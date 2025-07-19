@@ -105,16 +105,16 @@ namespace backend.Services.Auth
 
                     // Tạo Claims để làm JWT
                     var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name , loginRequest.loginUserName),
-                };
+                    {
+                        new Claim(ClaimTypes.Name , loginRequest.loginUserName),
+                    };
 
                     foreach (var roleName in getRoleList)
                     {
                         claims.Add(new Claim(ClaimTypes.Role, roleName));
                     }
 
-                    var getToken = generateToken(claims, checkLoginRequest.loginUserEmail);
+                    var getToken = generateToken(claims, checkLoginRequest.userId);
 
                     if (getToken != null)
                     {

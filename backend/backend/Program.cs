@@ -24,6 +24,7 @@ using backend.Interface.CloudinaryInterface;
 using backend.Interface.FoodInterface;
 using backend.Interface.PriceInterfaces;
 using backend.Interface.RoomInferface;
+using backend.Interface.StaffInterface;
 using backend.Services.CloudinaryServices;
 using backend.Interface.VnpayInterface;
 using backend.Services.VnpayServices;
@@ -35,6 +36,7 @@ using backend.Services.BookingHistoryServices;
 using backend.Services.FoodServices;
 using backend.Services.PriceServices;
 using backend.Services.RoomServices;
+using backend.Services.StaffService;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Identity.Client;
 
@@ -158,7 +160,8 @@ builder.Services.AddScoped<IMovieService, movieServices>();
 
 // Add thêm DI của Service user
 
-
+// DI cua Staff
+builder.Services.AddScoped<IStaffService, StaffService>();
 // DI MovieSchedule
 
 builder.Services.AddScoped<IScheduleServices, ScheduleServices>();
