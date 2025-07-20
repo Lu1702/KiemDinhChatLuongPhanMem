@@ -11,23 +11,26 @@ interface Service {
 
 const QuanLy: React.FC = () => {
   const [employeeId] = useState('123456789');
-  const [filterText, setFilterText] = useState('');
+  const [filterText, setFilterText] = useState(''); // filterText sẽ lưu OrderID được chọn để lọc
+  // Khởi tạo dịch vụ với orderID mặc định
   const [services, setServices] = useState<Service[]>([
     { id: 1, name: 'Bắp caramel', quantity: 1, orderID: 'ORD001' },
-    { id: 2, name: 'Pepsi', quantity: 2, orderID: 'ORD001' }, // Thêm một dịch vụ khác với cùng OrderID
+    { id: 2, name: 'Pepsi', quantity: 2, orderID: 'ORD001' },
     { id: 3, name: 'Coca', quantity: 1, orderID: 'ORD002' },
+    { id: 4, name: '7up', quantity: 1, orderID: 'ORD003' },
   ]);
   const [isAddingService, setIsAddingService] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
+  // Danh sách các dịch vụ có sẵn để chọn
   const availableServices = ['Pepsi', 'Coca', '7up', 'Bắp phô mai', 'Bắp origin', 'Bắp Carameo'];
   
+  // State cho ô chọn dịch vụ và số lượng khi thêm
   const [newServiceName, setNewServiceName] = useState(availableServices[0]);
   const [newServiceQuantity, setNewServiceQuantity] = useState(1);
   // State mới cho OrderID được chọn khi thêm dịch vụ
-  const [selectedOrderID, setSelectedOrderID] = useState(''); 
-
+  const [selectedOrderID, setSelectedOrderID] = useState('');
   const navigate = useNavigate();
 
   // Lấy danh sách các OrderID duy nhất từ các dịch vụ đã có
@@ -43,20 +46,20 @@ const QuanLy: React.FC = () => {
 
   const handleSubmitService = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newServiceName.trim() && selectedOrderID.trim()) { // Yêu cầu OrderID phải được chọn
+    if (newServiceName.trim() && selectedOrderID.trim()) {
       const newService: Service = { 
         id: services.length + 1, 
         name: newServiceName, 
         quantity: newServiceQuantity, 
-        orderID: selectedOrderID // Sử dụng OrderID đã chọn
+        orderID: selectedOrderID 
       };
       setServices([...services, newService]);
       setNewServiceName(availableServices[0]);
       setNewServiceQuantity(1);
-      setSelectedOrderID(''); // Reset OrderID đã chọn
+      setSelectedOrderID('');
       setIsAddingService(false);
     } else {
-        alert('Vui lòng chọn Tên dịch vụ và Order ID.'); // Thông báo nếu chưa chọn đủ
+        alert('Vui lòng chọn Tên dịch vụ và Order ID.');
     }
   };
 
@@ -64,9 +67,9 @@ const QuanLy: React.FC = () => {
     alert(`Đã lưu với filter: ${filterText}`);
   };
 
-  
+  // Logic lọc vẫn giữ nguyên, lọc theo Order ID
   const filteredServices = services.filter(service =>
-    service.orderID.toLowerCase().includes(filterText.toLowerCase())
+    filterText === '' || service.orderID.toLowerCase().includes(filterText.toLowerCase())
   );
 
   const modalOverlayStyle: React.CSSProperties = {
@@ -167,15 +170,18 @@ const QuanLy: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm">Filter (theo Order ID)</label>
-              <div className="uiverse-pixel-input">
-                <input
-                  type="text"
+              <label className="block text-sm">Chọn ID order bạn muốn thêm dịch vụ</label>
+              <div className="uiverse-pixel-input-wrapper">
+                <select
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
-                  className="w-full p-2 rounded text-white"
-                  placeholder="Lọc theo Order ID"
-                />
+                  className="uiverse-pixel-input w-full"
+                >
+                  <option value="">-- Chọn --</option>
+                  {existingOrderIDs.map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -213,7 +219,7 @@ const QuanLy: React.FC = () => {
                 </div>
               </div>
               
-              {/* Ô chọn Order ID mới */}
+              {/* Ô chọn Order ID khi thêm dịch vụ */}
               <div className="mt-4">
                 <label className="block text-sm">Order ID</label>
                 <div className="uiverse-pixel-input-wrapper">
@@ -221,16 +227,12 @@ const QuanLy: React.FC = () => {
                     value={selectedOrderID}
                     onChange={(e) => setSelectedOrderID(e.target.value)}
                     className="uiverse-pixel-input w-full"
-                    required 
+                    required
                   >
-                    <option value="" disabled>-- Chọn Order ID --</option> {/* Option mặc định */}
+                    <option value="" disabled>-- Chọn Order ID --</option>
                     {existingOrderIDs.map(id => (
-                      <option key={id} value={id}>{id}</option>
+                      <option key={id} value={id}>{id}</option> // This was the line with the extra '>'
                     ))}
-                    {/* Thêm một option cho phép tạo Order ID mới nếu chưa có OrderID nào */}
-                    {existingOrderIDs.length === 0 && (
-                        <option value="NEW_ORDER_ID">Tạo Order ID mới</option>
-                    )}
                   </select>
                 </div>
               </div>
@@ -253,9 +255,8 @@ const QuanLy: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-gray-700">
-                <th className="p-2 border-b">STT</th>
-                <th className="p-2 border-b">Order ID</th>
-                <th className="p-2 border-b">Dịch vụ</th>
+                <th className="p-2 border-b">ID</th>
+                <th className="p-2 border-b">Tên dịch vụ</th>
                 <th className="p-2 border-b">Số lượng</th>
               </tr>
             </thead>
@@ -263,7 +264,6 @@ const QuanLy: React.FC = () => {
               {filteredServices.map((service) => (
                 <tr key={service.id} className="border-b">
                   <td className="p-2">{service.id}</td>
-                  <td className="p-2">{service.orderID}</td>
                   <td className="p-2">{service.name}</td>
                   <td className="p-2">{service.quantity}</td>
                 </tr>
