@@ -49,9 +49,7 @@ function FutureFilm() {
                     <Nav />
                 </div>
             </div>
-
             <div className="flex flex-col items-center px-10">
-                {/* Movie Info */}
                 <div className="flex flex-col md:flex-row gap-6 mb-6 justify-center items-center">
                     <div>
                         <div>
@@ -93,8 +91,6 @@ function FutureFilm() {
                 <img src="data:image/png;base64,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" alt="film-reel"></img>
                 <p className="text-center text-4xl font-bold text-white uppercase ">hiện chưa có lịch chiếu</p>
             </div>
-
-            {/* Trailer Modal */}
             {showTrailer && (
                 <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50" onClick={() => setShowTrailer(false)}>
                     <div className="relative w-full max-w-3xl aspect-video">
@@ -103,7 +99,6 @@ function FutureFilm() {
                     </div>
                 </div>
             )}
-
             <footer>
                 <Bottom />
             </footer>

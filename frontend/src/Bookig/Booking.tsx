@@ -249,12 +249,9 @@ function Booking() {
                         </div>
                     </header>
                 </div>
-
                 <div className="content-wrapper max-w-screen-xl text-base mx-auto px-8 min-h-screen top-0">
                     <main className="flex flex-col gap-6 p-4 mt-10">
                         <QuickBooking />
-
-                        {/* Phim đang chiếu */}
                         <section>
                             <h2 className="text-4xl text-white font-bold pt-10 pb-24 uppercase text-center">--- Phim đang chiếu ---</h2>
                             <div className="px-4 sm:px-6 lg:px-8">
@@ -273,7 +270,6 @@ function Booking() {
                                 </Swiper>
                             </div>
                         </section>
-                        {/* Nút Xem thêm */}
                         <div className="pt-12">
                             <button
                                 onClick={(handleListfilm)}
@@ -295,8 +291,6 @@ function Booking() {
                                 </svg>
                             </button>
                         </div>
-
-                        {/* Phim sắp chiếu */}
                         <section>
                             <h2 className="text-4xl text-white font-bold pt-10 pb-24 uppercase text-center">--- Phim sắp chiếu ---</h2>
                             <div className="px-4 sm:px-6 lg:px-8">
@@ -315,7 +309,6 @@ function Booking() {
                                 </Swiper>
                             </div>
                         </section>
-                        {/* Nút Xem thêm */}
                         <div className="pt-12">
                             <button
                                 onClick={(handleComingmovies)}
@@ -337,7 +330,6 @@ function Booking() {
                                 </svg>
                             </button>
                         </div>
-                        {/* Popup Trailer */}
                         {showTrailer && (
                             <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
                                 <div className="bg-black rounded-lg p-4 relative w-[90%] md:w-[60%] aspect-video">

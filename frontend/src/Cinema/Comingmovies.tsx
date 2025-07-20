@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
+import { useNavigate } from "react-router";
 
 function Comingmovies() {
+    const navigate = useNavigate();
+    const handleFutureFilm = () => {
+        navigate("/futurefilm");
+    };
     const [showTrailer, setShowTrailer] = useState(false);
     const [trailerUrl, setTrailerUrl] = useState("");
 
@@ -202,7 +207,7 @@ function Comingmovies() {
                                 </button>
 
                                 <button
-                                    onClick={() => handleOpenTrailer(movie.trailer)}
+                                    onClick={handleFutureFilm}
                                     className="relative w-[160px] h-12 px-4 bg-purple-600 text-white border-none rounded-md text-sm inset-0 font-bold cursor-pointer z-10 group overflow-hidden flex items-center justify-center">
                                     🎟 Tìm hiểu thêm
                                     <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>

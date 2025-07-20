@@ -20,7 +20,6 @@ const QuickBooking: React.FC = () => {
     return (
         <div className="relative z-10 bg-white/90 backdrop-blur-md shadow-xl rounded-2xl px-6 py-3">
             <h2 className="text-center font-bold text-2xl text-[#081b3d] mb-6">🎬 ĐẶT VÉ NHANH</h2>
-
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <select
                     value={cinema}
@@ -29,7 +28,6 @@ const QuickBooking: React.FC = () => {
                     <option value="">1. Chọn Rạp</option>
                     <option value="Cinestar Quốc Thanh (TP.HCM)">Cinestar Quốc Thanh (TP.HCM)</option>
                 </select>
-
                 <select
                     value={movie}
                     onChange={(e) => setMovie(e.target.value)}
@@ -37,7 +35,6 @@ const QuickBooking: React.FC = () => {
                     <option value="">2. Chọn Phim</option>
                     <option value="Tấm Cám chuyện chưa kể">Tấm Cám chuyện chưa kể</option>
                 </select>
-
                 <select
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
@@ -45,7 +42,6 @@ const QuickBooking: React.FC = () => {
                     <option value="">3. Chọn Ngày</option>
                     <option value="2025-06-28">28/06/2025</option>
                 </select>
-
                 <select
                     value={session}
                     onChange={(e) => setSession(e.target.value)}
@@ -64,7 +60,6 @@ const QuickBooking: React.FC = () => {
                 </button>
             </div>
         </div>
-
     );
 };
 export default QuickBooking;
