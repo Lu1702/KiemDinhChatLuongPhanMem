@@ -1,3 +1,4 @@
+using System.Data.Common;
 using backend.Data;
 using backend.Enum;
 using backend.Interface.CinemaInterface;
@@ -68,28 +69,274 @@ public class CinemaService : ICinemaService
         };
     }
 
-    public GenericRespondDTOs AddCinema(CreateCinemaDTO cinema)
+    public async Task<GenericRespondDTOs> AddCinema(CreateCinemaDTO cinema)
     {
-        return null!;
+        var checkIfExits = _context.Cinema.FirstOrDefault(x => 
+            x.cinemaName.Equals(cinema.CinemaName) && x.cinemaLocation.Equals(cinema.CinemaLocation));
+        if (checkIfExits == null)
+        {
+           // Tiến hành lưu thông tin rạp
+           try
+           {
+               var newCinemaId = Guid.NewGuid().ToString();
+               await _context.AddAsync(new Cinema()
+               {
+                   cinemaName = cinema.CinemaName,
+                   cinemaLocation = cinema.CinemaLocation,
+                   cinemaDescription = cinema.CinemaDescription,
+                   cinemaId = newCinemaId,
+                   cinemaContactHotlineNumber = cinema.CinemaContactNumber
+               });
+               await _context.SaveChangesAsync();
+               
+               return new GenericRespondDTOs()
+               {
+                   Status = GenericStatusEnum.Success.ToString(),
+                   message = "Thêm Thành Công"
+               };
+           }
+           catch (Exception e)
+           {
+               return new GenericRespondDTOs()
+               {
+                   Status = GenericStatusEnum.Failure.ToString(),
+                   message = "Lỗi DataBase"
+               };
+           }
+        }
+
+        return new GenericRespondDTOs()
+        {
+            Status = GenericStatusEnum.Failure.ToString(),
+            message = "Rạp đã tồn tại"
+        };
     }
 
-    public GenericRespondDTOs EditCinema(string cinemaId, EditCinemaDTO cinema)
+    public async Task<GenericRespondDTOs> EditCinema(string cinemaId, EditCinemaDTO cinema)
     {
-        return null!;
+        if (!String.IsNullOrEmpty(cinemaId))
+        {
+            // Chỉ được sửa thông tin rạp khi chưa có ai đặt vé 
+            // Kiểm tra xem có lịch chua
+            var movieSchedule =
+                _context.movieSchedule.Where(x => x.cinemaRoom.cinemaId == cinemaId && !x.IsDelete);
+    
+            var checkOrder = await _context.TicketOrderDetail
+                .Where(x => movieSchedule.Select(x => x.movieScheduleId).Contains(x.movieScheduleID))
+                .Include(x => x.Order)
+                .FirstOrDefaultAsync(x => x.Order.PaymentStatus.Equals(PaymentStatus.PaymentSuccess.ToString()));
+            
+            if (checkOrder != null)
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Đã có người Order"
+                };
+            }
+            
+            var findCinema = _context.Cinema.FirstOrDefault(x => x.cinemaId == cinemaId);
+            if (findCinema != null)
+            {
+                string cinemaName = String.IsNullOrEmpty(cinema.CinemaName) ? findCinema.cinemaName : cinema.CinemaName;
+                string cinemaLocation = String.IsNullOrEmpty(cinema.CinemaLocation)
+                    ? findCinema.cinemaLocation
+                    : cinema.CinemaLocation;
+                string cinemaHotLineNUmber =
+                    String.IsNullOrEmpty(cinema.CinemaContactNumber)
+                        ? findCinema.cinemaContactHotlineNumber
+                        : cinema.CinemaContactNumber;
+                string cinemaDescription =
+                    String.IsNullOrEmpty(cinema.CinemaDescription)
+                        ? findCinema.cinemaDescription
+                        : cinema.CinemaDescription;
+                findCinema.cinemaName = cinemaName;
+                findCinema.cinemaLocation = cinemaLocation;
+                findCinema.cinemaDescription = cinemaDescription;
+                findCinema.cinemaContactHotlineNumber = cinemaHotLineNUmber;
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    _context.Cinema.Update(findCinema);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Success.ToString(),
+                        message = "Chỉnh sửa Rạp thành công"
+                    };
+                }
+                catch (Exception e)
+                {
+                    await transaction.RollbackAsync();
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Chỉnh sửa Rạp thất bại lỗi Database"
+                    };
+                }
+            }
+
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Lỗi Không tìm thấy Rạp"
+            };
+        }
+        return new GenericRespondDTOs()
+        {
+            Status = GenericStatusEnum.Failure.ToString(),
+            message = "Chưa có ID rạp"
+        };
     }
 
-    public GenericRespondDTOs DeleteCinema(string cinemaId)
+    public async Task<GenericRespondDTOs> DeleteCinema(string cinemaId)
     {
-        return null!;
-    }
+        if (!String.IsNullOrEmpty(cinemaId))
+        {
+            // Chỉ được sửa thông tin rạp khi chưa có ai đặt vé 
+            // Kiểm tra xem có lịch chua
+            var movieSchedule =
+                _context.movieSchedule.Where(x => x.cinemaRoom.cinemaId == cinemaId && !x.IsDelete);
 
-    public GenericRespondWithObjectDTO<GetCinemaListDTO> GetCinemaList()
+            var checkOrder = await _context.TicketOrderDetail
+                .Where(x => movieSchedule.Select(x => x.movieScheduleId).Contains(x.movieScheduleID))
+                .Include(x => x.Order)
+                .FirstOrDefaultAsync(x => x.Order.PaymentStatus.Equals(PaymentStatus.PaymentSuccess.ToString()));
+
+            if (checkOrder != null)
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Đã có người Order"
+                };
+            }
+            
+            // Tiến hành xóa các Data Liên quan
+            
+            var cinemaInfo = await _context.Cinema.FirstOrDefaultAsync(x => x.cinemaId == cinemaId);
+            var findRoom = _context.cinemaRoom.Where(x => x.cinemaId == cinemaId);
+
+            if (cinemaInfo != null)
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    cinemaInfo.isDeleted = true;
+                    _context.Cinema.Update(cinemaInfo);
+
+                    if (findRoom.Any())
+                    {
+                        foreach (var rooms in findRoom)
+                        {
+                            rooms.isDeleted = true;
+                        }
+
+                        _context.cinemaRoom.UpdateRange(findRoom);
+                    }
+
+                    if (movieSchedule.Any())
+                    {
+                        foreach (var movieScheduleItem in movieSchedule)
+                        {
+                            movieScheduleItem.IsDelete = true;
+                        }
+
+                        _context.movieSchedule.UpdateRange(movieSchedule);
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Success.ToString(),
+                        message = "Xóa rạp thành công"
+                    };
+                }
+                catch (Exception e)
+                {
+                    await transaction.RollbackAsync();
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Lỗi Database"
+                    };
+                }
+            }
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Lỗi Không tìm thấy rạp"
+            };
+        }
+        return new GenericRespondDTOs()
+        {
+            Status = GenericStatusEnum.Failure.ToString(),
+            message = "Lỗi Id rạp bị trống"
+        };
+    }
+    
+
+    public GenericRespondWithObjectDTO<List<GetCinemaListDTO>> GetCinemaList()
     {
-        return null!;
+        var findCinema = _context.Cinema.Where(x => !x.isDeleted).ToList();
+        if (findCinema.Any())
+        {
+            return new GenericRespondWithObjectDTO<List<GetCinemaListDTO>>()
+            {
+                Status = GenericStatusEnum.Success.ToString(),
+                message = "Lấy Danh Sách thành công",
+                data = findCinema.Select(x => new GetCinemaListDTO()
+                {
+                    CinemaId = x.cinemaId,
+                    CinemaLocation = x.cinemaLocation,
+                    CinemaDescription = x.cinemaDescription,
+                    CinemaContactNumber = x.cinemaContactHotlineNumber,
+                    CinemaName = x.cinemaName
+                }).ToList()
+            };
+        }
+        return new GenericRespondWithObjectDTO<List<GetCinemaListDTO>>()
+        {
+            Status = GenericStatusEnum.Failure.ToString(),
+            message = "Không tìm thấy danh sách"
+        };
     }
 
     public GenericRespondWithObjectDTO<GetCinemaDetailDTO> GetCinemaDetail(string cinemaId)
     {
-        return null!;
+        if (!String.IsNullOrEmpty(cinemaId))
+        {
+            var findCinema = _context.Cinema.FirstOrDefault
+                (x => x.cinemaId == cinemaId && x.isDeleted == false);
+            if (findCinema != null)
+            {
+                return new GenericRespondWithObjectDTO<GetCinemaDetailDTO>()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Thông tin rạp",
+                    data = new GetCinemaDetailDTO()
+                    {
+                        CinemaId = findCinema.cinemaId,
+                        CinemaContactNumber = findCinema.cinemaContactHotlineNumber,
+                        CinemaLocation = findCinema.cinemaLocation,
+                        CinemaName = findCinema.cinemaName,
+                        CinemaDescription = findCinema.cinemaDescription,
+                    }
+                };
+            }
+            return new GenericRespondWithObjectDTO<GetCinemaDetailDTO>()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Lỗi Không tìm thấy rạp"
+            };
+        }
+
+        return new GenericRespondWithObjectDTO<GetCinemaDetailDTO>()
+        {
+            Status = GenericStatusEnum.Failure.ToString(),
+            message = "Lỗi Chưa có CinemaID"
+        };
     }
 }

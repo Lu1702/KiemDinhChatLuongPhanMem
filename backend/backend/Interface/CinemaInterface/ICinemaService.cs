@@ -7,13 +7,13 @@ public interface ICinemaService
 {
     GenericRespondWithObjectDTO<List<GetCinemaDetailBookingDTO>> GetCinemaDetailBooking(string movieID , string movieVisualId);
 
-    GenericRespondDTOs AddCinema(CreateCinemaDTO cinema);
+    Task<GenericRespondDTOs> AddCinema(CreateCinemaDTO cinema);
     
-    GenericRespondDTOs EditCinema(string cinemaId ,EditCinemaDTO cinema);
+    Task<GenericRespondDTOs> EditCinema(string cinemaId ,EditCinemaDTO cinema);
     
-    GenericRespondDTOs DeleteCinema(string cinemaId);
+    Task<GenericRespondDTOs> DeleteCinema(string cinemaId);
     
-    GenericRespondWithObjectDTO<GetCinemaListDTO> GetCinemaList();
+    GenericRespondWithObjectDTO<List<GetCinemaListDTO>> GetCinemaList();
 
     GenericRespondWithObjectDTO<GetCinemaDetailDTO> GetCinemaDetail(string cinemaId);
 
