@@ -52,7 +52,7 @@ namespace backend.Services.BookingServices
             }
 
             var movieSchedule = await _dataContext.movieSchedule
-                                                .FirstOrDefaultAsync(ms => ms.movieScheduleId == orderRequestDTO.movieScheduleId);
+                                                .FirstOrDefaultAsync(ms => ms.movieScheduleId == orderRequestDTO.movieScheduleId && !ms.IsDelete);
             if (movieSchedule == null)
             {
                 return new OrderRespondDTO { Error = "Error: Movie schedule not found." };

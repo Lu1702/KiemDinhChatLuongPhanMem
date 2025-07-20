@@ -51,7 +51,7 @@ namespace backend.Services.BookingHistoryServices
                     "h\\:mm", 
                     null);
                 var convertToDateTime =
-                    DateTime.Now.Date.Add(convertToTimeSpan);
+                    getTicketItems.movieSchedule.ScheduleDate.Add(convertToTimeSpan);
                 var newBookingHistoryRespondList = new BookingHistoryRespondList()
                 {
                     BookingId = getTicketItems.orderId,

@@ -1,4 +1,5 @@
 ﻿using backend.ModelDTO.GenericRespond;
+using backend.ModelDTO.ScheduleDTO;
 using backend.ModelDTO.ScheduleDTO.Request;
 
 namespace backend.Interface.Schedule
@@ -10,5 +11,8 @@ namespace backend.Interface.Schedule
         Task<bool> edit(string id ,ScheduleRequestDTO scheduleRequestDTO);
 
         Task<bool> delete(string id , string options);
+
+        GenericRespondWithObjectDTO<List<GetListScheduleDTO>> getAlSchedulesByMovieName(string movieName);
+
     }
 }

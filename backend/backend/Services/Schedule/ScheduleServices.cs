@@ -8,6 +8,7 @@ using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 using System.Linq;
+using backend.ModelDTO.ScheduleDTO;
 
 namespace backend.Services.Schedule
 {
@@ -228,5 +229,58 @@ namespace backend.Services.Schedule
             }
             return false;
         }
+
+        public GenericRespondWithObjectDTO<List<GetListScheduleDTO>> getAlSchedulesByMovieName(string movieName)
+        {
+            if (!String.IsNullOrEmpty(movieName))
+            {
+                var findMovie = _dataContext.movieInformation
+                    .FirstOrDefault(x => x.movieName.Contains(movieName));
+                if (findMovie != null)
+                {
+                    var findSchedule = _dataContext.movieSchedule
+                        .Where(x => x.movieId.Equals(findMovie.movieId))
+                        .Include(x => x.cinemaRoom)
+                        .ThenInclude(x => x.Cinema)
+                        .Include(x => x.HourSchedule);
+                    if (findSchedule.Any())
+                    {
+                        findSchedule.GroupBy(x => x.movieInformation.movieName)
+                            .Select(x => new GetListScheduleDTO()
+                            {
+                                MovieName = x.Key ,
+                                getListSchedule = x.Select(y => new GetMovieScheduleDTO()
+                                {
+                                    ScheduleId = y.movieScheduleId,
+                                    CinemaName = y.cinemaRoom.Cinema.cinemaName ,
+                                    MovieVisualFormatInfo = y.movieVisualFormat.movieVisualFormatName ,
+                                    ShowTime = y.HourSchedule.HourScheduleShowTime ,
+                                    ShowDate = y.ScheduleDate ,
+                                    CinemaRoom = y.cinemaRoom.cinemaRoomNumber
+                                }).ToList()
+                            });
+                    }
+                    return new GenericRespondWithObjectDTO<List<GetListScheduleDTO>>()
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = $"Không tìm thấy lịch chiếu"
+                    };
+                }
+
+                return new GenericRespondWithObjectDTO<List<GetListScheduleDTO>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = $"Không tìm thaasy Phim Co Ten la {movieName}"
+                };
+
+            }
+
+            return new GenericRespondWithObjectDTO<List<GetListScheduleDTO>>()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Bạn Chưa Nhap Ten Phim"
+            };
+        }
+
     }
 }

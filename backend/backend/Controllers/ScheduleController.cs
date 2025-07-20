@@ -1,4 +1,5 @@
-﻿using backend.Interface.Schedule;
+﻿using backend.Enum;
+using backend.Interface.Schedule;
 using backend.ModelDTO.ScheduleDTO.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -49,6 +50,16 @@ namespace backend.Controllers
             return BadRequest(new {message = "Xóa thất bại do có người đã đặt lịch này"});
         }
 
+        [HttpGet("getScheduleByName")]
+        public IActionResult getScheduleByName([FromQuery] string name)
+        {
+            var findStatus = scheduleServices.getAlSchedulesByMovieName(name);
+            if (findStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            {
+                return BadRequest(findStatus);
+            }
+            return Ok(findStatus);
+        }
         
     }
 }

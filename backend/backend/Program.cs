@@ -9,6 +9,7 @@ using System.Text.Json.Serialization;
 using backend.Services.MovieServices;
 using backend;
 using backend.Helper;
+using backend.Hosted;
 using backend.Interface.Account;
 using backend.Interface.GenericsInterface;
 using backend.ModelDTO.MoviesDTO.MovieRequest;
@@ -131,6 +132,9 @@ builder.Services.AddScoped<IRoomService , RoomService>();
 // DI của VNpay Services
 
 builder.Services.AddScoped<IVnpayService, VnpayService>();
+
+builder.Services.AddSingleton<BackgroundService , HostedService>();
+builder.Services.AddHostedService<HostedService>();
 
 // DI cua Price
 
