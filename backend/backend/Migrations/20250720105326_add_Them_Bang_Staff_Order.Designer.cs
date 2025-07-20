@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
 
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250720105326_add_Them_Bang_Staff_Order")]
+    partial class add_Them_Bang_Staff_Order
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -165,61 +168,6 @@ namespace backend.Migrations
                     b.HasIndex("customerID");
 
                     b.ToTable("Order");
-                });
-
-            modelBuilder.Entity("backend.Model.Booking.StaffOrder", b =>
-                {
-                    b.Property<string>("orderId")
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("CustomerName")
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<string>("PaymentStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("StaffID")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("paymentMethod")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("paymentRequestCreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("totalAmount")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("orderId");
-
-                    b.HasIndex("StaffID");
-
-                    b.ToTable("StaffOrder");
-                });
-
-            modelBuilder.Entity("backend.Model.Booking.StaffOrderDetailFood", b =>
-                {
-                    b.Property<string>("orderId")
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("foodInformationId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("quanlity")
-                        .HasColumnType("int");
-
-                    b.HasKey("orderId", "foodInformationId");
-
-                    b.HasIndex("foodInformationId");
-
-                    b.ToTable("StaffOrderDetailFoods");
                 });
 
             modelBuilder.Entity("backend.Model.Booking.orderDetailFood", b =>
@@ -1335,36 +1283,6 @@ namespace backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("backend.Model.Booking.StaffOrder", b =>
-                {
-                    b.HasOne("backend.Model.Staff_Customer.Staff", "Staff")
-                        .WithMany()
-                        .HasForeignKey("StaffID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Staff");
-                });
-
-            modelBuilder.Entity("backend.Model.Booking.StaffOrderDetailFood", b =>
-                {
-                    b.HasOne("backend.Model.Product.foodInformation", "foodInformation")
-                        .WithMany()
-                        .HasForeignKey("foodInformationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("backend.Model.Booking.StaffOrder", "StaffOrder")
-                        .WithMany()
-                        .HasForeignKey("orderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("StaffOrder");
-
-                    b.Navigation("foodInformation");
                 });
 
             modelBuilder.Entity("backend.Model.Booking.orderDetailFood", b =>

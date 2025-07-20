@@ -42,7 +42,11 @@ namespace backend.Data
         public DbSet<PriceInformation> priceInformation { get; set; }
         public DbSet<movieVisualFormatDetail> movieVisualFormatDetails { get; set; }
         public DbSet<HourSchedule> HourSchedule { get; set; }
+
+        public DbSet<StaffOrder> StaffOrder { get; set; }
         public DbSet<Staff> Staff { get; set; }
+
+        public DbSet<StaffOrderDetailFood> StaffOrderDetailFoods { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<minimumAge> minimumAges { get; set; }
 

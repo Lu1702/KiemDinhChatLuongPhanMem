@@ -18,6 +18,7 @@ using backend.Interface.MovieInterface;
 using backend.Interface.Schedule;
 using backend.Services.Schedule;
 using backend.Interface.BookingInterface;
+using backend.Interface.CinemaInterface;
 using backend.Services.BookingServices;
 using backend.Interface.CommentInterface;
 using backend.Interface.CloudinaryInterface;
@@ -33,6 +34,7 @@ using backend.ModelDTO.BookingHistoryDTO.OrderDetailRespond;
 using backend.ModelDTO.BookingHistoryDTO.OrderRespond;
 using backend.Services.AccountServices;
 using backend.Services.BookingHistoryServices;
+using backend.Services.CinemaServices;
 using backend.Services.FoodServices;
 using backend.Services.PriceServices;
 using backend.Services.RoomServices;
@@ -158,7 +160,9 @@ builder.Services.AddScoped<IFoodService, FoodService>();
 
 builder.Services.AddScoped<IMovieService, movieServices>();
 
-// Add thêm DI của Service user
+// Add thêm DI của Cinema
+
+builder.Services.AddScoped<ICinemaService, CinemaService>();
 
 // DI cua Staff
 builder.Services.AddScoped<IStaffService, StaffService>();
