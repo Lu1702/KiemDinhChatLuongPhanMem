@@ -21,10 +21,10 @@ namespace backend.Services.MovieServices
             this._dataContext = dataContext;
         }
 
-        public List<CommentRequestGetListDTO> getAllComent(string movieID)
+        public GenericRespondWithObjectDTO<List<CommentRequestGetListDTO>> getAllComent(string movieID)
         {
             // Ai biết sửa cái warning này sửa giúp tui với :(
-            if (movieID != null)
+            if (!String.IsNullOrEmpty(movieID))
             {
                 var getComment = _dataContext.movieCommentDetail.Where(x => x.movieId.Equals(movieID)).ToList();
                 var newListCommentRespond = new List<CommentRequestGetListDTO>();
@@ -32,6 +32,7 @@ namespace backend.Services.MovieServices
                 {
                     var newComment = new CommentRequestGetListDTO()
                     {
+                        CommentId = item.commentID,
                         commentDetail = item.userCommentDetail,
                         customerEmail = _dataContext.userInformation.FirstOrDefault
                         (x => x.userId.Equals
@@ -39,9 +40,19 @@ namespace backend.Services.MovieServices
                     };
                     newListCommentRespond.Add(newComment);
                 }
-                return newListCommentRespond;
+
+                return new GenericRespondWithObjectDTO<List<CommentRequestGetListDTO>>()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Lay Data Thanh Cong",
+                    data = newListCommentRespond
+                };
             }
-            return null!;
+            return new GenericRespondWithObjectDTO<List<CommentRequestGetListDTO>>()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Khong Tim Thay Phim",
+            };
         }
 
         // Đăng comment lên
@@ -110,9 +121,6 @@ namespace backend.Services.MovieServices
                 Status = GenericStatusEnum.Failure.ToString(),
                 message = "Lỗi Không đăng được comment ! bạn chưa mua vé hoặc đã mua nhưng chưa thanh toán"
             };
-
-
-
         }
 
         public GenericRespondWithObjectDTO<CommentRequestDTO> getCommentDetails(string commentID)

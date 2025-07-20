@@ -22,19 +22,19 @@ namespace backend.Controllers
         [AllowAnonymous]
         public IActionResult getCommentList(string movieID)
         {
-            var ListComment = _services.getAllComent(movieID);
-            if (ListComment.Count > 0)
+            var listComment = _services.getAllComent(movieID);
+            if (listComment.Status.Equals(GenericStatusEnum.Success.ToString()))
             {
-                return Ok(ListComment);
+                return Ok(listComment);
             }
-            return BadRequest(new {message = "Phim hiện tại chưa có comment :("});
+            return BadRequest(listComment);
         }
 
         [HttpGet("getCommentDetail/{commentID}")]
         public IActionResult getCommentDetail(string commentID)
         {
             var getComment = _services.getCommentDetails(commentID);
-            if (getComment.data != null)
+            if (getComment.Status.Equals(GenericStatusEnum.Success.ToString()))
             {
                 return Ok(getComment);
             }
@@ -45,7 +45,7 @@ namespace backend.Controllers
         public async Task<IActionResult> postComment(string CustomerID , string movieID , CommentRequestDTO dtos)
         {
             var getStatus = await _services.uploadComment(CustomerID, movieID, dtos);
-            if (getStatus.message.ToLower().Contains("lỗi"))
+            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
                 return BadRequest(getStatus);
             }
@@ -58,7 +58,7 @@ namespace backend.Controllers
             var getStatus = await _services.editComment(commentID, dtos);
             if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
-                return NotFound(getStatus);
+                return BadRequest(getStatus);
             }
             return Ok(getStatus);
         }

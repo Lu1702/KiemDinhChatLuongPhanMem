@@ -7,7 +7,7 @@ namespace backend.Interface.CommentInterface
 {
     public interface ICommentServices
     {
-        List<CommentRequestGetListDTO> getAllComent(string movieID);
+        GenericRespondWithObjectDTO<List<CommentRequestGetListDTO>> getAllComent(string movieID);
 
         GenericRespondWithObjectDTO<CommentRequestDTO> getCommentDetails(string commentID);
 

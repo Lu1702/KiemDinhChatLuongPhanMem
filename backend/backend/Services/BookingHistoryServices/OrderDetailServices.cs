@@ -25,10 +25,9 @@ namespace backend.Services.BookingHistoryServices
             // Lấy OrderID
 
             var getOrderUserList = _dataContext.Order
-                .Where(x => x.customerID.Equals(userID))
+                .Where(x => x.customerID.Equals(userID)
+                && x.PaymentStatus.Equals(PaymentStatus.PaymentSuccess))
                 .Select(x => x.orderId);
-
-           
             var getTicketLists = await _dataContext.TicketOrderDetail
                 .Where(x => getOrderUserList.Contains(x.orderId))
                 .Include(tod => tod.movieSchedule) 
@@ -55,9 +54,9 @@ namespace backend.Services.BookingHistoryServices
                     DateTime.Now.Date.Add(convertToTimeSpan);
                 var newBookingHistoryRespondList = new BookingHistoryRespondList()
                 {
+                    BookingId = getTicketItems.orderId,
                     cinemaName = getTicketItems.movieSchedule.cinemaRoom.Cinema.cinemaName,
                     cinemaRoomNumber = getTicketItems.movieSchedule.cinemaRoom.cinemaRoomNumber.ToString(),
-                    DayInWeekend = getTicketItems.movieSchedule.DayInWeekendSchedule.ToString(),
                     HourSchedule = getTicketItems.movieSchedule.HourSchedule.HourScheduleShowTime,
                     movieName = getTicketItems.movieSchedule.movieInformation.movieName,
                     TrangThai = 
@@ -77,14 +76,12 @@ namespace backend.Services.BookingHistoryServices
             // Dùng Include và then Include
 
             var getOrderDetail = _dataContext.Order
-                .Where(y => y.orderId.Equals(orderID)).FirstOrDefault();
+                .FirstOrDefault(y => y.orderId.Equals(orderID));
             var getCustomerInfo = _dataContext.Order.Include(x => x.Customer);
             var getOrderDetailTicket = _dataContext.TicketOrderDetail
                 .Where(x => x.orderId.Equals(getOrderDetail.orderId))
                 .Include(x => x.movieSchedule).ThenInclude(x => x.movieInformation)
                 .Include(x => x.movieSchedule).ThenInclude(x => x.HourSchedule);
-                
-             
 
             // Trả về kết quả
             // Chỉ trả về một cái thôi
