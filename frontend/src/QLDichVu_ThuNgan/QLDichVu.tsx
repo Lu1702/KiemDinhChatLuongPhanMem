@@ -17,15 +17,17 @@ const QuanLy: React.FC = () => {
     { id: 1, name: 'Bắp caramel', quantity: 1, orderID: 'ORD001' },
     { id: 2, name: 'Pepsi', quantity: 2, orderID: 'ORD001' },
     { id: 3, name: 'Coca', quantity: 1, orderID: 'ORD002' },
-    { id: 4, name: '7up', quantity: 1, orderID: 'ORD003' },
+    { id: 4, name: 'Yêu cầu thêm dịch vụ', quantity: 0, orderID: 'ORD003' },
   ]);
   const [isAddingService, setIsAddingService] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  // State for loading spinner
+  const [isLoading, setIsLoading] = useState(false);
 
   // Danh sách các dịch vụ có sẵn để chọn
   const availableServices = ['Pepsi', 'Coca', '7up', 'Bắp phô mai', 'Bắp origin', 'Bắp Carameo'];
-  
+
   // State cho ô chọn dịch vụ và số lượng khi thêm
   const [newServiceName, setNewServiceName] = useState(availableServices[0]);
   const [newServiceQuantity, setNewServiceQuantity] = useState(1);
@@ -47,11 +49,11 @@ const QuanLy: React.FC = () => {
   const handleSubmitService = (e: React.FormEvent) => {
     e.preventDefault();
     if (newServiceName.trim() && selectedOrderID.trim()) {
-      const newService: Service = { 
-        id: services.length + 1, 
-        name: newServiceName, 
-        quantity: newServiceQuantity, 
-        orderID: selectedOrderID 
+      const newService: Service = {
+        id: services.length + 1,
+        name: newServiceName,
+        quantity: newServiceQuantity,
+        orderID: selectedOrderID
       };
       setServices([...services, newService]);
       setNewServiceName(availableServices[0]);
@@ -59,12 +61,19 @@ const QuanLy: React.FC = () => {
       setSelectedOrderID('');
       setIsAddingService(false);
     } else {
-        alert('Vui lòng chọn Tên dịch vụ và Order ID.');
+      alert('Vui lòng chọn Tên dịch vụ và Order ID.');
     }
   };
 
   const handleSave = () => {
-    alert(`Đã lưu với filter: ${filterText}`);
+    setIsLoading(true); // Show spinner when saving
+    // Simulate an API call or a long process
+    setTimeout(() => {
+      alert(`Đã lưu với thay đổi ở Order: ${filterText}`);
+      setIsLoading(false); // Hide spinner after process
+      // Navigate to /payment after the process is complete and spinner is hidden
+      navigate('/payment');
+    }, 2000); // 2 second delay for demonstration
   };
 
   // Logic lọc vẫn giữ nguyên, lọc theo Order ID
@@ -218,7 +227,7 @@ const QuanLy: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Ô chọn Order ID khi thêm dịch vụ */}
               <div className="mt-4">
                 <label className="block text-sm">Order ID</label>
@@ -231,7 +240,7 @@ const QuanLy: React.FC = () => {
                   >
                     <option value="" disabled>-- Chọn Order ID --</option>
                     {existingOrderIDs.map(id => (
-                      <option key={id} value={id}>{id}</option> // This was the line with the extra '>'
+                      <option key={id} value={id}>{id}</option>
                     ))}
                   </select>
                 </div>
@@ -276,9 +285,23 @@ const QuanLy: React.FC = () => {
           <button
             onClick={handleSave}
             className="button2 bg-[#7e57c2] text-white px-4 py-2 rounded"
-            style={{ width: '80px' }}
+            style={{ width: '250px' }}
+            disabled={isLoading} // Disable button when loading
           >
-            Lưu
+            {isLoading ? (
+              <div className="dot-spinner">
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+              </div>
+            ) : (
+              'Yêu cầu thanh toán'
+            )}
           </button>
         </div>
 
