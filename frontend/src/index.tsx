@@ -17,6 +17,7 @@ import Info from './Account/Info';
 import QLNV from './QL_Nhanvien_QLRap/homeQLRạp'
 import DT from './QL_Doanhthu_GiamDoc/Doanhthu'
 import RapPhongChieu from './QL_Rap_PhongChieu_QtrivienHT/Quantrivienhethong_QuanlyRapPhongChieu'
+import DV from './QLDichVu_ThuNgan/QLDichVu'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -35,6 +36,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/QuanLyRap/QLNV" element={<QLNV />} />
         <Route path="/Giamdoc/doanhthu" element={<DT />} />
         <Route path="/Quantrivienhethong/QLRapPhongChieu" element={<RapPhongChieu />} />
+        <Route path="/ThuNgan/DichVuThem" element={<DV />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
