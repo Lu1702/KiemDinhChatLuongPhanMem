@@ -25,6 +25,9 @@ function Home() {
   const handleShowtimes = () => {
     navigate('/showtimes');
   }
+  const handleFutureFilm = () => {
+    navigate('/futurefilm');
+  }
   const [showTrailer, setShowTrailer] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState("");
 
@@ -225,7 +228,7 @@ function Home() {
             </div>
           </button>
           <button
-            //onClick={(handleComingmovies)}
+            onClick={(handleFutureFilm)}
             className="overflow-hidden relative w50 p-2 h-12 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group">
             🎟 Tìm hiểu thêm
             <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
@@ -254,9 +257,6 @@ function Home() {
         <div className="content-wrapper max-w-screen-xl text-base mx-auto px-8 min-h-screen top-0">
           <main className="flex flex-col gap-6 p-4">
             <MovieSlider />
-            <QuickBooking />
-
-            {/* Phim đang chiếu */}
             <section>
               <h2 className="text-3xl text-white font-bold pt-10 pb-24 uppercase text-center">-- Phim đang chiếu --</h2>
               <div className="px-4 sm:px-6 lg:px-8">
@@ -275,15 +275,14 @@ function Home() {
                 </Swiper>
               </div>
             </section>
-            {/* Nút Xem thêm */}
             <div className="pt-12">
               <button
                 onClick={(handleListfilm)}
                 type="submit"
-                className="flex justify-center gap-2 items-center mx-auto shadow-xl text-base bg-purple-600 backdrop-blur-md lg:font-semibold isolation-auto
+                className=" flex justify-center gap-2 items-center mx-auto shadow-xl text-base bg-purple-600 backdrop-blur-md lg:font-semibold isolation-auto
                             border-gray-50 before:absolute before:w-full before:transition-all before:duration-700 before:hover:w-full before:-left-full before:hover:left-0 
                             before:rounded-full before:bg-orange-500 hover:text-gray-50 before:-z-10 before:aspect-square before:hover:scale-150 before:hover:duration-700 
-                            relative z-10 px-4 py-2 overflow-hidden border-2 rounded-full group">
+                            relative z-10 px-4 py-2 overflow-hidden border-2 rounded-full group text-white">
                 Xem thêm
                 <svg
                   className="w-6 h-6 justify-end group-hover:rotate-90 group-hover:bg-gray-50 text-gray-50 ease-linear duration-300 rounded-full border border-gray-700
@@ -297,8 +296,6 @@ function Home() {
                 </svg>
               </button>
             </div>
-
-            {/* Phim sắp chiếu */}
             <section>
               <h2 className="text-3xl text-white font-bold pt-10 pb-24 uppercase text-center">-- Phim sắp chiếu --</h2>
               <div className="px-4 sm:px-6 lg:px-8">
@@ -317,7 +314,6 @@ function Home() {
                 </Swiper>
               </div>
             </section>
-            {/* Nút Xem thêm */}
             <div className="pt-12">
               <button
                 onClick={(handleComingmovies)}
@@ -339,7 +335,6 @@ function Home() {
                 </svg>
               </button>
             </div>
-            {/* Popup Trailer */}
             {showTrailer && (
               <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
                 <div className="bg-black rounded-lg p-4 relative w-[90%] md:w-[60%] aspect-video">
@@ -350,7 +345,12 @@ function Home() {
             )}
           </main>
         </div>
-
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointers"
+        >
+          ↑
+        </button>
         <footer className="pt-32">
           <Bottom />
         </footer>

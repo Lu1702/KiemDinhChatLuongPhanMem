@@ -1,85 +1,130 @@
-import React from "react";
+import React, { useState } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
+import BookingHistory from "./BookingHistory";
 
-function Info() {
-    const userEmail = localStorage.getItem('userEmail');
+const Info: React.FC = () => {
+    const userEmail = localStorage.getItem("userEmail");
     const navigate = useNavigate();
+
     const handleLogout = () => {
-        localStorage.removeItem('userEmail');
-        navigate('/login');
+        localStorage.removeItem("userEmail");
+        navigate("/login");
     };
 
+    const [activeTab, setActiveTab] = useState<"info" | "history" | "password">("info");
+
     return (
-        <div className="min-h-screen bg-fixed w-full bg-cover bg-center"
-            style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
-            <div className="sticky top-0 z-50 bg-slate-900 shadow-md mb-4 ">
+        <div
+            className="min-h-screen bg-fixed bg-cover bg-center"
+            style={{
+                backgroundImage:
+                    "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')",
+            }}>
+            <div className="sticky top-0 z-50 bg-slate-900 shadow-md mb-4">
                 <div className="max-w-screen-xl mx-auto px-8">
                     <Nav />
                 </div>
             </div>
-            <div className="max-w-3xl mx-auto space-y-10 py-5">
-                <h1 className="text-white text-3xl font-bold text-center uppercase">Cinema xin chào!  {userEmail}</h1>
-                {/* Thông tin cá nhân */}
-                <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                    <h2 className="text-2xl font-bold mb-6">Thông tin cá nhân</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block mb-2 font-semibold ">Họ và tên:</label>
-                            <input placeholder="Nhập Họ và tên của bạn..." type="text" className="w-full placeholder-slate-800 border rounded-md px-4 py-2 bg-white/50" />
-                        </div>
-                        <div>
-                            <label className="block mb-2 font-semibold">Ngày sinh</label>
-                            <input placeholder="Ngày sinh của bạn..." type="date" className="w-full placeholder-slate-800 border rounded-md px-4 py-2 bg-white/50" />
-                        </div>
-                        <div>
-                            <label className="block mb-2 font-semibold">Email</label>
-                            <input placeholder="Email của bạn..." type="email" className="w-full placeholder-slate-800 border rounded-md px-4 py-2 bg-white/50" />
-                        </div>
-                        <div>
-                            <label className="block mb-2 font-semibold">Địa chỉ</label>
-                            <input placeholder="Địa chỉ của bạn..." type="text" className="w-full placeholder-slate-800 border rounded-md px-4 py-2 bg-white/50" />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="block mb-2 font-semibold">CCCD</label>
-                            <input placeholder="Căn cước công dân của bạn..." type="number" className="w-full placeholder-slate-800 border rounded-md px-4 py-2 bg-white/50" />
-                        </div>
-                    </div>
-                    <div className="mt-6 text-center">
-                        <button className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group">
-                            <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
-                            Lưu thông tin
-                        </button>
-
-
-                    </div>
+            <div className="max-w-6xl mx-auto py-10 px-4 md:flex gap-8">
+                {/* Sidebar */}
+                <div className="sticky top-32 h-fit self-start bg-white/20 backdrop-blur-md p-4 rounded-xl w-full md:w-1/4 space-y-4 shadow-lg">
+                    <button
+                        className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "info"
+                                ? "bg-yellow-300 text-black"
+                                : "hover:bg-white/30 text-white"
+                            }`}
+                        onClick={() => setActiveTab("info")}>
+                        Thông tin cá nhân
+                    </button>
+                    <button
+                        className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "history"
+                                ? "bg-yellow-300 text-black"
+                                : "hover:bg-white/30 text-white"
+                            }`}
+                        onClick={() => setActiveTab("history")}>
+                        Lịch sử đặt vé
+                    </button>
+                    <button
+                        className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "password"
+                                ? "bg-yellow-300 text-black"
+                                : "hover:bg-white/30 text-white"
+                            }`}
+                        onClick={() => setActiveTab("password")}>
+                        Đổi mật khẩu
+                    </button>
                 </div>
-                {/* Đổi mật khẩu */}
-                <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                    <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
-                            <input placeholder="Mật khẩu cũ của bạn..." type="password" className="w-full placeholder-slate-800 border rounded-md px-4 py-2 bg-white/50" />
+                <div className="flex-1 space-y-8 mt-8 md:mt-0">
+                    <h1 className="text-white text-3xl font-bold text-center uppercase">
+                        Cinema xin chào! {userEmail}
+                    </h1>
+                    {activeTab === "info" && (
+                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
+                            <h2 className="text-2xl font-bold mb-6">Thông tin cá nhân</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block mb-2 font-semibold">Họ và tên:</label>
+                                    <input type="text" className="w-full border rounded-md px-4 py-2 bg-white/50" />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Ngày sinh:</label>
+                                    <input type="date" className="w-full border rounded-md px-4 py-2 bg-white/50" />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Email:</label>
+                                    <input type="email" className="w-full border rounded-md px-4 py-2 bg-white/50" />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Địa chỉ:</label>
+                                    <input type="text" className="w-full border rounded-md px-4 py-2 bg-white/50" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block mb-2 font-semibold">CCCD:</label>
+                                    <input type="number" className="w-full border rounded-md px-4 py-2 bg-white/50" />
+                                </div>
+                            </div>
+                            <div className="mt-6 text-center">
+                                <button className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group">
+                                    <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
+                                    Lưu thông tin
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block mb-2 font-semibold">Mật khẩu mới</label>
-                            <input placeholder="Mật khẩu mới của bạn..." type="password" className="w-full placeholder-slate-800 border rounded-md px-4 py-2 bg-white/50" />
+                    )}
+                    {activeTab === "history" && (
+                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
+                            <BookingHistory />
                         </div>
-                        <div>
-                            <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
-                            <input placeholder="Xác nhận mật khẩu mới của bạn..." type="password" className="w-full placeholder-slate-800 border rounded-md px-4 py-2 bg-white/50" />
+                    )}
+                    {activeTab === "password" && (
+                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
+                            <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
+                                    <input type="password" className="w-full border rounded-md px-4 py-2 bg-white/50" />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Mật khẩu mới</label>
+                                    <input type="password" className="w-full border rounded-md px-4 py-2 bg-white/50" />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
+                                    <input type="password" className="w-full border rounded-md px-4 py-2 bg-white/50" />
+                                </div>
+                            </div>
+                            <div className="mt-6 text-center">
+                                <button className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group">
+                                    <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
+                                    Cập nhật mật khẩu
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div className="mt-6 text-center">
-                        <button className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group">
-                            <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
-                            Cập nhật mật khẩu
-                        </button>
-                    </div>
+                    )}
                 </div>
             </div>
+            {/* Logout button */}
             <div className="flex justify-center mt-10">
                 <button
                     className="group flex items-center justify-start w-11 h-11 bg-red-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-200 shadow-lg hover:w-32 hover:rounded-lg active:translate-x-1 active:translate-y-1">
@@ -98,11 +143,11 @@ function Info() {
                     </div>
                 </button>
             </div>
-
             <div className="sticky mx-auto mt-28">
                 <Bottom />
             </div>
         </div>
     );
 };
+
 export default Info;

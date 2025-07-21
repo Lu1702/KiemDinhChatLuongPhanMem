@@ -183,6 +183,7 @@ export default function QuanLy() {
         <button onClick={() => setActiveTab("phong")} className="button2">
           <span style={{ fontSize: "18px", marginRight: "8px" }}>☰</span> Phòng chiếu
         </button>
+
       </div>
 
       {/* Main content */}
@@ -211,7 +212,8 @@ export default function QuanLy() {
           <div style={{
             display: "flex",
             flexDirection: "column",
-            alignItems: "center"
+            alignItems: "center",
+
           }}>
             <h3 style={{ marginTop: "24px" }}>Thêm nhân viên</h3>
             <div style={{

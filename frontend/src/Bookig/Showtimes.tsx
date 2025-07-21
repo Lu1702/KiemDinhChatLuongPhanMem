@@ -7,6 +7,9 @@ import Choose from "./Choose";
 
 function Introduce() {
     const navigate = useNavigate();
+    const handleComment = () => {
+        navigate("/comment");
+    }
 
     const handlePayment = () => {
         // Tạo object chứa thông tin cần truyền
@@ -34,11 +37,11 @@ function Introduce() {
     const [seatLimitMsg, setSeatLimitMsg] = useState<string>("");
     const [selectedShowtime, setSelectedShowtime] = useState<string>("");
     const [foodCounts, setFoodCounts] = useState<{ [key: string]: number }>({});
+    const [drinkCounts, setDrinkCounts] = useState<{ [key: string]: number }>({})
     const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
     const [commentCount, setCommentCount] = useState<number>(0); // Giả sử fetch từ server sau này
     const [selectedCinemaTime, setSelectedCinemaTime] = useState<string>("");
     useEffect(() => {
-        // Giả lập số bình luận lấy từ server
         setTimeout(() => {
             setCommentCount(12); // số bình luận giả lập
         }, 500);
@@ -61,13 +64,13 @@ function Introduce() {
     };
 
 
-    const food = [
+    const drink = [
         { key: "Coke", img: "https://api-website.cinestar.com.vn/media/.thumbswysiwyg/pictures/HinhQuayconnew/coca.png?rand=1719572301", label: "Coke 32oz", price: 109000 },
         { key: "Fanta", img: "https://api-website.cinestar.com.vn/media/.thumbswysiwyg/pictures/HinhQuayconnew/fanta.jpg?rand=1719572506", label: "Fanta 32oz", price: 129000 },
         { key: "CokeZero", img: "https://api-website.cinestar.com.vn/media/.thumbswysiwyg/pictures/PICCONNEW/CNS034_COMBO_PARTY.png?rand=1723084117", label: "Coke Zero 32oz", price: 129000 },
         { key: "Sprite", img: "https://api-website.cinestar.com.vn/media/.thumbswysiwyg/pictures/PICCONNEW/CNS034_COMBO_PARTY.png?rand=1723084117", label: "Sprite 32oz", price: 129000 },
     ];
-    const food2 = [
+    const food = [
         { key: "Coke", img: "https://api-website.cinestar.com.vn/media/.thumbswysiwyg/pictures/HinhQuayconnew/coca.png?rand=1719572301", label: "Coke 32oz", price: 109000 },
         { key: "Fanta", img: "https://api-website.cinestar.com.vn/media/.thumbswysiwyg/pictures/HinhQuayconnew/fanta.jpg?rand=1719572506", label: "Fanta 32oz", price: 129000 },
         { key: "CokeZero", img: "https://api-website.cinestar.com.vn/media/.thumbswysiwyg/pictures/PICCONNEW/CNS034_COMBO_PARTY.png?rand=1723084117", label: "Coke Zero 32oz", price: 129000 },
@@ -143,12 +146,17 @@ function Introduce() {
             sum + (combos.find((c) => c.key === key)?.price || 0) * count,
         0
     );
+    const totaldrink = Object.entries(drinkCounts).reduce(
+        (sum, [key, count]) =>
+            sum + (drink.find((c) => c.key === key)?.price || 0) * count,
+        0
+    );
     const totalfood = Object.entries(foodCounts).reduce(
         (sum, [key, count]) =>
             sum + (food.find((c) => c.key === key)?.price || 0) * count,
         0
     );
-    const total = totalTicket + totalCombo + totalfood;
+    const total = totalTicket + totalCombo + totaldrink + totalfood;
 
     const movieInfo = {
         name: "Úc Lan Oán Linh Giữ Của",
@@ -182,8 +190,8 @@ function Introduce() {
         setShowTrailer(true);
     };
 
-    const drinkCount = food.reduce((sum, item) => sum + (foodCounts[item.key] || 0), 0);
-    const snackCount = food2.reduce((sum, item) => sum + (foodCounts[item.key] || 0), 0);
+    const drinkCount = drink.reduce((sum, item) => sum + (drinkCounts[item.key] || 0), 0);
+    const snackCount = food.reduce((sum, item) => sum + (foodCounts[item.key] || 0), 0);
 
     return (
         <div className="min-h-screen bg-fixed w-full bg-cover bg-center top-0" style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
@@ -192,9 +200,7 @@ function Introduce() {
                     <Nav />
                 </div>
             </div>
-
             <div className="flex flex-col items-center">
-                {/* Movie Info */}
                 <div className="flex flex-col md:flex-row gap-6 mb-6 justify-center items-center">
                     <div>
                         <div>
@@ -202,8 +208,8 @@ function Introduce() {
                         </div>
                         <div>
                             <p
-                                onClick={() => handleOpenTrailer(movieInfo.trailer)}
-                                className="text-white pl-32 py-9 text-lg font-bold flex items-center gap-2 cursor-pointer">
+                                onClick={(handleComment)}
+                                className="text-white pl-32 py-9 text-lg font-bold flex items-center gap-2 cursor-pointer hover:text-yellow-400 transition-colors duration-300">
                                 <img
                                     className="w-9"
                                     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAB00lEQVR4nO3au0oDQRiG4cGIhZ029l6EhcROBDsRLBQFwdbSzsrGqKUgKN6C9xBJtLQURWyUxGvwhK8k+ZA15LAJk8NM/qfSmSHZeYm7G1nnjDHGGGMEmACOgTfiUQaOKntz7VBbGKtcmgBlLZ53kQCy2lM5zeIqF5nU+yLtwsBYAPFXKjAWQPyVCowFEH+lAmMBxF+pwFgA8VcqMBZA/JUS4JbeuWnzPn/zgwxQ7GGAQpv3KQw8QCgsgPgrFRgLIP5K9ecq0PVZP5arQNdn/b4FCIUFEH+lAmMBxF+pwFgA8VcqMBZA/JUKjAWQjktRu9f/dw8e6FjXAaravViIYw3VLxymAx5UgGL9t7BAx7oLEItOApS1NusiASxoT6U0i3MMh2sg4/k/UYdpH5TMJT4Jg7Te4jg/OnidUmXzqR6UHAbAtg688rTqVJM1L1oz62IDjAF32uBlkzV5zS+7GAFzwCfwA2w0mD9RgAMXK2BPm3wHFuvmVjSXdzEDzhMR1hLj0xr7BmZcrIAMcKEIlT+HU2BSc1ca33WxA/aBL234CdgEVvX7Y6t7hthOjA+J6/tr4uctNwqo3ajtAM91Nzv3bpQA48AScKZPQtxXA2OM64Vff3q7PXoJEkoAAAAASUVORK5CYII="
@@ -212,7 +218,6 @@ function Introduce() {
                                 Bình luận
                                 <span className="text-yellow-400 ml-2">({commentCount})</span>
                             </p>
-
                         </div>
                     </div>
                     <div>
@@ -234,8 +239,7 @@ function Introduce() {
                                     <svg
                                         className="w-7 h-7 fill-current text-red-500 group-hover:text-red-400 transition-colors duration-300"
                                         viewBox="0 0 576 512"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"
                                         ></path>
@@ -245,9 +249,6 @@ function Introduce() {
                         </div>
                     </div>
                 </div>
-
-
-                {/* Showtime Selector */}
                 <div className="mb-6 flex flex-col items-center">
                     <h2 className="text-3xl font-bold text-yellow-400 mb-4 uppercase">Chọn Lịch Chiếu</h2>
                     <div className="flex justify-center items-center flex-col md:flex-row gap-4">
@@ -270,17 +271,14 @@ function Introduce() {
                                 <span>{st.label}</span>
                                 <span>{st.date}</span>
                             </label>
-
                         ))}
                     </div>
                 </div>
 
                 {selectedShowtime && (
                     <>
-                        {/* Cinema Selector */}
                         <div className="mb-6 flex flex-col items-center">
                             <div className="relative w-[500px] max-w-xl mx-auto">
-                                {/* Button hiển thị */}
                                 <button
                                     onClick={() => setIsOpen(!isOpen)}
                                     className="w-full bg-transparent text-left border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300">
@@ -293,8 +291,6 @@ function Introduce() {
                                         <span className="text-gray-400 flex justify-center items-center">-- Chọn rạp --</span>
                                     )}
                                 </button>
-
-                                {/* Danh sách dropdown */}
                                 {isOpen && (
                                     <div className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto">
                                         {listcinema.map((cinema) => (
@@ -319,10 +315,8 @@ function Introduce() {
                             )}
 
                         </div>
-                        {/* Ticket Types */}
                         <div className="mb-6 flex flex-col items-center">
                             <h2 className="text-3xl font-bold text-yellow-400 mb-4 uppercase">Chọn Loại Vé</h2>
-                            {/* Ví dụ cho phần chọn loại vé */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                                 {ticketTypes.map((t) => (
                                     <div key={t.key} className="bg-transparent p-4 rounded border border-zinc-100 max-w-xs w-full mx-auto">
@@ -361,15 +355,11 @@ function Introduce() {
                                 ))}
                             </div>
                         </div>
-
-                        {/* Seat Selector */}
                         <div className="mb-6 flex flex-col items-center">
                             <h2 className="text-3xl font-bold text-yellow-400 mb-4 uppercase">
                                 Chọn Ghế {selectedCinema ? `- ${selectedCinema.cinema}` : ""}
                             </h2>
                             <p className="text-yellow-400 mb-4">Ghế đã chọn: {selectedSeats.join(", ")}</p>
-
-                            {/* Màn hình cong */}
                             <div className="relative w-full flex justify-center items-center mb-10 pb-5">
                                 <svg viewBox="0 0 600 120" className="w-full max-w-5xl h-24">
                                     <path
@@ -384,27 +374,23 @@ function Introduce() {
                                         textAnchor="middle"
                                         fill="#ffffff"
                                         fontSize="36"
-                                        fontWeight="bold"
-                                    >
+                                        fontWeight="bold">
                                         Màn hình
                                     </text>
                                 </svg>
                             </div>
-                            {/* Ghế */}
                             <div className="flex flex-col gap-2">
                                 {Array.from({ length: 14 }).map((_, rowIndex) => {
-                                    const rowLabel = String.fromCharCode(65 + rowIndex); // A → N
+                                    const rowLabel = String.fromCharCode(65 + rowIndex);
                                     return (
                                         <div key={rowLabel} className="flex items-center gap-2">
                                             {/* Ký hiệu hàng */}
                                             <div className="w-6 text-right font-bold text-white">{rowLabel}</div>
-
                                             {/* Ghế trong hàng */}
                                             {Array.from({ length: 12 }).map((_, colIndex) => {
                                                 const seatId = `${rowLabel}${(colIndex + 1).toString().padStart(2, "0")}`;
                                                 const isSelected = selectedSeats.includes(seatId);
-                                                const disabled = Object.values(ticketCounts).reduce((a, b) => a + b, 0) === 0;
-
+                                                const disabled = Object.values(ticketCounts).reduce((a, b) => a + b, 0) === 0
                                                 return (
                                                     <button
                                                         key={seatId}
@@ -420,7 +406,6 @@ function Introduce() {
                                         </div>
                                     );
                                 })}
-
                             </div>
 
                             {/* Thông báo lỗi giới hạn ghế */}
@@ -458,29 +443,48 @@ function Introduce() {
                             <div className="mb-6 flex flex-col items-center">
                                 <p className="text-xl font-bold text-yellow-400 mb-4 uppercase">Nước ngọt</p>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {food.map((c) => (
+                                    {drink.map((c) => (
                                         <div key={c.key} className="bg-transparent p-4 rounded border border-zinc-100 w-96 flex flex-row justify-center items-center gap-16">
                                             <div>
                                                 <img src={c.img} alt={c.label} className="w-full h-32 object-cover mb-2 rounded" />
                                             </div>
                                             <div>
-                                                <p className=" text-white uppercase font-bold hover:text-yellow-300 transition-colors">{c.label}</p>
+                                                <p className="text-white uppercase font-bold hover:text-yellow-300 transition-colors">{c.label}</p>
                                                 <p className="text-yellow-400">{c.price.toLocaleString()} VND</p>
                                                 <div className="flex items-center gap-2 mt-2">
-                                                    <button onClick={() => setFoodCounts((prev) => ({ ...prev, [c.key]: Math.max((prev[c.key] || 0) - 1, 0) }))} className="bg-slate-300 px-2 hover:bg-yellow-300">-</button>
-                                                    <span className="text-white">{foodCounts[c.key] || 0}</span>
-                                                    <button onClick={() => setFoodCounts((prev) => ({ ...prev, [c.key]: (prev[c.key] || 0) + 1 }))} className="bg-slate-300 px-2 hover:bg-yellow-300">+</button>
+                                                    <button
+                                                        onClick={() =>
+                                                            setDrinkCounts((prev) => ({
+                                                                ...prev,
+                                                                [c.key]: Math.max((prev[c.key] || 0) - 1, 0),
+                                                            }))
+                                                        }
+                                                        className="bg-slate-300 px-2 hover:bg-yellow-300">
+                                                        -
+                                                    </button>
+                                                    <span className="text-white">{drinkCounts[c.key] || 0}</span>
+                                                    <button
+                                                        onClick={() =>
+                                                            setDrinkCounts((prev) => ({
+                                                                ...prev,
+                                                                [c.key]: (prev[c.key] || 0) + 1,
+                                                            }))
+                                                        }
+                                                        className="bg-slate-300 px-2 hover:bg-yellow-300">
+                                                        +
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
+
                             {/* food Selector */}
                             <div className="mb-6 flex flex-col items-center">
                                 <p className="text-xl font-bold text-yellow-400 mb-4 uppercase">Snacks</p>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {food2.map((c) => (
+                                    {food.map((c) => (
                                         <div key={c.key} className="bg-transparent p-4 rounded border border-zinc-100 w-96 flex flex-row justify-center items-center gap-16">
                                             <div>
                                                 <img src={c.img} alt={c.label} className="w-full h-32 object-cover mb-2 rounded" />
@@ -515,7 +519,7 @@ function Introduce() {
                                         <p className="text-yellow-400">{selectedCinema?.cinema} | Ghế đã chọn: {selectedSeats.join(", ")}</p>
                                     </li>
                                 </ul>
-                                <p className="text-yellow-400">Số combo: {Object.values(comboCounts).reduce((a, b) => a + b, 0)} | Số nước/snacks: {Object.values(foodCounts).reduce((a, b) => a + b, 0)}</p>
+                                <p className="text-yellow-400">Số combo: {Object.values(comboCounts).reduce((a, b) => a + b, 0)} | Số snacks: {Object.values(foodCounts).reduce((a, b) => a + b, 0)} | Số lượng nước: {Object.values(drinkCounts).reduce((a, b) => a + b, 0)}</p>
                             </div>
                             <div>
                                 <ul className="flex flex-row gap-2 items-center">
@@ -534,8 +538,7 @@ function Introduce() {
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     className="w-auto h-full opacity-100 object-stretch"
-                                                    viewBox="0 0 487 487"
-                                                >
+                                                    viewBox="0 0 487 487">
                                                     <path
                                                         fill-opacity=".1"
                                                         fill-rule="nonzero"
@@ -548,8 +551,7 @@ function Introduce() {
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     className="object-cover w-full h-full"
-                                                    viewBox="0 0 487 487"
-                                                >
+                                                    viewBox="0 0 487 487">
                                                     <path
                                                         fill-opacity=".1"
                                                         fill-rule="nonzero"
@@ -570,7 +572,6 @@ function Introduce() {
                     </>
                 )}
             </div>
-
             {/* Trailer Modal */}
             {showTrailer && (
                 <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50" onClick={() => setShowTrailer(false)}>
@@ -580,7 +581,6 @@ function Introduce() {
                     </div>
                 </div>
             )}
-
             <footer>
                 <Bottom />
             </footer>
