@@ -24,9 +24,11 @@ using backend.Services.BookingServices;
 using backend.Interface.CommentInterface;
 using backend.Interface.CloudinaryInterface;
 using backend.Interface.FoodInterface;
+using backend.Interface.MovieGenreInterface;
 using backend.Interface.PriceInterfaces;
 using backend.Interface.RoomInferface;
 using backend.Interface.StaffInterface;
+using backend.Interface.VisualFormatInterface;
 using backend.Services.CloudinaryServices;
 using backend.Interface.VnpayInterface;
 using backend.Services.VnpayServices;
@@ -37,6 +39,8 @@ using backend.Services.AccountServices;
 using backend.Services.BookingHistoryServices;
 using backend.Services.CinemaServices;
 using backend.Services.FoodServices;
+using backend.Services.MovieGenreServices;
+using backend.Services.MovieVisualServices;
 using backend.Services.PriceServices;
 using backend.Services.RoomServices;
 using backend.Services.StaffService;
@@ -190,6 +194,10 @@ builder.Services.AddScoped<VNPAY.NET.IVnpay, VNPAY.NET.Vnpay>();
 
 builder.Services.AddScoped
     <GenericInterface<BookingHistoryRespondList, OrderDetailRespond>, OrderDetailServices>();
+
+builder.Services.AddScoped<IMovieVisualFormatService, MovieVisualService>();
+
+builder.Services.AddScoped<IMovieGenreService, MovieGenreService>();
 
 
 Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection"));
