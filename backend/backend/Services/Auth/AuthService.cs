@@ -200,6 +200,7 @@ namespace backend.Services.Auth
                     tokenID = gettingToken ,
                     userID = Email,
                     expDate = Hour.ToString(),
+                    RoleName = String.Join("," , claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value)),
                     message = "Success"
                 };
                 return newAuthRepond;
