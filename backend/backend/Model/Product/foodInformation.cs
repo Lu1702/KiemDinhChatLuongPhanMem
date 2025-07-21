@@ -23,5 +23,7 @@ namespace backend.Model.Product
         public long foodPrice { get; set; }
 
         public List<orderDetailFood> orderDetailFood = [];
+
+        public List<StaffOrderDetailFood> StaffOrderDetailFood = [];
     }
 }

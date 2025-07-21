@@ -3,6 +3,7 @@
     public class BookingHistoryRespondList
     {
         // Phòng chiếu phim
+        public string BookingId { get; set; } = string.Empty;
         public string cinemaRoomNumber { get; set; } = string.Empty;
 
         // Thông tin của rạp chiếu phim nơi đang xem phim
@@ -20,8 +21,6 @@
 
         public string NgayChieu { get; set; } = string.Empty;
 
-        // Thứ của Lịch chiếu để tham chiếu
-        public string DayInWeekend { get; set; } = string.Empty;
 
         // Giờ chiếu của phim
 
