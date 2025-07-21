@@ -39,6 +39,19 @@ public class StaffService(DataContext dbContext) : IStaffService
                 roleId = "1a8f7b9c-d4e5-4f6a-b7c8-9d0e1f2a3b4c"
             });
             
+            List<userRoleInformation> userRoles = new List<userRoleInformation>();
+
+            foreach (var roleID in createStaffDTO.RoleID)
+            {
+                userRoles.Add(new userRoleInformation()
+                {
+                    userId = generateUserId,
+                    roleId = roleID
+                });
+            }
+            
+            await _context.userRoleInformation.AddRangeAsync(userRoles);
+            
             // Them Tai khoan
             await _context.userInformation.AddAsync(new userInformation()
             {
@@ -92,13 +105,29 @@ public class StaffService(DataContext dbContext) : IStaffService
                 string CinemaId = 
                     string.IsNullOrEmpty(editStaffDTO.CinemaId) ? findStaff.cinemaID : editStaffDTO.CinemaId;
                 DateTime staffDateOfBirth = editStaffDTO.DateOfBirth ?? findStaff.dateOfBirth;
-
+                
                 try
                 {
                     findStaff.Name = StaffName;
                     findStaff.phoneNumber = PhoneNumber;
                     findStaff.cinemaID = CinemaId;
                     findStaff.dateOfBirth = staffDateOfBirth;
+                    
+                    if (editStaffDTO.RoleID != null && editStaffDTO.RoleID.Any())
+                    {
+                        _context.userRoleInformation.RemoveRange(_context.userRoleInformation.Where(x => x.userId.Equals(findStaff.userID)));
+                        List<userRoleInformation> userRoles = new List<userRoleInformation>();
+                        foreach (var roleID in editStaffDTO.RoleID)
+                        {
+                            userRoles.Add(new userRoleInformation()
+                            {
+                                userId = findStaff.userID ,
+                                roleId = roleID
+                            });
+                        }
+                        await _context.userRoleInformation.AddRangeAsync(userRoles);
+                    }
+                    
                     _context.Staff.Update(findStaff);
                     await _context.SaveChangesAsync();
                     
