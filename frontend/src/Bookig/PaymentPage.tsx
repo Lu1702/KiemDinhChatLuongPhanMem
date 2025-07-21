@@ -6,13 +6,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 export default function PaymentPage() {
     const navigate = useNavigate();
     const handleShowtimes = () => {
-        // Chuyển hướng đến trang chọn giờ chiếu
         navigate("/showtimes");
     }
     const location = useLocation();
     const ticketInfo = location.state || {};
 
-    console.log(ticketInfo.time); // phải ra đúng giờ bạn chọn
+    console.log(ticketInfo.time);
 
     return (
         <div className="min-h-screen bg-fixed w-full bg-cover bg-center top-0" style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
@@ -21,9 +20,7 @@ export default function PaymentPage() {
                     <Nav />
                 </div>
             </div>
-            {/* Body */}
             <div className="flex flex-col lg:flex-row justify-center gap-10 items-start px-4">
-                {/* Cột Thanh Toán */}
                 <div className="flex-1 max-w-md w-full">
                     <h2 className="text-3xl font-bold mb-6 text-center text-white">THANH TOÁN</h2>
                     <div className="flex flex-col gap-4">
@@ -55,7 +52,6 @@ export default function PaymentPage() {
                         </div>
                     </div>
                 </div>
-                {/* Cột Thông tin vé */}
                 <div className="flex-1 max-w-md w-full">
                     <h2 className="text-3xl font-bold mb-6 text-center text-white">THÔNG TIN VÉ XEM</h2>
                     <div className="bg-white text-black rounded-xl p-6 shadow-lg space-y-3">

@@ -9,61 +9,48 @@ const QuickBooking: React.FC = () => {
 
     const navigate = useNavigate();
 
-    const handleBooking = () => {
+    const handlePayment = () => {
         if (!cinema || !movie || !date || !session) {
             alert("Vui lòng chọn đầy đủ thông tin!");
             return;
         }
-
-        console.log({
-            cinema,
-            movie,
-            date,
-            session,
-        });
-
-        // Ví dụ chuyển trang
-        navigate("/booking");
+        navigate("/payment",);
     };
 
     return (
-        <div className="container mx-auto p-4 bg-sky-50 rounded-lg shadow">
-            <h2 className="text-center font-bold text-2xl text-slate-700 mb-4">ĐẶT VÉ NHANH</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 ">
+        <div className="relative z-10 bg-white/90 backdrop-blur-md shadow-xl rounded-2xl px-6 py-3">
+            <h2 className="text-center font-bold text-2xl text-[#081b3d] mb-6">🎬 ĐẶT VÉ NHANH</h2>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <select
                     value={cinema}
                     onChange={(e) => setCinema(e.target.value)}
-                    className="w-full p-2 rounded-xl text-[#081b3d] font-medium border border-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full p-3 rounded-xl bg-white/50 text-[#081b3d] font-medium border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">1. Chọn Rạp</option>
                     <option value="Cinestar Quốc Thanh (TP.HCM)">Cinestar Quốc Thanh (TP.HCM)</option>
                 </select>
-
                 <select
                     value={movie}
                     onChange={(e) => setMovie(e.target.value)}
-                    className="w-full p-2 rounded-xl text-[#081b3d] font-medium border border-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full p-3 rounded-xl bg-white/50 text-[#081b3d] font-medium border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">2. Chọn Phim</option>
                     <option value="Tấm Cám chuyện chưa kể">Tấm Cám chuyện chưa kể</option>
                 </select>
-
                 <select
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full p-2 rounded-xl text-[#081b3d] font-medium border border-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full p-3 rounded-xl bg-white/50 text-[#081b3d] font-medium border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">3. Chọn Ngày</option>
                     <option value="2025-06-28">28/06/2025</option>
                 </select>
-
                 <select
                     value={session}
                     onChange={(e) => setSession(e.target.value)}
-                    className="w-full p-2 rounded-xl text-[#081b3d] font-medium border border-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full p-3 rounded-xl bg-white/50 text-[#081b3d] font-medium border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">4. Chọn Suất</option>
                     <option value="10:30 - 2D Standard">10:30 - 2D Standard</option>
                 </select>
                 <button
-                    onClick={handleBooking}
+                    onClick={handlePayment}
                     className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-[#081b3d] backdrop-blur-lg px-6 py-2 text-base font-semibold text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20">
                     <span className="text-lg">Đặt vé ngay!</span>
                     <div
@@ -73,7 +60,6 @@ const QuickBooking: React.FC = () => {
                 </button>
             </div>
         </div>
-
     );
 };
 export default QuickBooking;
