@@ -235,36 +235,56 @@ namespace backend.Services.Schedule
             if (!String.IsNullOrEmpty(movieName))
             {
                 var findMovie = _dataContext.movieInformation
-                    .FirstOrDefault(x => x.movieName.Contains(movieName));
+                    .FirstOrDefault(x => x.movieName.Contains(movieName) && !x.isDelete);
                 if (findMovie != null)
                 {
-                    var findSchedule = _dataContext.movieSchedule
-                        .Where(x => x.movieId.Equals(findMovie.movieId))
-                        .Include(x => x.cinemaRoom)
-                        .ThenInclude(x => x.Cinema)
-                        .Include(x => x.HourSchedule);
-                    if (findSchedule.Any())
+                    try
                     {
-                        findSchedule.GroupBy(x => x.movieInformation.movieName)
-                            .Select(x => new GetListScheduleDTO()
-                            {
-                                MovieName = x.Key ,
-                                getListSchedule = x.Select(y => new GetMovieScheduleDTO()
+                        var findSchedule = _dataContext.movieSchedule
+                            .Where(x => x.movieId.Equals(findMovie.movieId))
+                            .Include(x => x.cinemaRoom)
+                            .ThenInclude(x => x.Cinema)
+                            .Include(x => x.HourSchedule)
+                            .AsSplitQuery();
+                        if (findSchedule.Any())
+                        {
+                            var convertToGetList = findSchedule.GroupBy(x => x.movieInformation.movieName)
+                                .Select(x => new GetListScheduleDTO()
                                 {
-                                    ScheduleId = y.movieScheduleId,
-                                    CinemaName = y.cinemaRoom.Cinema.cinemaName ,
-                                    MovieVisualFormatInfo = y.movieVisualFormat.movieVisualFormatName ,
-                                    ShowTime = y.HourSchedule.HourScheduleShowTime ,
-                                    ShowDate = y.ScheduleDate ,
-                                    CinemaRoom = y.cinemaRoom.cinemaRoomNumber
-                                }).ToList()
-                            });
+                                    MovieName = x.Key,
+                                    getListSchedule = x.Select(y => new GetMovieScheduleDTO()
+                                    {
+                                        ScheduleId = y.movieScheduleId,
+                                        CinemaName = y.cinemaRoom.Cinema.cinemaName,
+                                        MovieVisualFormatInfo = y.movieVisualFormat.movieVisualFormatName,
+                                        ShowTime = y.HourSchedule.HourScheduleShowTime,
+                                        ShowDate = y.ScheduleDate,
+                                        CinemaRoom = y.cinemaRoom.cinemaRoomNumber
+                                    }).ToList()
+                                }).ToList();
+
+                            return new GenericRespondWithObjectDTO<List<GetListScheduleDTO>>()
+                            {
+                                Status = GenericStatusEnum.Success.ToString(),
+                                message = "Tim Kiem Thanh Cong",
+                                data = convertToGetList
+                            };
+                        }
+
+                        return new GenericRespondWithObjectDTO<List<GetListScheduleDTO>>()
+                        {
+                            Status = GenericStatusEnum.Failure.ToString(),
+                            message = $"Không tìm thấy lịch chiếu"
+                        };
                     }
-                    return new GenericRespondWithObjectDTO<List<GetListScheduleDTO>>()
+                    catch (Exception e)
                     {
-                        Status = GenericStatusEnum.Failure.ToString(),
-                        message = $"Không tìm thấy lịch chiếu"
-                    };
+                        return new GenericRespondWithObjectDTO<List<GetListScheduleDTO>>()
+                        {
+                            Status = GenericStatusEnum.Failure.ToString(),
+                            message = $"Lỗi Database Lỗi : {e.Message}"
+                        };
+                    }
                 }
 
                 return new GenericRespondWithObjectDTO<List<GetListScheduleDTO>>()

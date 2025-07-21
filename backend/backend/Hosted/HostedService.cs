@@ -138,7 +138,7 @@ public class HostedService : BackgroundService
                         {
                             // Neeus Pending >5 thi la rejected
                             var checkDateTime = DateTime.Now.Minute - paymentStatus.paymentRequestCreatedDate.Minute;
-                            if (checkDateTime >= 1)
+                            if (checkDateTime >= 5)
                             {
                                 paymentStatus.PaymentStatus = PaymentStatus.PaymentFailure.ToString();
                                 paymentStatus.message = "Thời gian thanh toán quá hạn rồi =(";
