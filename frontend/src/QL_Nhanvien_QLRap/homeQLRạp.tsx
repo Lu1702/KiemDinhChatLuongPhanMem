@@ -205,10 +205,10 @@ export default function QuanLy() {
                 flexDirection: "column",
                 alignItems: "center"
               }}>
-                <h3 style={{ marginTop: "24px" }}>Thêm nhân viên</h3>
+                <h3 style={{ marginTop: "24px",fontSize:"40px" }}>Thêm nhân viên</h3>
                 <div style={{
                   display: "flex", flexDirection: "column", gap: "16px",
-                  maxWidth: "600px", marginTop: "16px"
+                  maxWidth: "1000px", marginTop: "16px"
                 }}>
                   <div className="uiverse-pixel-input-wrapper">
                     <label className="uiverse-pixel-label">Rạp</label>

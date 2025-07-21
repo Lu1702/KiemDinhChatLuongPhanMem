@@ -283,7 +283,10 @@ const QuanLy: React.FC = () => {
 
         <div className="flex justify-center mt-6">
           <button
-            onClick={handleSave}
+            onClick={() => {
+                      handleSave();
+                      navigate("/payment");
+                    }}
             className="button2 bg-[#7e57c2] text-white px-4 py-2 rounded"
             style={{ width: '250px' }}
             disabled={isLoading} // Disable button when loading
