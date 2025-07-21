@@ -10,6 +10,8 @@ public class GetStaffInfoDTO
     
     public DateTime DayOfBirth { get; set; }
     
+    public string CinenaName { get; set; } = string.Empty;
+    
     public string CinemaId { get; set; } = string.Empty;
     
     public string StaffRole { get; set; } = string.Empty;

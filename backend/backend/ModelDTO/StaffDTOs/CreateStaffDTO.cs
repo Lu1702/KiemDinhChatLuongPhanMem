@@ -16,9 +16,10 @@ public class CreateStaffDTO
     [Required]
     public DateTime DateOfBirth { get; set; }
     
-    
     [Required]
     public string PhoneNumer { get; set; } = string.Empty;
     [Required]
     public string CinemaId { get; set; } = string.Empty;
+
+    public List<string> RoleID { get; set; } = [];
 }

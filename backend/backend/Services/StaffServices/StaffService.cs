@@ -22,12 +22,35 @@ public class StaffService(DataContext dbContext) : IStaffService
             var generateStaffId = Guid.NewGuid().ToString();
 
             var bcryptStaffPassword = BCrypt.Net.BCrypt.HashPassword(createStaffDTO.LoginUserPassword);
+            
+            var findExitsUser = _context.userInformation.FirstOrDefault(x => x.loginUserEmail.Equals(createStaffDTO.LoginUserEmail));
+            if (findExitsUser != null)
+            {
+                return new GenericRespondDTOs()
+                {
+                    message = "User already exists!",
+                    Status = GenericStatusEnum.Failure.ToString()
+                };
+            }
 
             await _context.userRoleInformation.AddAsync(new userRoleInformation()
             {
                 userId = generateUserId,
                 roleId = "1a8f7b9c-d4e5-4f6a-b7c8-9d0e1f2a3b4c"
             });
+            
+            List<userRoleInformation> userRoles = new List<userRoleInformation>();
+
+            foreach (var roleID in createStaffDTO.RoleID)
+            {
+                userRoles.Add(new userRoleInformation()
+                {
+                    userId = generateUserId,
+                    roleId = roleID
+                });
+            }
+            
+            await _context.userRoleInformation.AddRangeAsync(userRoles);
             
             // Them Tai khoan
             await _context.userInformation.AddAsync(new userInformation()
@@ -82,13 +105,29 @@ public class StaffService(DataContext dbContext) : IStaffService
                 string CinemaId = 
                     string.IsNullOrEmpty(editStaffDTO.CinemaId) ? findStaff.cinemaID : editStaffDTO.CinemaId;
                 DateTime staffDateOfBirth = editStaffDTO.DateOfBirth ?? findStaff.dateOfBirth;
-
+                
                 try
                 {
                     findStaff.Name = StaffName;
                     findStaff.phoneNumber = PhoneNumber;
                     findStaff.cinemaID = CinemaId;
                     findStaff.dateOfBirth = staffDateOfBirth;
+                    
+                    if (editStaffDTO.RoleID != null && editStaffDTO.RoleID.Any())
+                    {
+                        _context.userRoleInformation.RemoveRange(_context.userRoleInformation.Where(x => x.userId.Equals(findStaff.userID)));
+                        List<userRoleInformation> userRoles = new List<userRoleInformation>();
+                        foreach (var roleID in editStaffDTO.RoleID)
+                        {
+                            userRoles.Add(new userRoleInformation()
+                            {
+                                userId = findStaff.userID ,
+                                roleId = roleID
+                            });
+                        }
+                        await _context.userRoleInformation.AddRangeAsync(userRoles);
+                    }
+                    
                     _context.Staff.Update(findStaff);
                     await _context.SaveChangesAsync();
                     
@@ -182,7 +221,7 @@ public class StaffService(DataContext dbContext) : IStaffService
         try
         {
             var staffList = _context.Staff
-                .ToList();
+                .Include(x => x.Cinema).ToList();
 
             if (staffList.Count > 0)
             {
@@ -195,9 +234,10 @@ public class StaffService(DataContext dbContext) : IStaffService
                     staffInfoList.Add(new GetStaffInfoDTO
                     {
                         StaffName = staffInfo.Name,
-                        CinemaId = staffInfo.cinemaID,
+                        CinenaName = staffInfo.Cinema.cinemaName,
                         DayOfBirth = staffInfo.dateOfBirth,
                         StaffId = staffInfo.Id,
+                        CinemaId = staffInfo.Cinema.cinemaId,
                         StaffPhoneNumber = staffInfo.phoneNumber,
                         StaffRole = String.Join(",", getStaffRole.Select(x => x.roleInformation.roleName)),
                     });
@@ -231,7 +271,7 @@ public class StaffService(DataContext dbContext) : IStaffService
     {
         try
         {
-            var findStaff = _context.Staff.Find(id);
+            var findStaff = _context.Staff.Include(x => x.Cinema).FirstOrDefault(x => x.Id.Equals(id));
             if (findStaff != null)
             {
                 var staffRole = _context.userRoleInformation
@@ -246,9 +286,10 @@ public class StaffService(DataContext dbContext) : IStaffService
                         data = new GetStaffInfoDTO()
                         {
                             StaffName = findStaff.Name,
-                            CinemaId = findStaff.cinemaID,
+                            CinenaName = findStaff.Cinema.cinemaName,
                             DayOfBirth = findStaff.dateOfBirth,
                             StaffId = findStaff.Id,
+                            CinemaId = findStaff.Cinema.cinemaId,
                             StaffPhoneNumber = findStaff.phoneNumber,
                             StaffRole = String.Join(",", staffRole.Select(x => x.roleInformation.roleName))
                         }

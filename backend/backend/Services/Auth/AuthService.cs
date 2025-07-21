@@ -43,6 +43,16 @@ namespace backend.Services.Auth
 
             if (getCustomerRoleID != null)
             {
+                var findExitsEmail = _dataContext.userInformation.FirstOrDefault(x => x.loginUserEmail.ToLower()
+                    .Equals(registerRequest.loginEmail));
+                if (findExitsEmail != null)
+                {
+                    return new registerRespondDTO()
+                    {
+                        message = "Lỗi Email Đã bị trùng",
+                        statusCode = StatusCodes.Status400BadRequest,
+                    };
+                }
                 var Transition =  await _dataContext.Database.BeginTransactionAsync();
                 try
                 {
