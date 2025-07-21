@@ -182,7 +182,7 @@ public class StaffService(DataContext dbContext) : IStaffService
         try
         {
             var staffList = _context.Staff
-                .ToList();
+                .Include(x => x.Cinema).ToList();
 
             if (staffList.Count > 0)
             {
@@ -195,9 +195,10 @@ public class StaffService(DataContext dbContext) : IStaffService
                     staffInfoList.Add(new GetStaffInfoDTO
                     {
                         StaffName = staffInfo.Name,
-                        CinemaId = staffInfo.cinemaID,
+                        CinenaName = staffInfo.Cinema.cinemaName,
                         DayOfBirth = staffInfo.dateOfBirth,
                         StaffId = staffInfo.Id,
+                        CinemaId = staffInfo.Cinema.cinemaId,
                         StaffPhoneNumber = staffInfo.phoneNumber,
                         StaffRole = String.Join(",", getStaffRole.Select(x => x.roleInformation.roleName)),
                     });
@@ -231,7 +232,7 @@ public class StaffService(DataContext dbContext) : IStaffService
     {
         try
         {
-            var findStaff = _context.Staff.Find(id);
+            var findStaff = _context.Staff.Include(x => x.Cinema).FirstOrDefault(x => x.Id.Equals(id));
             if (findStaff != null)
             {
                 var staffRole = _context.userRoleInformation
@@ -246,9 +247,10 @@ public class StaffService(DataContext dbContext) : IStaffService
                         data = new GetStaffInfoDTO()
                         {
                             StaffName = findStaff.Name,
-                            CinemaId = findStaff.cinemaID,
+                            CinenaName = findStaff.Cinema.cinemaName,
                             DayOfBirth = findStaff.dateOfBirth,
                             StaffId = findStaff.Id,
+                            CinemaId = findStaff.Cinema.cinemaId,
                             StaffPhoneNumber = findStaff.phoneNumber,
                             StaffRole = String.Join(",", staffRole.Select(x => x.roleInformation.roleName))
                         }
