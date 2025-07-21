@@ -14,7 +14,10 @@ import Showtimes from './Bookig/Showtimes';
 import Cinezone from './Cinema/Cinezone';
 import PaymentPage from './Bookig/PaymentPage';
 import Info from './Account/Info';
-import QLRap from './HomeQLRap'
+import QLNV from './QL_Nhanvien_QLRap/homeQLRạp'
+import DT from './QL_Doanhthu_GiamDoc/Doanhthu'
+import RapPhongChieu from './QL_Rap_PhongChieu_QtrivienHT/Quantrivienhethong_QuanlyRapPhongChieu'
+import DV from './QLDichVu_ThuNgan/QLDichVu'
 import Comment from './Cinema/Comment';
 import FutureFilm from './Bookig/FutureFilm';
 import Booking from './Bookig/Booking';
@@ -37,12 +40,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/cinezone" element={<Cinezone />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/info" element={<Info />} />
-        <Route path="/QLRap/Home" element={<QLRap />} />
+        <Route path="/QuanLyRap/QLNV" element={<QLNV />} />
+        <Route path="/Giamdoc/doanhthu" element={<DT />} />
+        <Route path="/Quantrivienhethong/QLRapPhongChieu" element={<RapPhongChieu />} />
+        <Route path="/ThuNgan/DichVuThem" element={<DV />} />
         <Route path="/comment" element={<Comment />} />
         <Route path="/futurefilm" element={<FutureFilm />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/bookinghistory" element={<BookingHistory />} />
-
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
