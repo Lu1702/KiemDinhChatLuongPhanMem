@@ -212,12 +212,6 @@ using (var scoped = app.Services.CreateScope())
 }
 app.UseSwagger();
 app.UseSwaggerUI();
-<<<<<<< HEAD
-app.UseRequestTimeouts(); 
-=======
-app.UseMiddleware<AuthMiddleware>();
-
->>>>>>> origin/Merge_FE_BE_Branch
 
 app.UseAuthorization();
 
