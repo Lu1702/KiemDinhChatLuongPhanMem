@@ -17,7 +17,7 @@ const QuanLy: React.FC = () => {
     { id: 1, name: 'Bắp caramel', quantity: 1, orderID: 'ORD001' },
     { id: 2, name: 'Pepsi', quantity: 2, orderID: 'ORD001' },
     { id: 3, name: 'Coca', quantity: 1, orderID: 'ORD002' },
-    { id: 4, name: 'Yêu cầu thêm dịch vụ', quantity: 0, orderID: 'ORD003' },
+    { id: 4, name: 'Không thêm dịch vụ', quantity: 1, orderID: 'ORD003' },
   ]);
   const [isAddingService, setIsAddingService] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -61,7 +61,7 @@ const QuanLy: React.FC = () => {
       setSelectedOrderID('');
       setIsAddingService(false);
     } else {
-      alert('Vui lòng chọn Tên dịch vụ và Order ID.');
+      alert('Vui lòng chọn Order ID.');
     }
   };
 
@@ -179,7 +179,7 @@ const QuanLy: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm">Chọn ID order bạn muốn thêm dịch vụ</label>
+              <label className="block text-sm">Chọn ID order muốn confirm</label>
               <div className="uiverse-pixel-input-wrapper">
                 <select
                   value={filterText}

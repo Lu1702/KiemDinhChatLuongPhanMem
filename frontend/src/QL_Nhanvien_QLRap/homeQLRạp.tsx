@@ -300,7 +300,7 @@ export default function QuanLy() {
                     border: "none", borderRadius: "8px"
                   }}>Lưu</button>
                 </div>
-                <h3 style={{ marginTop: "24px" }}>Danh sách nhân viên</h3>
+                <h3 style={{ marginTop: "24px", fontSize:"40px" }}>Danh sách nhân viên</h3>
                 <div style={{ maxWidth: "900px", width: "100%" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
