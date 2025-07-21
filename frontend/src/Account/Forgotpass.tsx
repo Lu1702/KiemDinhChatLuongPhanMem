@@ -37,7 +37,6 @@ function Forgotpassword() {
                                             </svg>
                                         </button>
                                     </div>
-
                                     <h2
                                         className="text-xl pb-10 font-bold text-center cursor-default dark:text-[#12213c] text-[#12213c]">
                                         QUÊN MẬT KHẨU

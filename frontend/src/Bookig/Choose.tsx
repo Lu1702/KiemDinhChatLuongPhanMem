@@ -8,13 +8,10 @@ function Choose() {
         { id: "4", time: "16:00" },
         { id: "5", time: "18:00" },
     ];
-    //Khai báo interface cho Cinema
     interface Timecinema {
         id: string;
         time: string;
     }
-    //Khai báo state cho Cinema
-    //Sử dụng Timecinema để định nghĩa kiểu dữ liệu cho selectedCinema
     const [selectedCinema, setSelectedCinema] = useState<Timecinema | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const handleSelect = (cinema: any) => {
@@ -25,7 +22,6 @@ function Choose() {
         <div>
             <div className="mb-6 flex flex-col items-center">
                 <div className="relative w-[500px] max-w-xl mx-auto">
-                    {/* Button hiển thị */}
                     <button
                         onClick={() => setIsOpen(!isOpen)}
                         className="w-full bg-transparent border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300">
@@ -37,8 +33,6 @@ function Choose() {
                             <span className="text-gray-400">-- Chọn thời gian --</span>
                         )}
                     </button>
-
-                    {/* Danh sách dropdown */}
                     {isOpen && (
                         <div className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto">
                             {timecinema.map((cinema) => (

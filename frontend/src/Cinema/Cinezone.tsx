@@ -9,6 +9,9 @@ function TabsExample() {
     const handleShowTimes = () => {
         navigate("/showtimes");
     }
+    const handleFutureFilm = () => {
+        navigate("/futurefilm");
+    };
     // State lưu tab đang active
     const [activeTab, setActiveTab] = useState("tab1");
     const [showTrailer, setShowTrailer] = useState(false);
@@ -282,15 +285,13 @@ function TabsExample() {
                                 <div className="mt-3 flex gap-3">
                                     <button
                                         onClick={() => handleOpenTrailer(movie.trailer)}
-                                        className="p-3 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
-                                    >
+                                        className="p-3 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden">
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
                                         <div className="relative z-10">
                                             <svg
                                                 className="w-7 h-7 fill-current text-red-500 group-hover:text-red-400 transition-colors duration-300"
                                                 viewBox="0 0 576 512"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                            >
+                                                xmlns="http://www.w3.org/2000/svg">
                                                 <path
                                                     d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"
                                                 ></path>
@@ -299,8 +300,7 @@ function TabsExample() {
                                     </button>
                                     <button
                                         onClick={handleShowTimes}
-                                        className="overflow-hidden relative w50 p-2 h-12 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group"
-                                    >
+                                        className="overflow-hidden relative w50 p-2 h-12 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group">
                                         🎟 Đặt vé ngay
                                         <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
                                         <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-400 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-700 duration-700 origin-left"></span>
@@ -326,15 +326,13 @@ function TabsExample() {
                                 <div className="mt-3 flex gap-3">
                                     <button
                                         onClick={() => handleOpenTrailer(movie.trailer)}
-                                        className="p-3 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
-                                    >
+                                        className="p-3 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden">
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
                                         <div className="relative z-10">
                                             <svg
                                                 className="w-7 h-7 fill-current text-red-500 group-hover:text-red-400 transition-colors duration-300"
                                                 viewBox="0 0 576 512"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                            >
+                                                xmlns="http://www.w3.org/2000/svg">
                                                 <path
                                                     d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"
                                                 ></path>
@@ -342,9 +340,8 @@ function TabsExample() {
                                         </div>
                                     </button>
                                     <button
-                                        onClick={() => window.open("https://tailwindcss.com/docs/flex-basis", "_blank")}
-                                        className="overflow-hidden relative w50 p-2 h-12 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group"
-                                    >
+                                        onClick={(handleFutureFilm)}
+                                        className="overflow-hidden relative w50 p-2 h-12 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group">
                                         🎟 Tìm hiểu thêm
                                         <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
                                         <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-400 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-700 duration-700 origin-left"></span>
@@ -363,8 +360,7 @@ function TabsExample() {
                             <div className="bg-black rounded-lg p-4 relative w-[90%] md:w-[60%] aspect-video">
                                 <button
                                     onClick={() => setShowTrailer(false)}
-                                    className="absolute top-2 right-2 text-white text-2xl font-bold"
-                                >
+                                    className="absolute top-2 right-2 text-white text-2xl font-bold">
                                     ✕
                                 </button>
                                 <iframe
@@ -376,6 +372,11 @@ function TabsExample() {
                             </div>
                         </div>
                     )}
+                    <button
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                        className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointers">
+                        ↑
+                    </button>
                 </div>
                 <div>
                     <Footer />
