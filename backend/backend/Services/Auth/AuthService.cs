@@ -44,7 +44,7 @@ namespace backend.Services.Auth
             if (getCustomerRoleID != null)
             {
                 var findExitsEmail = _dataContext.userInformation.FirstOrDefault(x => x.loginUserEmail.ToLower()
-                    .Equals(registerRequest.loginEmail));
+                    .Equals(registerRequest.loginEmail.ToLower()));
                 if (findExitsEmail != null)
                 {
                     return new registerRespondDTO()

@@ -23,12 +23,21 @@ public class StaffService(DataContext dbContext) : IStaffService
 
             var bcryptStaffPassword = BCrypt.Net.BCrypt.HashPassword(createStaffDTO.LoginUserPassword);
             
-            var findExitsUser = _context.userInformation.FirstOrDefault(x => x.loginUserEmail.Equals(createStaffDTO.LoginUserEmail));
+            var findExitsUser = _context.userInformation.FirstOrDefault(x => x.loginUserEmail.ToLower().Equals(createStaffDTO.LoginUserEmail.ToLower()));
             if (findExitsUser != null)
             {
                 return new GenericRespondDTOs()
                 {
                     message = "User already exists!",
+                    Status = GenericStatusEnum.Failure.ToString()
+                };
+            }
+
+            if (createStaffDTO.LoginUserPassword != createStaffDTO.LoginUserPasswordConfirm)
+            {
+                return new GenericRespondDTOs()
+                {
+                    message = "Passwords do not match!",
                     Status = GenericStatusEnum.Failure.ToString()
                 };
             }
@@ -317,4 +326,28 @@ public class StaffService(DataContext dbContext) : IStaffService
             };
         }
     }
+
+    public GenericRespondWithObjectDTO<List<RoleInfoListDTO>> getRoles()
+    {
+        var getRoles = _context.roleInformation.ToList();
+        if (getRoles.Any())
+        {
+            return new GenericRespondWithObjectDTO<List<RoleInfoListDTO>>()
+            {
+                Status = GenericStatusEnum.Success.ToString(),
+                message = "Role List",
+                data = getRoles.Select(x => new RoleInfoListDTO()
+                {
+                    RoleId = x.roleId,
+                    RoleName = x.roleName
+                }).ToList()
+            };
+        }
+        return new GenericRespondWithObjectDTO<List<RoleInfoListDTO>>()
+        {
+            Status = GenericStatusEnum.Failure.ToString(),
+            message = "Error"
+        }
+    }
+
 }
