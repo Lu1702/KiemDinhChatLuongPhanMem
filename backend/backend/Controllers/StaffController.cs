@@ -2,6 +2,7 @@ using backend.Enum;
 using backend.Interface.StaffInterface;
 using backend.Model.Staff_Customer;
 using backend.ModelDTO.StaffDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers;
@@ -13,6 +14,7 @@ public class StaffController(IStaffService staffService) : Controller
     private readonly IStaffService _staffService = staffService;
 
     [HttpPost("AddStaff")]
+    [Authorize(Policy = "TheaterManager")]
     public async Task<IActionResult> addStaff(CreateStaffDTO dtos)
     {
         var getStaffStatus = await _staffService.addStaff(dtos);
@@ -24,6 +26,7 @@ public class StaffController(IStaffService staffService) : Controller
     }
 
     [HttpPatch("editStaff")]
+    [Authorize(Policy = "TheaterManager")]
     public async Task<IActionResult> editStaff(string id, EditStaffDTO dtos)
     {
         var getEditStaffStatus = await _staffService.EditStaff(id , dtos);
@@ -35,6 +38,7 @@ public class StaffController(IStaffService staffService) : Controller
     }
 
     [HttpDelete("DeleteStaff")]
+    [Authorize(Policy = "TheaterManager")]
     public async Task<IActionResult> deleteStaff(string id)
     {
         var getDeleteStaffStatus = await _staffService.DeleteStaff(id);
@@ -46,6 +50,8 @@ public class StaffController(IStaffService staffService) : Controller
     }
 
     [HttpGet("GetStaffList")]
+    [Authorize(Policy = "TheaterManager")]
+
     public IActionResult GetStaffList()
     {
         var getStaffList = _staffService.GetStaffListInfo();
@@ -57,6 +63,7 @@ public class StaffController(IStaffService staffService) : Controller
     }
 
     [HttpGet("GetStaffByID")]
+    [Authorize(Policy = "TheaterManager")]
     public IActionResult GetStaffByID(string id)
     {
         var getStaffById = _staffService.GetStaffInfo(id);
@@ -68,6 +75,7 @@ public class StaffController(IStaffService staffService) : Controller
     }
 
     [HttpGet("GetRoleList")]
+    [Authorize(Policy = "TheaterManager")]
     public IActionResult GetRoleList()
     {
         var getRoleListStatus = _staffService.getRoles();

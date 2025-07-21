@@ -1,6 +1,7 @@
 using backend.Enum;
 using backend.Interface.RoomInferface;
 using backend.ModelDTO.RoomDTOS;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers; 
@@ -36,6 +37,7 @@ public class CinemaRoomController : ControllerBase
 
     // POST: api/CinemaRoom/CreateRoom
     [HttpPost("CreateRoom")]
+    [Authorize(Policy = "FacilitiesManager")]
     public async Task<IActionResult> CreateRoom([FromBody] RoomCreateRequestDTO roomCreateRequestDTO)
     {
         var result = await _roomService.CreateRoom(roomCreateRequestDTO);
@@ -49,6 +51,7 @@ public class CinemaRoomController : ControllerBase
 
     // PUT: api/CinemaRoom/UpdateRoom/{RoomId}
     [HttpPut("UpdateRoom/{RoomId}")]
+    [Authorize(Policy = "FacilitiesManager")]
     public async Task<IActionResult> UpdateRoom(
         [FromRoute] string RoomId, // Lấy RoomId từ URL Segment
         [FromBody] RoomEditRequestDTO roomEditRequestDTO)
@@ -64,6 +67,7 @@ public class CinemaRoomController : ControllerBase
 
     // DELETE: api/CinemaRoom/DeleteRoom/{RoomId}
     [HttpDelete("DeleteRoom/{RoomId}")]
+    [Authorize(Policy = "FacilitiesManager")]
     public async Task<IActionResult> DeleteRoom([FromRoute] string RoomId)
     {
         var result = await _roomService.DeleteRoom(RoomId);

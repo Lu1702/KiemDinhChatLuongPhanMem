@@ -20,6 +20,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("createMovie")]
+        [Authorize(Policy = "MovieManager")]
         public async Task<IActionResult> createMovie([FromForm] MovieRequestDTO movieRequestDTO) 
         {
             var createdStatus = await IMovieService.add(movieRequestDTO);
@@ -30,7 +31,7 @@ namespace backend.Controllers
             }
             return Created();
         }
-
+        [Authorize(Policy = "MovieManager")]
         [HttpPatch("editMovie/{movieID}")]
         public async Task<IActionResult> editMovie(string movieID , [FromForm] MovieEditRequestDTO dtos)
         {
@@ -52,7 +53,7 @@ namespace backend.Controllers
             }
             return BadRequest(getMovieDetail);
         }
-
+        [Authorize(Policy = "MovieManager")]
         [HttpDelete("DeleteMovie/{Id}")]
         public async Task<IActionResult> deleteMovie(string Id)
         {
