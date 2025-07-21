@@ -195,6 +195,11 @@ builder.Services.AddScoped<VNPAY.NET.IVnpay, VNPAY.NET.Vnpay>();
 builder.Services.AddScoped
     <GenericInterface<BookingHistoryRespondList, OrderDetailRespond>, OrderDetailServices>();
 
+builder.Services.AddCors(x => x.AddPolicy("AllowAll", builder =>
+{
+    builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader();
+}));
+
 builder.Services.AddScoped<IMovieVisualFormatService, MovieVisualService>();
 
 builder.Services.AddScoped<IMovieGenreService, MovieGenreService>();
@@ -203,7 +208,7 @@ builder.Services.AddScoped<IMovieGenreService, MovieGenreService>();
 Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection"));
 
 var app = builder.Build();
-
+app.UseCors("AllowAll");
 using (var scoped = app.Services.CreateScope())
 {
     var services = scoped.ServiceProvider;
