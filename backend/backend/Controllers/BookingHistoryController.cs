@@ -1,6 +1,7 @@
 ﻿using backend.Interface.GenericsInterface;
 using backend.ModelDTO.BookingHistoryDTO.OrderDetailRespond;
 using backend.ModelDTO.BookingHistoryDTO.OrderRespond;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ namespace backend.Controllers
         }
 
         [HttpGet("getBookingHistory/{userID}")]
+        [Authorize(Policy = "Customer")]
         public async Task<IActionResult> getBookingHistoryLists(string userID)
         {
             var getLists = await bookingHistoryList.getAll(userID);
@@ -32,6 +34,7 @@ namespace backend.Controllers
         }
 
         [HttpGet("getBookingHistoryDetail/{orderID}")]
+        [Authorize(Policy = "Customer")]
         public async Task<IActionResult> getBookingHistoryDetail(string orderID)
         {
             // Add Thêm services
