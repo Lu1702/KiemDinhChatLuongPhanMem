@@ -265,16 +265,15 @@ namespace backend.Controllers
                 vnp_TransactionNo: vnpTransactionNo,
                 vnp_message: responseMessage // Use the human-readable message
             );
-
-            // You might want to do further processing here, like:
-            // 1. Verify the signature (vnp_SecureHash) if VNPAY sends it (highly recommended for security!)
-            //    This is crucial to ensure the callback hasn't been tampered with.
-            // 2. Update your order status in your database based on vnpTxnRef (your order ID)
-            // 3. Log the callback details for auditing
-
-            // Return the constructed object with a 200 OK status
+            
             Console.WriteLine(callbackData.vnp_message);
-            return Ok(callbackData);
+            return Redirect($"http://localhost:3000/VNPAY/PaymentStatus?" +
+                            $"success={ (vnpResponseCode == "00" ? "true" : "false") }" +
+                            $"&code={vnpResponseCode}" +
+                            $"&message={responseMessage}" +
+                            $"&transactionNo={vnpTransactionNo}" +
+                            $"&orderInfo={HttpUtility.UrlDecode(vnpOrderInfo)}" +
+                            $"&bankCode={vnpBankCode}");
         }
     }
 }

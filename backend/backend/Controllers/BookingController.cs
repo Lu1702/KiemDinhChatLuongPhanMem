@@ -1,5 +1,6 @@
 ﻿using backend.Interface.BookingInterface;
 using backend.ModelDTO.Customer.OrderRequest;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("Booking")]
+        [Authorize(Policy = "Customer")]
         public async Task<IActionResult> booking(OrderRequestDTO dtos)
         {
             var getBookingstatus = await _services.booking(dtos , HttpContext);

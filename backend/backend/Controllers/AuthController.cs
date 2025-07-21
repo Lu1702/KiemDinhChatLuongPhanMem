@@ -25,6 +25,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> register(registerRequestDTO registerRequestDTO)
         {
             if (registerRequestDTO != null)
@@ -43,6 +44,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public IActionResult login(loginRequestDTO loginRequestDTO)
         {
             if (loginRequestDTO != null)

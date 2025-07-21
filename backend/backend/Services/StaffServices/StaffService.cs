@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Runtime.InteropServices.JavaScript;
 using backend.Data;
 using backend.Enum;
 using backend.Interface.StaffInterface;
@@ -18,6 +19,21 @@ public class StaffService(DataContext dbContext) : IStaffService
         var transition = await _context.Database.BeginTransactionAsync();
         try
         {
+            DateTime dateTime = DateTime.Now;
+            int age = dateTime.Year - createStaffDTO.DateOfBirth.Year;
+            if (createStaffDTO.DateOfBirth.Date < dateTime.AddYears(-age))
+            {
+                age--;
+            }
+
+            if (age < 18)
+            {
+                return new GenericRespondDTOs()
+                {
+                    message = "Tuoi Khong Hop Le Vui Long Nhap Tuoi tren 18",
+                    Status = GenericStatusEnum.Failure.ToString()
+                };
+            }
             var generateUserId = Guid.NewGuid().ToString();
             var generateStaffId = Guid.NewGuid().ToString();
 
