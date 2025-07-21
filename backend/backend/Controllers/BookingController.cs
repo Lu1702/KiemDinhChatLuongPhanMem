@@ -1,6 +1,8 @@
 ﻿using backend.Interface.BookingInterface;
 using backend.ModelDTO.Customer.OrderRequest;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
@@ -17,14 +19,15 @@ namespace backend.Controllers
         }
 
         [HttpPost("Booking")]
+        [Authorize(Policy = "Customer")]
         public async Task<IActionResult> booking(OrderRequestDTO dtos)
         {
             var getBookingstatus = await _services.booking(dtos , HttpContext);
-            if (getBookingstatus.Equals("Lỗi"))
+            if (String.IsNullOrEmpty(getBookingstatus.Error))
             {
-                return BadRequest();
+                return Ok(getBookingstatus);
             }
-            return Ok(getBookingstatus);
+            return BadRequest(getBookingstatus);
         }
     }
 }

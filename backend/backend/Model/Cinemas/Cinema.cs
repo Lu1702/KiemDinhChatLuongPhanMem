@@ -45,6 +45,8 @@ namespace backend.Model.Cinemas
         [Column(TypeName = "varchar(10)")]
         [Required]
         public string cinemaContactHotlineNumber { get; set; } = "";
+        
+        public bool isDeleted { get; set; } = false;
 
         public List<cinemaRoom> cinemaRoom { get; set; } = null!;
 

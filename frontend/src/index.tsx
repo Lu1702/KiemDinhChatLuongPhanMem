@@ -1,19 +1,55 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
+import App from './Home';
 import reportWebVitals from './reportWebVitals';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from './Account/Login';
+import Register from './Account/Register';
+import Listfilm from './Cinema/Listfilm';
+import Forgotpassword from './Account/Forgotpass';
+import Comingmovies from './Cinema/Comingmovies';
+import Introduce from './Cinema/Introduce';
+import Showtimes from './Bookig/Showtimes';
+import Cinezone from './Cinema/Cinezone';
+import PaymentPage from './Bookig/PaymentPage';
+import Info from './Account/Info';
+import QLNV from './QL_Nhanvien_QLRap/homeQLRạp'
+import DT from './QL_Doanhthu_GiamDoc/Doanhthu'
+import RapPhongChieu from './QL_Rap_PhongChieu_QtrivienHT/Quantrivienhethong_QuanlyRapPhongChieu'
+import DV from './QLDichVu_ThuNgan/QLDichVu'
+import Comment from './Cinema/Comment';
+import FutureFilm from './Bookig/FutureFilm';
+import Booking from './Bookig/Booking';
+import BookingHistory from './Account/BookingHistory';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
-root.render(
+
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/login" element={< Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/listfilm" element={<Listfilm />} />
+        <Route path="/forgotpassword" element={<Forgotpassword />} />
+        <Route path="/comingmovies" element={<Comingmovies />} />
+        <Route path="/introduce" element={<Introduce />} />
+        <Route path="/showtimes" element={<Showtimes />} />
+        <Route path="/cinezone" element={<Cinezone />} />
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/info" element={<Info />} />
+        <Route path="/QuanLyRap/QLNV" element={<QLNV />} />
+        <Route path="/Giamdoc/doanhthu" element={<DT />} />
+        <Route path="/Quantrivienhethong/QLRapPhongChieu" element={<RapPhongChieu />} />
+        <Route path="/ThuNgan/DichVuThem" element={<DV />} />
+        <Route path="/comment" element={<Comment />} />
+        <Route path="/futurefilm" element={<FutureFilm />} />
+        <Route path="/booking" element={<Booking />} />
+        <Route path="/bookinghistory" element={<BookingHistory />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();

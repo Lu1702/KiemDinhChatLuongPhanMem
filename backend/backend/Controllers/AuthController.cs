@@ -25,6 +25,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> register(registerRequestDTO registerRequestDTO)
         {
             if (registerRequestDTO != null)
@@ -43,11 +44,17 @@ namespace backend.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> login(loginRequestDTO loginRequestDTO)
+        [AllowAnonymous]
+        public IActionResult login(loginRequestDTO loginRequestDTO)
         {
             if (loginRequestDTO != null)
             {
                 var getStatus = _IAuth.Login(loginRequestDTO);
+                if (getStatus.message.ToLower().Equals("error"))
+                {
+                    return BadRequest(new {message = "Nhập sai mật khẩu hoặc userName"});
+                }
+
                 return Ok(getStatus);
             }
             return BadRequest();

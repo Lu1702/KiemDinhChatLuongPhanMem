@@ -12,9 +12,12 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Logging;
 using System.Reflection.PortableExecutable;
+using backend.Helper;
+using backend.Model.Staff_Customer;
 using Microsoft.AspNetCore.Authorization;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using BCrypt.Net;
 
 namespace backend.Services.Auth
 {
@@ -23,11 +26,14 @@ namespace backend.Services.Auth
         private readonly DataContext _dataContext;
 
         private readonly IConfiguration _configuration;
+        
+        private readonly HashHelper _hashHelper;
 
-        public AuthService(DataContext dataContext, IConfiguration _configuration)
+        public AuthService(DataContext dataContext, IConfiguration _configuration , HashHelper hashHelper)
         {
             _dataContext = dataContext;
             this._configuration = _configuration;
+            _hashHelper = hashHelper;
         }
 
         [AllowAnonymous]
@@ -37,79 +43,129 @@ namespace backend.Services.Auth
 
             if (getCustomerRoleID != null)
             {
-                Guid userID = Guid.NewGuid();
-                var BryptPassword = BCrypt.Net.BCrypt.HashPassword(registerRequest.loginUserPassword);
-                var BryptIdentifyCode = BCrypt.Net.BCrypt.HashPassword(registerRequest.IdentityCode);
-                var newUserInformarion = new userInformation()
+                var findExitsEmail = _dataContext.userInformation.FirstOrDefault(x => x.loginUserEmail.ToLower()
+                    .Equals(registerRequest.loginEmail.ToLower()));
+                if (findExitsEmail != null)
                 {
-                    userId = userID.ToString(),
-                    loginUserEmail = registerRequest.loginEmail,
-                    loginUserPassword = BryptPassword,
-                    
-                };
-                await _dataContext.userInformation.AddAsync(newUserInformarion);
+                    return new registerRespondDTO()
+                    {
+                        message = "Lỗi Email Đã bị trùng",
+                        statusCode = StatusCodes.Status400BadRequest,
+                    };
+                }
+                var Transition =  await _dataContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Guid userID = Guid.NewGuid();
+                    var BryptPassword = BCrypt.Net.BCrypt.HashPassword(registerRequest.loginUserPassword);
+                    var HashIdentityCode = _hashHelper.Hash(registerRequest.IdentityCode);
+                    var newUserInformarion = new userInformation()
+                    {
+                        userId = userID.ToString(),
+                        loginUserEmail = registerRequest.loginEmail,
+                        loginUserPassword = BryptPassword
+                    };
+                    string CustomerID = Guid.NewGuid().ToString();
+                    var newCustomerInfo = new Customer()
+                    {
+                        dateOfBirth = registerRequest.dateOfBirth,
+                        IdentityCode = HashIdentityCode,
+                        Id = CustomerID,
+                        Name = registerRequest.userName,
+                        userID = userID.ToString(),
+                        phoneNumber = registerRequest.phoneNumber,
+                    };
+                    await _dataContext.Customers.AddAsync(newCustomerInfo);
+                    await _dataContext.userInformation.AddAsync(newUserInformarion);
 
-                var newUserRoleInformation = new userRoleInformation()
+                    var newUserRoleInformation = new userRoleInformation()
+                    {
+                        userId = userID.ToString(),
+                        roleId = getCustomerRoleID.roleId
+                    };
+                    await _dataContext.userRoleInformation.AddAsync(newUserRoleInformation);
+                    
+                    await Transition.CommitAsync();
+                    return new registerRespondDTO { statusCode = StatusCodes.Status201Created, message = "Đã tạo thành công" };
+                }
+                catch (Exception ex)
                 {
-                    userId = userID.ToString(),
-                    roleId = getCustomerRoleID.roleId
-                };
-                await _dataContext.userRoleInformation.AddAsync(newUserRoleInformation);
-                return new registerRespondDTO { statusCode = StatusCodes.Status201Created, message = "Đã tạo thành công" };
+                    await Transition.RollbackAsync();
+                    return new registerRespondDTO { statusCode = StatusCodes.Status201Created, message = "Lỗi Database" };
+                }
+               
             }
-            return new registerRespondDTO { statusCode = StatusCodes.Status400BadRequest, message = "Đã tạo thành công" };
+            return new registerRespondDTO { statusCode = StatusCodes.Status400BadRequest, message = "Loi Nhap Thieu Truong Du Lieu" };
         }
 
         [AllowAnonymous]
         public loginRespondDTO Login(loginRequestDTO loginRequest)
         {
-            var checkLoginRequest = checkLogin(loginRequest);
-            if (checkLoginRequest != null)
+            try
             {
-                // Lấy ID
-                var getID = checkLoginRequest.userId;
-                // Lấy ID role trong bảng quan hệ n-n
-                var getRole = _dataContext.userRoleInformation.Where(x => x.userId.Equals(getID)).Select(x => x.roleId).ToList();
-                // Lấy RoleName
-                var getRoleList = _dataContext.roleInformation.Where(x => getRole.Contains(x.roleId)).Select(x => x.roleName).ToList();
-
-                // Tạo Claims để làm JWT
-                var claims = new List<Claim>
+                var checkLoginRequest = checkLogin(loginRequest);
+                if (checkLoginRequest != null)
                 {
-                    new Claim(ClaimTypes.Name , loginRequest.loginUserName),
+                    // Lấy ID
+                    var getID = checkLoginRequest.userId;
+                    // Lấy ID role trong bảng quan hệ n-n
+                    var getRole = _dataContext.userRoleInformation.Where(x => x.userId.Equals(getID)).Select(x => x.roleId).ToList();
+                    // Lấy RoleName
+                    var getRoleList = _dataContext.roleInformation.Where(x => getRole.Contains(x.roleId)).Select(x => x.roleName).ToList();
+
+                    // Tạo Claims để làm JWT
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name , loginRequest.loginUserName),
+                    };
+
+                    foreach (var roleName in getRoleList)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, roleName));
+                    }
+
+                    var getToken = generateToken(claims, checkLoginRequest.userId);
+
+                    if (getToken != null)
+                    {
+                        return getToken;
+                    }
+                }
+                return new loginRespondDTO()
+                {
+                    message = "Error"
                 };
-
-                foreach (var roleName in getRoleList)
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, roleName));
-                }
-
-                var getToken = generateToken(claims , checkLoginRequest.loginUserEmail);
-
-                if (getToken != null)
-                {
-                    return getToken;
-                }
-
             }
-
-            var imageUpload = new ImageUploadParams()
+            catch (Exception e)
             {
-                
-            };
-            return null!;
+                Console.WriteLine(e.Message);
+                return null!;
+            }
         }
 
         private userInformation checkLogin(loginRequestDTO loginRequest)
         {
-            var findUser =  _dataContext.userInformation.FirstOrDefault
-                (x => x.loginUserEmail.Equals(loginRequest.loginUserName)
-                && x.loginUserPassword.Equals(loginRequest.loginUserPassword));
-            if (findUser != null)
+            try
             {
-                return findUser;
+                var findUser = _dataContext.userInformation.FirstOrDefault
+                (x => x.loginUserEmail.Equals(loginRequest.loginUserName));
+                if (findUser != null)
+                {
+                    // Kiểm tra có đúng mk hay không
+                    var checkPassword = BCrypt.Net.BCrypt.Verify(loginRequest.loginUserPassword, findUser.loginUserPassword);
+                    if (checkPassword)
+                    {
+                        return findUser;
+                    }
+                    return null!;
+                }
+                return null!;
             }
-            return null;
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null!;
+            }
         }
 
         private loginRespondDTO generateToken(List<Claim> claims , string Email)
@@ -144,6 +200,7 @@ namespace backend.Services.Auth
                     tokenID = gettingToken ,
                     userID = Email,
                     expDate = Hour.ToString(),
+                    message = "Success"
                 };
                 return newAuthRepond;
             }

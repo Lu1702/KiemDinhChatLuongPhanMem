@@ -22,12 +22,14 @@ namespace backend.Model.Booking
         public string paymentMethod { get; set; } = "VNPAY";
 
         [Required]
-        public bool isPay { get; set; } = false;
+        public string PaymentStatus { get; set; } = string.Empty;
 
         [Required]
         public long totalAmount { get; set; }
 
-        public DateTime paymentDate { get; set; }
+        public string message { get; set; } = string.Empty;
+
+        public DateTime paymentRequestCreatedDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         [ForeignKey("Customer")]
@@ -36,7 +38,7 @@ namespace backend.Model.Booking
 
         public Customer Customer { get; set; } = null!;
 
-        public List<orderDetailTicket> orderDetail = [];
+        public List<orderDetailTicket> orderDetailTicket = [];
 
         public List<orderDetailFood> orderDetailFood = [];
 
