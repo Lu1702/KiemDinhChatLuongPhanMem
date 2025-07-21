@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import './style.css';
 
@@ -13,6 +13,9 @@ export default function QuanLy() {
   const [editRapIndex, setEditRapIndex] = useState<number | null>(null);
   const [editSeatIndex, setEditSeatIndex] = useState<number | null>(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingCinemas, setIsFetchingCinemas] = useState(false);
+
   const [rap, setRap] = useState({
     name: "",
     diachi: "",
@@ -22,20 +25,69 @@ export default function QuanLy() {
 
   const [phong, setPhong] = useState({
     soPhong: "",
-    rap: "",
+    rap: "", // This will store cinemaName
     dinhDang: "",
     slGhe: "",
   });
 
-  const [gheList, setGheList] = useState<{ stt: number; ghe: string }[]>([
-    { stt: 1, ghe: "A01" },
-    { stt: 2, ghe: "A02" },
-  ]);
+  const [gheList, setGheList] = useState<{ stt: number; ghe: string }[]>([]);
 
-  const [listRap, setListRap] = useState([
-    { stt: 1, name: "Rạp 1", diachi: "123 Đường ABC", hotline: "0123456789" },
-    { stt: 2, name: "Rạp 2", diachi: "456 Đường XYZ", hotline: "0987654321" },
-  ]);
+  const [listRap, setListRap] = useState<any[]>([]);
+  const [visualFormats, setVisualFormats] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setIsFetchingCinemas(true);
+      try {
+        const cinemaResponse = await fetch('http://localhost:5229/api/Cinema/getCinemaList');
+        if (cinemaResponse.ok) {
+          const responseData = await cinemaResponse.json();
+          let actualCinemaData = responseData;
+
+          if (responseData && responseData.data && Array.isArray(responseData.data)) {
+            actualCinemaData = responseData.data;
+          } else if (responseData && Array.isArray(responseData)) {
+            actualCinemaData = responseData;
+          }
+          // Add other conditions if your API structure is different (e.g., responseData.cinemas)
+
+          if (Array.isArray(actualCinemaData)) {
+            setListRap(actualCinemaData.map((c: any, index: number) => ({
+              stt: index + 1,
+              id: c.cinemaId,
+              name: c.cinemaName,
+              diachi: c.cinemaLocation,
+              mota: c.cinemaDescription,
+              hotline: c.cinemaContactNumber
+            })));
+            console.log("Fetched listRap:", actualCinemaData.map((c: any) => ({ id: c.cinemaId, name: c.cinemaName }))); // Log fetched cinemas
+          } else {
+            console.error("API did not return an array in expected format:", responseData);
+            alert("Dữ liệu rạp trả về không đúng định dạng. Vui lòng kiểm tra console và network tab.");
+          }
+        } else {
+          const errorText = await cinemaResponse.text();
+          console.error("Failed to fetch cinemas:", errorText);
+          alert(`Lỗi khi tải danh sách rạp: ${errorText}`);
+        }
+
+        // Static visual formats for now. If you have an API for this, fetch it here.
+        const staticVisualFormats = [
+            { visualFormatID: "2D", visualFormatName: "2D" },
+            { visualFormatID: "3D", visualFormatName: "3D" }
+        ];
+        setVisualFormats(staticVisualFormats);
+        console.log("Loaded visualFormats:", staticVisualFormats); // Log loaded visual formats
+
+      } catch (error: unknown) {
+        console.error("Error fetching initial data:", (error as Error).message);
+        alert(`Đã xảy ra lỗi khi tải dữ liệu: ${(error as Error).message}`);
+      } finally {
+        setIsFetchingCinemas(false);
+      }
+    };
+    fetchInitialData();
+  }, []);
 
   const handleRapChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,83 +98,247 @@ export default function QuanLy() {
     const { name, value } = e.target;
     setPhong({ ...phong, [name]: value });
 
-    // Generate gheList when slGhe changes
     if (name === "slGhe") {
       if (value) {
         const numSeats = parseInt(value, 10);
+        if (isNaN(numSeats) || numSeats <= 0) {
+            setGheList([]);
+            return;
+        }
         const newGheList = Array.from({ length: numSeats }, (_, index) => ({
           stt: index + 1,
-          ghe: `A${(index + 1).toString().padStart(1, '0')}`,
+          ghe: `A${(index + 1).toString().padStart(2, '0')}`,
         }));
         setGheList(newGheList);
       } else {
-        setGheList([]); // Clear gheList if slGhe is empty
+        setGheList([]);
       }
-      setEditSeatIndex(null); // Clear edit state when slGhe changes
+      setEditSeatIndex(null);
     }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (activeTab === "rap") {
       if (rap.name && rap.diachi && rap.hotline) {
-        if (editRapIndex !== null) {
-          // Update existing cinema
-          const updatedList = listRap.map((item, index) =>
-            index === editRapIndex
-              ? { ...item, name: rap.name, diachi: rap.diachi, hotline: rap.hotline }
-              : item
-          );
-          setListRap(updatedList);
-          alert(`Đã cập nhật rạp: ${JSON.stringify({ name: rap.name, diachi: rap.diachi, hotline: rap.hotline }, null, 2)}`);
-          setEditRapIndex(null);
-        } else {
-          // Add new cinema
-          const newRap = {
-            stt: listRap.length + 1,
-            name: rap.name,
-            diachi: rap.diachi,
-            hotline: rap.hotline,
-          };
-          setListRap([...listRap, newRap]);
-          alert(`Đã thêm rạp: ${JSON.stringify(newRap, null, 2)}`);
-          setActiveTab("phong"); // Switch to Phòng chiếu tab
+        setIsLoading(true);
+        try {
+          if (editRapIndex !== null) {
+            const rapToUpdate = listRap[editRapIndex];
+            if (!rapToUpdate || !rapToUpdate.id) {
+                alert("Không tìm thấy ID rạp để cập nhật.");
+                setIsLoading(false);
+                return;
+            }
+
+            const updatedCinemaData = {
+              cinemaId: rapToUpdate.id,
+              cinemaName: rap.name,
+              cinemaLocation: rap.diachi,
+              cinemaDescription: rap.mota,
+              cinemaContactNumber: rap.hotline,
+            };
+
+            const response = await fetch(`http://localhost:5229/api/Cinema/UpdateCinema`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(updatedCinemaData),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(`Đã cập nhật rạp thành công: ${result.cinemaName || rap.name}`);
+                const updatedList = listRap.map((item, index) =>
+                    index === editRapIndex
+                        ? { ...item, name: rap.name, diachi: rap.diachi, mota: rap.mota, hotline: rap.hotline }
+                        : item
+                );
+                setListRap(updatedList);
+                setEditRapIndex(null);
+                setRap({ name: "", diachi: "", mota: "", hotline: "" });
+            } else {
+                const errorData = await response.json();
+                alert(`Lỗi khi cập nhật rạp: ${errorData.message || response.statusText}`);
+                console.error('Lỗi khi cập nhật rạp:', errorData);
+            }
+
+          } else {
+            const newCinemaData = {
+              cinemaName: rap.name,
+              cinemaLocation: rap.diachi,
+              cinemaDescription: rap.mota,
+              cinemaContactNumber: rap.hotline,
+            };
+
+            const response = await fetch('http://localhost:5229/api/Cinema/addCinema', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(newCinemaData),
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              alert(`Đã thêm rạp thành công: ${result.cinemaName || rap.name}`);
+              setListRap(prevList => [...prevList, {
+                stt: prevList.length > 0 ? Math.max(...prevList.map(r => r.stt)) + 1 : 1,
+                id: result.cinemaId,
+                name: result.cinemaName || rap.name,
+                diachi: result.cinemaLocation || rap.diachi,
+                mota: result.cinemaDescription || rap.mota,
+                hotline: result.cinemaContactNumber || rap.hotline
+              }]);
+              setRap({ name: "", diachi: "", mota: "", hotline: "" });
+            } else {
+              const errorData = await response.json();
+              alert(`Lỗi khi thêm rạp: ${errorData.message || response.statusText}`);
+              console.error('Lỗi khi thêm rạp:', errorData);
+            }
+          }
+        } catch (error: unknown) {
+          alert(`Đã xảy ra lỗi: ${(error as Error).message}`);
+          console.error("Lỗi network hoặc lỗi không xác định:", error);
+        } finally {
+          setIsLoading(false);
         }
-        setRap({ name: "", diachi: "", mota: "", hotline: "" });
       } else {
         alert("Vui lòng điền đầy đủ Tên rạp, Địa chỉ và Hotline!");
       }
-    } else {
-      alert(`Đã lưu phòng chiếu: ${JSON.stringify(phong, null, 2)}`);
+    } else { // Xử lý khi activeTab là "phong"
+      if (phong.soPhong && phong.rap && phong.dinhDang && gheList.length > 0) {
+        setIsLoading(true);
+        try {
+          const selectedCinema = listRap.find(c => c.name === phong.rap);
+          const selectedVisualFormat = visualFormats.find(vf => vf.visualFormatName === phong.dinhDang);
+
+          // --- THÊM LOG ĐỂ KIỂM TRA GIÁ TRỊ CỦA selectedCinema và selectedVisualFormat ---
+          console.log("phong.rap (selected name):", phong.rap);
+          console.log("selectedCinema (found object):", selectedCinema);
+          console.log("selectedCinema.id:", selectedCinema?.id); // Use optional chaining for safety
+
+          console.log("phong.dinhDang (selected name):", phong.dinhDang);
+          console.log("selectedVisualFormat (found object):", selectedVisualFormat);
+          console.log("selectedVisualFormat.visualFormatID:", selectedVisualFormat?.visualFormatID); // Use optional chaining for safety
+
+
+          if (!selectedCinema || !selectedCinema.id) {
+              alert("Không tìm thấy rạp đã chọn hoặc rạp không có ID hợp lệ. Vui lòng chọn lại rạp.");
+              setIsLoading(false);
+              return;
+          }
+          if (!selectedVisualFormat || !selectedVisualFormat.visualFormatID) {
+              alert("Không tìm thấy định dạng hình ảnh đã chọn hoặc định dạng không có ID hợp lệ. Vui lòng chọn lại định dạng.");
+              setIsLoading(false);
+              return;
+          }
+
+          const roomNum = parseInt(phong.soPhong, 10);
+          if (isNaN(roomNum) || roomNum <= 0) {
+              alert("Số phòng chiếu phải là một số nguyên dương.");
+              setIsLoading(false);
+              return;
+          }
+
+          const seatNumbersAsString = gheList.map(g => (parseInt(g.ghe.substring(1), 10)).toString());
+          if (seatNumbersAsString.some(s => s === 'NaN')) {
+              alert("Có lỗi trong việc tạo số ghế. Vui lòng kiểm tra lại SL ghế.");
+              setIsLoading(false);
+              return;
+          }
+
+          const requestBody = {
+            roomCreateRequestDTO: {
+              roomNumber: roomNum,
+              cinemaID: selectedCinema.id, // Đảm bảo đây là UUID của rạp
+              visualFormatID: selectedVisualFormat.visualFormatID, // Ví dụ: "2D", "3D"
+              seatsNumber: seatNumbersAsString // Mảng các chuỗi
+            }
+          };
+
+          console.log("Dữ liệu gửi đi cho phòng chiếu (final payload):", requestBody);
+
+          const response = await fetch('http://localhost:5229/api/CinemaRoom/CreateRoom', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            alert(`Đã thêm phòng chiếu thành công: Phòng ${result.roomNumber || phong.soPhong} tại rạp ${phong.rap}`);
+            setPhong({ soPhong: "", rap: "", dinhDang: "", slGhe: "" });
+            setGheList([]);
+          } else {
+            const errorData = await response.json();
+            alert(`Lỗi khi thêm phòng chiếu: ${errorData.title || response.statusText}. Chi tiết: ${JSON.stringify(errorData.errors || errorData)}`);
+            console.error('Lỗi khi thêm phòng chiếu:', errorData);
+          }
+        } catch (error: unknown) {
+          alert(`Đã xảy ra lỗi khi thêm phòng chiếu: ${(error as Error).message}`);
+          console.error("Lỗi network hoặc lỗi không xác định khi thêm phòng chiếu:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        alert("Vui lòng điền đầy đủ thông tin phòng chiếu và tạo danh sách ghế!");
+      }
     }
   };
 
-  const handleDelete = (stt: number) => {
-    setListRap(listRap.filter((item) => item.stt !== stt));
-    setEditRapIndex(null); // Clear edit state if deleted
-    alert(`Đã xóa rạp có STT: ${stt}`);
+  const handleDelete = async (stt: number) => {
+    const rapToDelete = listRap.find(item => item.stt === stt);
+    if (!rapToDelete || !rapToDelete.id) {
+        alert("Không tìm thấy rạp để xóa hoặc rạp không có ID.");
+        return;
+    }
+
+    if (window.confirm(`Bạn có chắc chắn muốn xóa rạp "${rapToDelete.name}" không?`)) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`http://localhost:5229/api/Cinema/DeleteCinema/${rapToDelete.id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          alert(`Đã xóa rạp: ${rapToDelete.name}`);
+          setListRap(listRap.filter((item) => item.stt !== stt));
+          setEditRapIndex(null);
+        } else {
+          const errorData = await response.json();
+          alert(`Lỗi khi xóa rạp: ${errorData.message || response.statusText}`);
+          console.error('Lỗi khi xóa rạp:', errorData);
+        }
+      } catch (error: unknown) {
+        alert(`Đã xảy ra lỗi khi xóa rạp: ${(error as Error).message}`);
+        console.error("Lỗi network hoặc lỗi không xác định khi xóa rạp:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleEdit = (item: typeof listRap[0], index: number) => {
     setRap({
       name: item.name,
       diachi: item.diachi,
-      mota: "",
+      mota: item.mota || "",
       hotline: item.hotline,
     });
     setEditRapIndex(index);
-    alert(`Đã chọn rạp để sửa: ${item.name}`);
   };
 
   const handleSeatDelete = (stt: number) => {
     const deletedSeat = gheList.find((item) => item.stt === stt);
     setGheList(gheList.filter((item) => item.stt !== stt));
-    setEditSeatIndex(null); // Clear edit state if deleted
+    setEditSeatIndex(null);
     alert(`Đã xóa ghế: ${JSON.stringify(deletedSeat, null, 2)}`);
   };
 
   const handleSeatEdit = (item: typeof gheList[0], index: number) => {
-    // Since gheList is regenerated based on slGhe, set slGhe to current gheList length
-    setPhong({ ...phong, slGhe: gheList.length.toString() });
     setEditSeatIndex(index);
     alert(`Đã chọn ghế để sửa: ${item.ghe}`);
   };
@@ -227,39 +443,62 @@ export default function QuanLy() {
                   />
                 </div>
               </div>
-              <table className="revenue-table" style={{ width: "auto", marginTop: "20px" }}>
+              <button
+                onClick={handleAdd}
+                style={{
+                  background: "#add8e6", color: "black", padding: "8px 24px",
+                  border: "none", borderRadius: "8px", cursor: "pointer",
+                  marginTop: "16px"
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Đang xử lý...' : (editRapIndex !== null ? "Cập nhật rạp" : "Thêm rạp")}
+              </button>
+
+              <h4 style={{ marginTop: "24px" }}>Danh sách Rạp</h4>
+              <table className="revenue-table" style={{ width: "auto", marginTop: "10px" }}>
                 <thead>
                   <tr>
                     <th style={thStyle}>STT</th>
                     <th style={thStyle}>Tên rạp</th>
                     <th style={thStyle}>Địa chỉ</th>
+                    <th style={thStyle}>Miêu tả</th>
                     <th style={thStyle}>Hotline</th>
                     <th style={thStyle}>Tùy chỉnh</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {listRap.map((item, index) => (
-                    <tr key={item.stt}>
-                      <td style={tdStyle}>{item.stt}</td>
-                      <td style={tdStyle}>{item.name}</td>
-                      <td style={tdStyle}>{item.diachi}</td>
-                      <td style={tdStyle}>{item.hotline}</td>
-                      <td style={tdStyle}>
-                        <button
-                          onClick={() => handleDelete(item.stt)}
-                          style={{ backgroundColor: '#cc3380', color: "white", border: "none", borderRadius: "4px", padding: "4px 8px", marginRight: "4px" }}
-                        >
-                          Xóa
-                        </button>
-                        <button
-                          onClick={() => handleEdit(item, index)}
-                          style={{ backgroundColor: "#ccc", color: "black", border: "none", borderRadius: "4px", padding: "4px 8px" }}
-                        >
-                          Sửa
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {isFetchingCinemas ? (
+                    <tr><td colSpan={6} style={{textAlign: 'center'}}>Đang tải danh sách rạp...</td></tr>
+                  ) : listRap.length === 0 ? (
+                    <tr><td colSpan={6} style={{textAlign: 'center'}}>Không có rạp nào.</td></tr>
+                  ) : (
+                    listRap.map((item, index) => (
+                      <tr key={item.id || item.stt}>
+                        <td style={tdStyle}>{item.stt}</td>
+                        <td style={tdStyle}>{item.name}</td>
+                        <td style={tdStyle}>{item.diachi}</td>
+                        <td style={tdStyle}>{item.mota}</td>
+                        <td style={tdStyle}>{item.hotline}</td>
+                        <td style={tdStyle}>
+                          <button
+                            onClick={() => handleDelete(item.stt)}
+                            style={{ backgroundColor: '#cc3380', color: "white", border: "none", borderRadius: "4px", padding: "4px 8px", marginRight: "4px" }}
+                            disabled={isLoading}
+                          >
+                            Xóa
+                          </button>
+                          <button
+                            onClick={() => handleEdit(item, index)}
+                            style={{ backgroundColor: "#ccc", color: "black", border: "none", borderRadius: "4px", padding: "4px 8px" }}
+                            disabled={isLoading}
+                          >
+                            Sửa
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </>
@@ -269,16 +508,15 @@ export default function QuanLy() {
               <div style={{ marginTop: "16px", maxWidth: "500px", display: "flex", flexDirection: "column", gap: "16px", width: "100%" }}>
                 <div className="uiverse-pixel-input-wrapper">
                   <label className="uiverse-pixel-label">Số phòng chiếu</label>
-                  <select
+                  <input
+                    type="number"
                     name="soPhong"
                     value={phong.soPhong}
                     onChange={handlePhongChange}
+                    placeholder="Số phòng chiếu"
                     className="uiverse-pixel-input"
-                  >
-                    <option value="">Chọn</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                  </select>
+                    min="1"
+                  />
                 </div>
                 <div className="uiverse-pixel-input-wrapper">
                   <label className="uiverse-pixel-label">Rạp</label>
@@ -288,10 +526,14 @@ export default function QuanLy() {
                     onChange={handlePhongChange}
                     className="uiverse-pixel-input"
                   >
-                    <option value="">Chọn</option>
-                    {listRap.map((item) => (
-                      <option key={item.stt} value={item.name}>{item.name}</option>
-                    ))}
+                    <option value="">Chọn rạp</option>
+                    {isFetchingCinemas ? (
+                        <option disabled>Đang tải rạp...</option>
+                    ) : (
+                        listRap.map((item) => (
+                            <option key={item.id} value={item.name}>{item.name}</option>
+                        ))
+                    )}
                   </select>
                 </div>
                 <div className="uiverse-pixel-input-wrapper">
@@ -302,9 +544,12 @@ export default function QuanLy() {
                     onChange={handlePhongChange}
                     className="uiverse-pixel-input"
                   >
-                    <option value="">Chọn</option>
-                    <option value="2D">2D</option>
-                    <option value="3D">3D</option>
+                    <option value="">Chọn định dạng</option>
+                    {visualFormats.map(format => (
+                        <option key={format.visualFormatID} value={format.visualFormatName}>
+                            {format.visualFormatName}
+                        </option>
+                    ))}
                   </select>
                 </div>
                 <div className="uiverse-pixel-input-wrapper">
@@ -318,52 +563,60 @@ export default function QuanLy() {
                     <option value="">Chọn</option>
                     <option value="50">50</option>
                     <option value="100">100</option>
+                    <option value="150">150</option>
+                    <option value="200">200</option>
                   </select>
                 </div>
               </div>
 
-              <table className="revenue-table" style={{ width: "auto", marginTop: "20px" }}>
-                <thead>
-                  <tr>
-                    <th style={thStyle}>STT</th>
-                    <th style={thStyle}>Tên ghế</th>
-                    <th style={thStyle}>Tùy chỉnh</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {gheList.map((item, index) => (
-                    <tr key={item.stt}>
-                      <td style={tdStyle}>{item.stt}</td>
-                      <td style={tdStyle}>{item.ghe}</td>
-                      <td style={tdStyle}>
-                        <button
-                          onClick={() => handleSeatDelete(item.stt)}
-                          style={{ backgroundColor: '#cc3380', color: "white", border: "none", borderRadius: "4px", padding: "4px 8px", marginRight: "4px" }}
-                        >
-                          Xóa
-                        </button>
-                        <button
-                          onClick={() => handleSeatEdit(item, index)}
-                          style={{ backgroundColor: "#ccc", color: "black", border: "none", borderRadius: "4px", padding: "4px 8px" }}
-                        >
-                          Sửa
-                        </button>
-                      </td>
+              {gheList.length > 0 && (
+                <table className="revenue-table" style={{ width: "auto", marginTop: "20px" }}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>STT</th>
+                      <th style={thStyle}>Tên ghế</th>
+                      <th style={thStyle}>Tùy chỉnh</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {gheList.map((item, index) => (
+                      <tr key={item.stt}>
+                        <td style={tdStyle}>{item.stt}</td>
+                        <td style={tdStyle}>{item.ghe}</td>
+                        <td style={tdStyle}>
+                          <button
+                            onClick={() => handleSeatDelete(item.stt)}
+                            style={{ backgroundColor: '#cc3380', color: "white", border: "none", borderRadius: "4px", padding: "4px 8px", marginRight: "4px" }}
+                          >
+                            Xóa
+                          </button>
+                          <button
+                            onClick={() => handleSeatEdit(item, index)}
+                            style={{ backgroundColor: "#ccc", color: "black", border: "none", borderRadius: "4px", padding: "4px 8px" }}
+                          >
+                            Sửa
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <div style={{ marginTop: "16px" }}>
+                <button
+                  onClick={handleAdd}
+                  style={{
+                    background: "#add8e6", color: "black", padding: "8px 24px",
+                    border: "none", borderRadius: "8px", cursor: "pointer"
+                  }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Đang xử lý...' : "Thêm phòng"}
+                </button>
+              </div>
             </>
           )}
 
-          <div style={{ marginTop: "16px" }}>
-            <button onClick={handleAdd} style={{
-              background: "#add8e6", color: "black", padding: "8px 24px",
-              border: "none", borderRadius: "8px", cursor: "pointer"
-            }}>
-              {activeTab === "rap" ? "Thêm" : "Lưu"}
-            </button>
-          </div>
         </div>
       </div>
 

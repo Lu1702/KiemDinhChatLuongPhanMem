@@ -4,7 +4,6 @@ import logo from '../src/logo.svg'
 
 function App() {
   return (
-<<<<<<< HEAD
     <div className="App">
       <img src={logo} />
       <header className="App-header">
@@ -23,12 +22,7 @@ function App() {
         </a>
       </header>
     </div>
-=======
-    <>
-      <div>
-      </div> 
-    </>
->>>>>>> origin/Merge_FE_BE_Branch
+
   );
 }
 
