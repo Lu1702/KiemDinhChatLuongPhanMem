@@ -23,9 +23,10 @@ namespace backend.Services.BookingHistoryServices
         public async Task<List<BookingHistoryRespondList>> getAll(string userID)
         {
             // Lấy OrderID
-
+            var findCustomerID = _dataContext.Customers.FirstOrDefault
+                (x => x.userID.Equals(userID));
             var getOrderUserList = _dataContext.Order
-                .Where(x => x.customerID.Equals(userID)
+                .Where(x => x.customerID.Equals(findCustomerID.Id)
                 && x.PaymentStatus.Equals(PaymentStatus.PaymentSuccess))
                 .Select(x => x.orderId);
             var getTicketLists = await _dataContext.TicketOrderDetail
@@ -37,6 +38,7 @@ namespace backend.Services.BookingHistoryServices
                     .ThenInclude(ms => ms.movieInformation) 
                 .Include(tod => tod.movieSchedule)
                     .ThenInclude(ms => ms.HourSchedule) 
+                .AsSplitQuery()
                 .ToListAsync();
 
             // Tạo List để cho vào
