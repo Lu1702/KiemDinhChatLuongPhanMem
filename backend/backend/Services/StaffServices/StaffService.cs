@@ -22,6 +22,16 @@ public class StaffService(DataContext dbContext) : IStaffService
             var generateStaffId = Guid.NewGuid().ToString();
 
             var bcryptStaffPassword = BCrypt.Net.BCrypt.HashPassword(createStaffDTO.LoginUserPassword);
+            
+            var findExitsUser = _context.userInformation.FirstOrDefault(x => x.loginUserEmail.Equals(createStaffDTO.LoginUserEmail));
+            if (findExitsUser != null)
+            {
+                return new GenericRespondDTOs()
+                {
+                    message = "User already exists!",
+                    Status = GenericStatusEnum.Failure.ToString()
+                };
+            }
 
             await _context.userRoleInformation.AddAsync(new userRoleInformation()
             {
