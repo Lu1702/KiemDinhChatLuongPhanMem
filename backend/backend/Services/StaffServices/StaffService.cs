@@ -57,25 +57,7 @@ public class StaffService(DataContext dbContext) : IStaffService
                     Status = GenericStatusEnum.Failure.ToString()
                 };
             }
-
-            await _context.userRoleInformation.AddAsync(new userRoleInformation()
-            {
-                userId = generateUserId,
-                roleId = "1a8f7b9c-d4e5-4f6a-b7c8-9d0e1f2a3b4c"
-            });
-            
             List<userRoleInformation> userRoles = new List<userRoleInformation>();
-
-            foreach (var roleID in createStaffDTO.RoleID)
-            {
-                userRoles.Add(new userRoleInformation()
-                {
-                    userId = generateUserId,
-                    roleId = roleID
-                });
-            }
-            
-            await _context.userRoleInformation.AddRangeAsync(userRoles);
             
             // Them Tai khoan
             await _context.userInformation.AddAsync(new userInformation()
@@ -94,6 +76,17 @@ public class StaffService(DataContext dbContext) : IStaffService
                 userID = generateUserId ,
                 Id = generateStaffId
             });
+            
+            foreach (var roleID in createStaffDTO.RoleID)
+            {
+                userRoles.Add(new userRoleInformation()
+                {
+                    userId = generateUserId,
+                    roleId = roleID
+                });
+            }
+            
+            await _context.userRoleInformation.AddRangeAsync(userRoles);
             
             await _context.SaveChangesAsync();
             
@@ -194,7 +187,8 @@ public class StaffService(DataContext dbContext) : IStaffService
             if (findStaff != null)
             {
                 var findUserInfo = await _context.userInformation.FirstOrDefaultAsync(x => x.userId.Equals(findStaff.userID));
-                if (findUserInfo != null)
+                var findUserRole = _context.userRoleInformation.Where(x => x.userId.Equals(findStaff.userID));
+                if (findUserInfo != null && findUserRole.Any())
                 {
                     await using var transaction = await _context.Database.BeginTransactionAsync();
                     try
@@ -202,6 +196,7 @@ public class StaffService(DataContext dbContext) : IStaffService
                         _context.userInformation.Remove
                             (findUserInfo);
                         _context.Staff.Remove(findStaff);
+                        _context.userRoleInformation.RemoveRange(findUserRole);
                         await _context.SaveChangesAsync();
                         await transaction.CommitAsync();
                         
@@ -369,7 +364,7 @@ public class StaffService(DataContext dbContext) : IStaffService
         return new GenericRespondWithObjectDTO<List<RoleInfoListDTO>>()
         {
             Status = GenericStatusEnum.Failure.ToString(),
-            message = "Error"
+            message = "Error Ko có data về các Role"
         };
     }
 
