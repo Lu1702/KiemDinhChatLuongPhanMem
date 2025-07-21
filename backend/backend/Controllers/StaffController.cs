@@ -66,4 +66,15 @@ public class StaffController(IStaffService staffService) : Controller
         }
         return Ok(getStaffById);
     }
+
+    [HttpGet("GetRoleList")]
+    public IActionResult GetRoleList()
+    {
+        var getRoleListStatus = _staffService.getRoles();
+        if (getRoleListStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        {
+            return BadRequest(getRoleListStatus);
+        }
+        return Ok(getRoleListStatus);
+    }
 }

@@ -11,6 +11,8 @@ public interface IStaffService
     
     Task<GenericRespondDTOs> DeleteStaff(string id);
     
+    GenericRespondWithObjectDTO<List<RoleInfoListDTO>> getRoles();
+    
     GenericRespondWithObjectDTO<List<GetStaffInfoDTO>> GetStaffListInfo();
     
     GenericRespondWithObjectDTO<GetStaffInfoDTO> GetStaffInfo(string id);

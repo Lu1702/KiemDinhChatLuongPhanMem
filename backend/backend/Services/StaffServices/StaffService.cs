@@ -326,4 +326,28 @@ public class StaffService(DataContext dbContext) : IStaffService
             };
         }
     }
+
+    public GenericRespondWithObjectDTO<List<RoleInfoListDTO>> getRoles()
+    {
+        var getRoles = _context.roleInformation.ToList();
+        if (getRoles.Any())
+        {
+            return new GenericRespondWithObjectDTO<List<RoleInfoListDTO>>()
+            {
+                Status = GenericStatusEnum.Success.ToString(),
+                message = "Role List",
+                data = getRoles.Select(x => new RoleInfoListDTO()
+                {
+                    RoleId = x.roleId,
+                    RoleName = x.roleName
+                }).ToList()
+            };
+        }
+        return new GenericRespondWithObjectDTO<List<RoleInfoListDTO>>()
+        {
+            Status = GenericStatusEnum.Failure.ToString(),
+            message = "Error"
+        }
+    }
+
 }
