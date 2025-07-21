@@ -30,9 +30,8 @@ namespace backend.Services.BookingServices
             {
                 return new OrderRespondDTO { Error = "Error: User ID is missing." };
             }
-
             var customer = await _dataContext.Customers
-                                             .FirstOrDefaultAsync(c => c.Id == orderRequestDTO.userId); // Use FirstOrDefaultAsync
+                                             .FirstOrDefaultAsync(c => c.userID == orderRequestDTO.userId); // Use FirstOrDefaultAsync
             if (customer == null)
             {
                 return new OrderRespondDTO { Error = "Error: User not found." };
@@ -168,7 +167,7 @@ namespace backend.Services.BookingServices
                     paymentRequestCreatedDate = DateTime.Now,
                     PaymentStatus = PaymentStatus.Pending.ToString(),
                     totalAmount = totalAmount,
-                    customerID = orderRequestDTO.userId,
+                    customerID = customer.Id,
                 };
                 await _dataContext.Order.AddAsync(order);
 
