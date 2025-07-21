@@ -177,8 +177,7 @@ function Listfilm() {
                         {movies.map((movie, index) => (
                             <div
                                 key={index}
-                                className="bg-slate-800 rounded-xl shadow-lg p-4 flex flex-col items-center object-cover"
-                            >
+                                className="bg-slate-800 rounded-xl shadow-lg p-4 flex flex-col items-center object-cover">
                                 <img
                                     src={movie.image}
                                     alt={movie.title}
@@ -188,12 +187,10 @@ function Listfilm() {
                                 <h3 className="text-white font-semibold text-center mt-4 min-h-[48px] line-clamp-2">
                                     {movie.title}
                                 </h3>
-
                                 <div className="mt-3 flex flex-col sm:flex-row gap-3 items-center justify-center w-full">
                                     <button
                                         onClick={() => handleOpenTrailer(movie.trailer)}
-                                        className="w-12 h-12 p-3 flex items-center justify-center rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
-                                    >
+                                        className="w-12 h-12 p-3 flex items-center justify-center rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden">
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
                                         <div className="relative z-10">
                                             <svg
@@ -209,8 +206,7 @@ function Listfilm() {
 
                                     <button
                                         onClick={handleShowtimes}
-                                        className="relative w-[160px] h-12 px-4 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group overflow-hidden flex items-center justify-center"
-                                    >
+                                        className="relative w-[160px] h-12 px-4 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group overflow-hidden flex items-center justify-center">
                                         🎟 Đặt vé ngay
                                         <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
                                         <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-400 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-700 duration-700 origin-left"></span>
@@ -225,7 +221,6 @@ function Listfilm() {
                     </div>
 
                 </main>
-
                 {/* Trailer Popup */}
                 {showTrailer && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
@@ -245,7 +240,12 @@ function Listfilm() {
                     </div>
                 )}
             </div>
-            {/* Footer */}
+            <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointers"
+            >
+                ↑
+            </button>
             <footer className="pt-32">
                 <Bottom />
             </footer>

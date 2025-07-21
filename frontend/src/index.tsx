@@ -20,9 +20,6 @@ import FutureFilm from './Bookig/FutureFilm';
 import Booking from './Bookig/Booking';
 import BookingHistory from './Account/BookingHistory';
 
-//Phần admin
-import HomeQL from './HomeQLRap';
-import QLCSVC from './QLCoSoVatChat/homeQLCSVC';
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -44,8 +41,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/comment" element={<Comment />} />
         <Route path="/futurefilm" element={<FutureFilm />} />
         <Route path="/booking" element={<Booking />} />
-        <Route path="/homeQL" element={<HomeQL />} />
-        <Route path="/QLCSVC" element={<QLCSVC />} />
         <Route path="/bookinghistory" element={<BookingHistory />} />
 
       </Routes>

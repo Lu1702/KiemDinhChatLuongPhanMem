@@ -30,7 +30,7 @@ function Choose() {
                                 <p className="flex justify-center items-center font-semibold text-white">{selectedCinema.time}</p>
                             </div>
                         ) : (
-                            <span className="text-gray-400">-- Chọn thời gian --</span>
+                            <span className="text-white">-- Chọn thời gian --</span>
                         )}
                     </button>
                     {isOpen && (
