@@ -64,7 +64,8 @@ export default function PaymentPage() {
                             <p>Số ghế<br /><span className="font-bold">{(ticketInfo.seats || []).join(", ")}</span></p>
                             <p>Loại vé<br /><span className="font-bold">{ticketInfo.ticketType || ""}</span></p>
                             <p>Combo<br /><span className="font-bold">{ticketInfo.combos || ""}</span></p>
-                            <p>Số nước ngọt/snacks<br /><span className="font-bold">{ticketInfo.drinkCount || ""}</span></p>
+                            <p>Số nước ngọt<br /><span className="font-bold">{ticketInfo.drinkCount || ""}</span></p>
+                            <p>Số snacks<br /><span className="font-bold">{ticketInfo.snackCount || ""}</span></p>
                         </div>
                         <hr className="my-2 border-black" />
                         <p className="font-bold text-lg">

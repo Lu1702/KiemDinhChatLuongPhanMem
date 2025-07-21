@@ -32,24 +32,24 @@ const Info: React.FC = () => {
                 <div className="sticky top-32 h-fit self-start bg-white/20 backdrop-blur-md p-4 rounded-xl w-full md:w-1/4 space-y-4 shadow-lg">
                     <button
                         className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "info"
-                                ? "bg-yellow-300 text-black"
-                                : "hover:bg-white/30 text-white"
+                            ? "bg-yellow-300 text-black"
+                            : "hover:bg-white/30 text-white"
                             }`}
                         onClick={() => setActiveTab("info")}>
                         Thông tin cá nhân
                     </button>
                     <button
                         className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "history"
-                                ? "bg-yellow-300 text-black"
-                                : "hover:bg-white/30 text-white"
+                            ? "bg-yellow-300 text-black"
+                            : "hover:bg-white/30 text-white"
                             }`}
                         onClick={() => setActiveTab("history")}>
                         Lịch sử đặt vé
                     </button>
                     <button
                         className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "password"
-                                ? "bg-yellow-300 text-black"
-                                : "hover:bg-white/30 text-white"
+                            ? "bg-yellow-300 text-black"
+                            : "hover:bg-white/30 text-white"
                             }`}
                         onClick={() => setActiveTab("password")}>
                         Đổi mật khẩu
@@ -124,7 +124,6 @@ const Info: React.FC = () => {
                     )}
                 </div>
             </div>
-            {/* Logout button */}
             <div className="flex justify-center mt-10">
                 <button
                     className="group flex items-center justify-start w-11 h-11 bg-red-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-200 shadow-lg hover:w-32 hover:rounded-lg active:translate-x-1 active:translate-y-1">
@@ -143,6 +142,11 @@ const Info: React.FC = () => {
                     </div>
                 </button>
             </div>
+            <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointers">
+                ↑
+            </button>
             <div className="sticky mx-auto mt-28">
                 <Bottom />
             </div>

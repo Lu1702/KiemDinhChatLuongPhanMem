@@ -257,6 +257,7 @@ function Home() {
         <div className="content-wrapper max-w-screen-xl text-base mx-auto px-8 min-h-screen top-0">
           <main className="flex flex-col gap-6 p-4">
             <MovieSlider />
+            <QuickBooking />
             <section>
               <h2 className="text-3xl text-white font-bold pt-10 pb-24 uppercase text-center">-- Phim đang chiếu --</h2>
               <div className="px-4 sm:px-6 lg:px-8">
@@ -347,8 +348,7 @@ function Home() {
         </div>
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointers"
-        >
+          className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointers">
           ↑
         </button>
         <footer className="pt-32">

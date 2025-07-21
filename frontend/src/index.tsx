@@ -23,7 +23,6 @@ import FutureFilm from './Bookig/FutureFilm';
 import Booking from './Bookig/Booking';
 import BookingHistory from './Account/BookingHistory';
 
-//Phần admin
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
