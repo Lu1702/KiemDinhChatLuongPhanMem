@@ -18,6 +18,7 @@ namespace backend.Controllers
             this.scheduleServices = scheduleServices;
         }
         [HttpPost("addSchedule")]
+        [Authorize(Policy = "TheaterManager")]
         public async Task<IActionResult> addSchedule(ScheduleRequestDTO scheduleRequestDTO)
         {
             var status = await scheduleServices.add(scheduleRequestDTO);
@@ -29,6 +30,7 @@ namespace backend.Controllers
         }
 
         [HttpPatch("editSchedule/{id}")]
+        [Authorize(Policy = "TheaterManager")]
         public async Task<IActionResult> editSchedule(string id, ScheduleRequestDTO scheduleRequestDTO)
         {
             var status = await scheduleServices.edit(id, scheduleRequestDTO);
@@ -40,6 +42,7 @@ namespace backend.Controllers
         }
 
         [HttpDelete("removeSchedule/{id}")]
+        [Authorize(Policy = "TheaterManager")]
         public async Task<IActionResult> removeSchedule(string id, string options)
         {
             var status = await scheduleServices.delete(id, options);

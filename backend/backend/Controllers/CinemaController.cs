@@ -1,6 +1,7 @@
 using backend.Enum;
 using backend.Interface.CinemaInterface;
 using backend.ModelDTO.CinemaDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers;
@@ -37,6 +38,7 @@ public class CinemaController : ControllerBase
 
     // Thêm rạp chiếu phim mới
     [HttpPost("addCinema")]
+    [Authorize(Policy = "FacilitiesManager")]
     public async Task<IActionResult> AddCinema([FromBody] CreateCinemaDTO cinema)
     {
         if (cinema == null)
@@ -55,6 +57,7 @@ public class CinemaController : ControllerBase
 
     // Chỉnh sửa thông tin rạp chiếu phim
     [HttpPut("editCinema/{cinemaId}")]
+    [Authorize(Policy = "FacilitiesManager")]
     public async Task<IActionResult> EditCinema(string cinemaId, [FromBody] EditCinemaDTO cinema)
     {
         // Kiểm tra ID rạp và DTO đầu vào
@@ -81,6 +84,7 @@ public class CinemaController : ControllerBase
 
     // Xóa rạp chiếu phim (soft delete)
     [HttpDelete("deleteCinema/{cinemaId}")]
+    [Authorize(Policy = "FacilitiesManager")]
     public async Task<IActionResult> DeleteCinema(string cinemaId)
     {
         if (string.IsNullOrEmpty(cinemaId))

@@ -42,6 +42,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("uploadComment/{CustomerID}/{movieID}")]
+        [Authorize(Policy = "Customer")]
         public async Task<IActionResult> postComment(string CustomerID , string movieID , CommentRequestDTO dtos)
         {
             var getStatus = await _services.uploadComment(CustomerID, movieID, dtos);
@@ -53,6 +54,7 @@ namespace backend.Controllers
         }
 
         [HttpPatch("editComment/{commentID}")]
+        [Authorize(Policy = "Customer")]
         public async Task<IActionResult> editComment(string commentID, CommentRequestDTO dtos)
         {
             var getStatus = await _services.editComment(commentID, dtos);
@@ -64,6 +66,7 @@ namespace backend.Controllers
         }
 
         [HttpDelete("deleteComment/{commentID}")]
+        [Authorize(Policy = "Customer")]
         public async Task<IActionResult> deleteComment(string commentID)
         {
             var getStatus = await _services.deleteComment(commentID);
