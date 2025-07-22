@@ -8,7 +8,19 @@ import { useNavigate } from 'react-router-dom';
 function Nav() {
     const userEmail = localStorage.getItem('userEmail');
     const handleInfo = () => {
-        navigate('/info');
+        if(localStorage.getItem('role')=="Cashier")
+        {
+            console.log('HAHHAHAAHA');
+        }
+        if(localStorage.getItem('role')=="TheaterManager")
+        {
+            navigate('/QuanLyRap/QLNV');
+        }
+        if(localStorage.getItem('role')=="Customer")
+        {
+            navigate('/info');
+        }
+        
     }
     const handleBooking = () => {
         navigate('/booking');

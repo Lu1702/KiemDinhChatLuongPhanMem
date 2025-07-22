@@ -216,19 +216,14 @@ export default function QuanLy() {
 
           // --- THÊM LOG ĐỂ KIỂM TRA GIÁ TRỊ CỦA selectedCinema và selectedVisualFormat ---
           console.log("phong.rap (selected name):", phong.rap);
-          console.log("selectedCinema (found object):", selectedCinema);
-          console.log("selectedCinema.id:", selectedCinema?.id); // Use optional chaining for safety
+          console.log("selectedCinema (found object):", phong.rap);
+          console.log("selectedCinema.id:", phong.rap); // Use optional chaining for safety
 
           console.log("phong.dinhDang (selected name):", phong.dinhDang);
           console.log("selectedVisualFormat (found object):", selectedVisualFormat);
           console.log("selectedVisualFormat.visualFormatID:", selectedVisualFormat?.visualFormatID); // Use optional chaining for safety
           
 
-          if (!selectedCinema || !selectedCinema.id) {
-              alert("Không tìm thấy rạp đã chọn hoặc rạp không có ID hợp lệ. Vui lòng chọn lại rạp.");
-              setIsLoading(false);
-              return;
-          }
           if (!selectedVisualFormat || !selectedVisualFormat.visualFormatID) {
               alert("Không tìm thấy định dạng hình ảnh đã chọn hoặc định dạng không có ID hợp lệ. Vui lòng chọn lại định dạng.");
               setIsLoading(false);
@@ -249,13 +244,13 @@ export default function QuanLy() {
               return;
           }
 
-          console.log(selectedCinema.id);
+          console.log(phong.rap);
           const requestBody = {
             roomCreateRequestDTO: {
               roomNumber: roomNum,
-              cinemaID: selectedCinema.id, // Đảm bảo đây là UUID của rạp
+              cinemaID: phong.rap, // Đảm bảo đây là UUID của rạp
               visualFormatID: selectedVisualFormat.visualFormatID, // Ví dụ: "2D", "3D"
-              seatsNumber: seatNumbersAsString // Mảng các chuỗi
+              seatsNumber: seatNumbersAsString,
             }
           };
 
