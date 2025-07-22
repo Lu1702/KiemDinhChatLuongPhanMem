@@ -8,20 +8,17 @@ import { useNavigate } from 'react-router-dom';
 function Nav() {
     const userEmail = localStorage.getItem('userEmail');
     const handleInfo = () => {
-        if(localStorage.getItem('role')=="Cashier")
-        {
-            console.log('HAHHAHAAHA');
-        }
-        if(localStorage.getItem('role')=="TheaterManager")
-        {
-            navigate('/QuanLyRap/QLNV');
-        }
-        if(localStorage.getItem('role')=="Customer")
-        {
-            navigate('/info');
-        }
-        
+    // Retrieve roleName from localStorage and split into an array
+    const roleName = localStorage.getItem('role') || '';
+    const roles: string[] = roleName ? roleName.split(',') : [];
+
+    // Role-based navigation
+    if (roles.includes('Cashier') || roles.includes('TheaterManager') || roles.includes('Director') || roles.includes('MovieManager') || roles.includes('FacilitiesManager')) {
+        navigate('/QuanLyRap/QLNV');
+    } else if (roles.includes('Customer')) {
+        navigate('/info');
     }
+};
     const handleBooking = () => {
         navigate('/booking');
     }

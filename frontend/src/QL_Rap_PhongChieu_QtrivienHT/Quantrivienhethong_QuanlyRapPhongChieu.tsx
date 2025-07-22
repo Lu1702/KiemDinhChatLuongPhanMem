@@ -12,7 +12,7 @@ export default function QuanLy() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [editRapIndex, setEditRapIndex] = useState<number | null>(null);
   const [editSeatIndex, setEditSeatIndex] = useState<number | null>(null);
-
+  const [isCheckingRoles, setIsCheckingRoles] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingCinemas, setIsFetchingCinemas] = useState(false);
 
@@ -22,7 +22,8 @@ export default function QuanLy() {
     mota: "",
     hotline: "",
   });
-
+  const roleName = localStorage.getItem('role') || '';
+  const roles = roleName ? roleName.split(',') : [];
   const [phong, setPhong] = useState({
     soPhong: "",
     rap: "", // This will store cinemaName
@@ -34,61 +35,84 @@ export default function QuanLy() {
 
   const [listRap, setListRap] = useState<any[]>([]);
   const [visualFormats, setVisualFormats] = useState<any[]>([]);
-
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  // Check roles on page load
   useEffect(() => {
-    const fetchInitialData = async () => {
-      setIsFetchingCinemas(true);
-      try {
-        const cinemaResponse = await fetch('http://localhost:5229/api/Cinema/getCinemaList');
-        if (cinemaResponse.ok) {
-          const responseData = await cinemaResponse.json();
-          let actualCinemaData = responseData;
+    setIsCheckingRoles(true);
+    const timer = setTimeout(() => {
+      if (roles.includes('FacilitiesManager')) {
+        alert('Chào mừng trở lại!');
+        setIsAuthorized(true);
+        setIsCheckingRoles(false);
+      } else {
+        alert('Không được phép vào trang này');
+        navigate('/login');
+      }
+    }, 1000); // 1-second delay to show spinner
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array for mount-only execution
 
-          if (responseData && responseData.data && Array.isArray(responseData.data)) {
-            actualCinemaData = responseData.data;
-          } else if (responseData && Array.isArray(responseData)) {
-            actualCinemaData = responseData;
-          }
-          // Add other conditions if your API structure is different (e.g., responseData.cinemas)
+  // Fetch initial data for cinemas and visual formats
+  useEffect(() => {
+    if (isAuthorized) {
+      const fetchInitialData = async () => {
+        setIsFetchingCinemas(true);
+        try {
+          const cinemaResponse = await fetch('http://localhost:5229/api/Cinema/getCinemaList');
+          if (cinemaResponse.ok) {
+            const responseData = await cinemaResponse.json();
+            let actualCinemaData = responseData;
 
-          if (Array.isArray(actualCinemaData)) {
-            setListRap(actualCinemaData.map((c: any, index: number) => ({
-              stt: index + 1,
-              id: c.cinemaId,
-              name: c.cinemaName,
-              diachi: c.cinemaLocation,
-              mota: c.cinemaDescription,
-              hotline: c.cinemaContactNumber
-            })));
-            console.log("Fetched listRap:", actualCinemaData.map((c: any) => ({ id: c.cinemaId, name: c.cinemaName }))); // Log fetched cinemas
+            if (responseData && responseData.data && Array.isArray(responseData.data)) {
+              actualCinemaData = responseData.data;
+            } else if (responseData && Array.isArray(responseData)) {
+              actualCinemaData = responseData;
+            }
+
+            if (Array.isArray(actualCinemaData)) {
+              setListRap(actualCinemaData.map((c: any, index: number) => ({
+                stt: index + 1,
+                id: c.cinemaId,
+                name: c.cinemaName,
+                diachi: c.cinemaLocation,
+                mota: c.cinemaDescription,
+                hotline: c.cinemaContactNumber
+              })));
+              console.log("Fetched listRap:", actualCinemaData.map((c: any) => ({ id: c.cinemaId, name: c.cinemaName })));
+            } else {
+              console.error("API did not return an array in expected format:", responseData);
+              alert("Dữ liệu rạp trả về không đúng định dạng. Vui lòng kiểm tra console và network tab.");
+            }
           } else {
-            console.error("API did not return an array in expected format:", responseData);
-            alert("Dữ liệu rạp trả về không đúng định dạng. Vui lòng kiểm tra console và network tab.");
+            const errorText = await cinemaResponse.text();
+            console.error("Failed to fetch cinemas:", errorText);
+            alert(`Lỗi khi tải danh sách rạp: ${errorText}`);
           }
-        } else {
-          const errorText = await cinemaResponse.text();
-          console.error("Failed to fetch cinemas:", errorText);
-          alert(`Lỗi khi tải danh sách rạp: ${errorText}`);
-        }
 
-        // Static visual formats for now. If you have an API for this, fetch it here.
-        const staticVisualFormats = [
+          // Static visual formats (replace with API call if available)
+          const staticVisualFormats = [
             { visualFormatID: "2D", visualFormatName: "2D" },
             { visualFormatID: "3D", visualFormatName: "3D" }
-        ];
-        setVisualFormats(staticVisualFormats);
-        console.log("Loaded visualFormats:", staticVisualFormats); // Log loaded visual formats
+          ];
+          setVisualFormats(staticVisualFormats);
+          console.log("Loaded visualFormats:", staticVisualFormats);
+        } catch (error: unknown) {
+          console.error("Error fetching initial data:", (error as Error).message);
+          alert(`Đã xảy ra lỗi khi tải dữ liệu: ${(error as Error).message}`);
+        } finally {
+          setIsFetchingCinemas(false);
+        }
+      };
+      fetchInitialData();
+    }
+  }, [isAuthorized]);
 
-      } catch (error: unknown) {
-        console.error("Error fetching initial data:", (error as Error).message);
-        alert(`Đã xảy ra lỗi khi tải dữ liệu: ${(error as Error).message}`);
-      } finally {
-        setIsFetchingCinemas(false);
-      }
-    };
-    fetchInitialData();
-  }, []);
-
+  // Handle csphongrap tab navigation
+  useEffect(() => {
+    if (activeTab === 'rap' && isAuthorized) {
+      navigate('/Quantrivienhethong/QLRapPhongChieu');
+    }
+  }, [activeTab, isAuthorized, navigate]);
   const handleRapChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setRap({ ...rap, [name]: value });
@@ -340,6 +364,30 @@ export default function QuanLy() {
     alert(`Đã chọn ghế để sửa: ${item.ghe}`);
   };
 
+  if (isCheckingRoles) {
+    return (
+      <div style={{
+        display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh",
+        backgroundImage: "url('/images/bg.png')", backgroundSize: "cover", backgroundPosition: "center",
+        backgroundRepeat: "no-repeat", backgroundAttachment: "fixed"
+      }}>
+        <div className="dot-spinner">
+          <div className="dot-spinner__dot"></div>
+          <div className="dot-spinner__dot"></div>
+          <div className="dot-spinner__dot"></div>
+          <div className="dot-spinner__dot"></div>
+          <div className="dot-spinner__dot"></div>
+          <div className="dot-spinner__dot"></div>
+          <div className="dot-spinner__dot"></div>
+          <div className="dot-spinner__dot"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
   return (
     <div style={{
       backgroundImage: "url('/images/bg.png')",
@@ -387,7 +435,7 @@ export default function QuanLy() {
               }}>
                 <button onClick={() => { setShowLogoutModal(true); setShowAccountMenu(false); }}
                   style={{ background: "", border: "", color: "White", cursor: "pointer" }}>
-                  Đăng xuất
+                  Thoát
                 </button>
               </div>
             )}
@@ -632,12 +680,11 @@ export default function QuanLy() {
                 <img src="/images/warning.png" alt="!" style={{ width: "40px" }} />
               </div>
             </div>
-            <p>Bạn chắc chắn muốn đăng xuất không</p>
+            <p>Bạn chắc chắn muốn thoát trang chỉnh sửa?</p>
             <div style={{ display: "flex", justifyContent: "space-around", marginTop: "16px" }}>
               <button onClick={() => {
-                alert("Đã đăng xuất");
                 setShowLogoutModal(false);
-                navigate("/");
+                navigate("/QuanLyRap/QLNV");
               }}
                 style={{ padding: "6px 12px", border: "none", borderRadius: "4px", background: "#ccc", color: "black" }}>Có</button>
               <button onClick={() => setShowLogoutModal(false)}
