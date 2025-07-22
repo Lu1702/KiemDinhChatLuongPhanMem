@@ -1,17 +1,18 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace backend.ModelDTO.RoomDTOS;
 
 public class RoomCreateRequestDTO
 {
-    [Required]
+    [Required(ErrorMessage = "Chưa có số phòng")]
     public int RoomNumber { get; set; } 
-    [Required]
+    [Required(ErrorMessage = "Chưa có ID rạp")]
     public string CinemaID { get; set; } = string.Empty;
-    [Required]
+    [Required(ErrorMessage = "Chưa có Định dạng hình ảnh")]
+
     public string VisualFormatID { get; set; } = string.Empty;
-    
-    [Required]
+
+    [Required(ErrorMessage = "Chưa có ghế")]
     public List<string> SeatsNumber { get; set; } = [];
 
 }

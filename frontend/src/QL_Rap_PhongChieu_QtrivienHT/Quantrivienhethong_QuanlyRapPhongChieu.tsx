@@ -131,21 +131,20 @@ export default function QuanLy() {
             }
 
             const updatedCinemaData = {
-              cinemaId: rapToUpdate.id,
               cinemaName: rap.name,
               cinemaLocation: rap.diachi,
               cinemaDescription: rap.mota,
               cinemaContactNumber: rap.hotline,
             };
 
-            const response = await fetch(`http://localhost:5229/api/Cinema/UpdateCinema`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(updatedCinemaData),
+            const response = await fetch(`http://localhost:5229/api/Cinema/editCinema/${rapToUpdate.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(updatedCinemaData),
             });
-
             if (response.ok) {
                 const result = await response.json();
                 alert(`Đã cập nhật rạp thành công: ${result.cinemaName || rap.name}`);
@@ -175,6 +174,7 @@ export default function QuanLy() {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
               },
               body: JSON.stringify(newCinemaData),
             });
@@ -189,6 +189,7 @@ export default function QuanLy() {
                 diachi: result.cinemaLocation || rap.diachi,
                 mota: result.cinemaDescription || rap.mota,
                 hotline: result.cinemaContactNumber || rap.hotline
+                
               }]);
               setRap({ name: "", diachi: "", mota: "", hotline: "" });
             } else {
@@ -221,7 +222,7 @@ export default function QuanLy() {
           console.log("phong.dinhDang (selected name):", phong.dinhDang);
           console.log("selectedVisualFormat (found object):", selectedVisualFormat);
           console.log("selectedVisualFormat.visualFormatID:", selectedVisualFormat?.visualFormatID); // Use optional chaining for safety
-
+          
 
           if (!selectedCinema || !selectedCinema.id) {
               alert("Không tìm thấy rạp đã chọn hoặc rạp không có ID hợp lệ. Vui lòng chọn lại rạp.");
@@ -248,6 +249,7 @@ export default function QuanLy() {
               return;
           }
 
+          console.log(selectedCinema.id);
           const requestBody = {
             roomCreateRequestDTO: {
               roomNumber: roomNum,
@@ -263,10 +265,10 @@ export default function QuanLy() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             },
             body: JSON.stringify(requestBody),
           });
-
           if (response.ok) {
             const result = await response.json();
             alert(`Đã thêm phòng chiếu thành công: Phòng ${result.roomNumber || phong.soPhong} tại rạp ${phong.rap}`);
@@ -531,7 +533,7 @@ export default function QuanLy() {
                         <option disabled>Đang tải rạp...</option>
                     ) : (
                         listRap.map((item) => (
-                            <option key={item.id} value={item.name}>{item.name}</option>
+                            <option key={item.id} value={item.id}>{item.name}</option>
                         ))
                     )}
                   </select>
@@ -546,7 +548,7 @@ export default function QuanLy() {
                   >
                     <option value="">Chọn định dạng</option>
                     {visualFormats.map(format => (
-                        <option key={format.visualFormatID} value={format.visualFormatName}>
+                        <option key={format.visualFormatID} value={format.visualFormatID}>
                             {format.visualFormatName}
                         </option>
                     ))}

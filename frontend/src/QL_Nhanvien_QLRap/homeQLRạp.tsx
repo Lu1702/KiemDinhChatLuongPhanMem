@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
@@ -25,7 +26,7 @@ interface Staff {
 }
 
 interface AddStaffFormData {
-    staffId: string; // Thêm staffId để hỗ trợ sau này nếu cần
+    staffId: string;
     cinemaId: string;
     loginUserEmail: string;
     loginUserPassword: string;
@@ -46,7 +47,7 @@ interface EditingStaff {
 }
 
 // Utility function to format date
-const formatDate = (dateStr: string) => dateStr ? new Date(dateStr).toISOString().split("T")[0] : "";
+const formatDate = (dateStr: string) => dateStr ? new Date(dateStr).toISOString() : "";
 
 const Info: React.FC = () => {
     const userEmail = localStorage.getItem("userEmail");
@@ -62,7 +63,7 @@ const Info: React.FC = () => {
         staffName: "",
         dateOfBirth: "",
         phoneNumer: "",
-        role: "Cashier", // Giá trị mặc định
+        role: "", // Mặc định là rỗng, người dùng tự chọn
     });
     const [cinemas, setCinemas] = useState<Cinema[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
@@ -92,52 +93,67 @@ const Info: React.FC = () => {
 
     // Fetch roles
     useEffect(() => {
-        const fetchRoles = async () => {
-            const authToken = localStorage.getItem('authToken');
-            if (!authToken) {
-                console.error('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
-                navigate('/');
-                return;
-            }
-            try {
-                const response = await fetch("http://localhost:5229/api/Staff/GetRoleList", {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    const fetchRoles = async () => {
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            console.error('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
+            navigate('/');
+            return;
+        }
+        try {
+            const response = await fetch("http://localhost:5229/api/Staff/GetRoleList", {
+                method: 'GET',
+                headers: {
+                    'accept': '*/*',
+                    'Authorization': `Bearer ${authToken}`
                 }
-                const data = await response.json();
-                if (data.status === "Success" && data.data) {
-                    setRoles(data.data);
-                    if (data.data.length > 0) {
-                        setAddStaffFormData(prev => ({ ...prev, role: data.data[0].roleid }));
-                    }
-                } else {
-                    console.error("Lỗi khi tải danh sách vai trò:", data.message);
-                }
-            } catch (error: any) {
-                console.error("Lỗi khi tải danh sách vai trò:", error.message);
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
-        };
-        fetchRoles();
-    }, []);
+
+            const data = await response.json();
+
+            // Kiểm tra trạng thái và dữ liệu trả về từ API
+            if (data.status === "Success" && data.data) {
+                // Ép kiểu (type assertion) dữ liệu nhận được thành mảng Role
+                const fetchedRoles: Role[] = data.data;
+                setRoles(fetchedRoles); // Cập nhật state chứa danh sách vai trò
+
+                if (fetchedRoles.length > 0) {
+                    // Ưu tiên tìm vai trò "Cashier" dựa trên 'roleName'
+                    const cashierRole = fetchedRoles.find((role: Role) => role.roleName === "Cashier");
+
+                    if (cashierRole) {
+                        // Nếu tìm thấy "Cashier", đặt roleid của Cashier làm mặc định
+                        setAddStaffFormData(prev => ({ ...prev, role: cashierRole.roleid }));
+                    } else {
+                        // Nếu không tìm thấy "Cashier", đặt roleid của vai trò đầu tiên làm mặc định
+                        setAddStaffFormData(prev => ({ ...prev, role: fetchedRoles[0].roleid }));
+                    }
+                }
+            } else {
+                console.error("Lỗi khi tải danh sách vai trò:", data.message);
+            }
+        } catch (error: any) {
+            console.error("Lỗi khi tải danh sách vai trò:", error.message);
+        }
+    };
+    fetchRoles();
+}, []);
 
     // Fetch staff list
     const fetchStaffList = useCallback(async () => {
         const roleName = localStorage.getItem('role');
-        if (activeTab !== "nhanvien" || roleName !== "TheaterManager") return;
+        if (activeTab !== "nhanvien") return;
         try {
             setIsInitialLoading(true);
             const authToken = localStorage.getItem('authToken');
             if (!authToken) {
                 console.error('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
                 navigate('/login');
-                return;
+                return;     
             }
             const response = await fetch("http://localhost:5229/api/Staff/GetStaffList", {
                 method: 'GET',
@@ -180,9 +196,11 @@ const Info: React.FC = () => {
     };
 
     // Handle Add Staff submission
-    const handleAddStaffSubmit = async () => {
-        if (!addStaffFormData.staffName || !addStaffFormData.loginUserEmail || !addStaffFormData.cinemaId || !addStaffFormData.role) {
-            alert("Vui lòng điền đầy đủ thông tin bắt buộc (Email, Tên nhân viên, Rạp, Vai trò).");
+   const handleAddStaffSubmit = async () => {
+        if (!addStaffFormData.loginUserEmail || !addStaffFormData.loginUserPassword || !addStaffFormData.loginUserPasswordConfirm ||
+            !addStaffFormData.staffName || !addStaffFormData.dateOfBirth || !addStaffFormData.phoneNumer ||
+            !addStaffFormData.cinemaId ) {
+            alert("Vui lòng điền đầy đủ tất cả thông tin (Email, Mật khẩu, Xác nhận mật khẩu, Tên nhân viên, Ngày sinh, SĐT, Rạp, Vai trò).");
             return;
         }
         if (addStaffFormData.loginUserPassword !== addStaffFormData.loginUserPasswordConfirm) {
@@ -199,9 +217,11 @@ const Info: React.FC = () => {
                 navigate('/login');
                 return;
             }
+            // Gán mặc định "Cashier" nếu role là rỗng
+            
             const response = await fetch("http://localhost:5229/api/Staff/AddStaff", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${authToken}` },
+                headers: { "accept": "*/*", "Content-Type": "application/json", 'Authorization': `Bearer ${authToken}` },
                 body: JSON.stringify({
                     loginUserEmail: addStaffFormData.loginUserEmail,
                     loginUserPassword: addStaffFormData.loginUserPassword,
@@ -210,10 +230,12 @@ const Info: React.FC = () => {
                     dateOfBirth: dateOfBirthISO,
                     phoneNumer: addStaffFormData.phoneNumer,
                     cinemaId: addStaffFormData.cinemaId,
-                    roleId: addStaffFormData.role,
+                    roleID: [
+                        "1a8f7b9c-d4e5-4f6a-b7c8-9d0e1f2a3b4c"
+                    ], // Gửi role dưới dạng string, với "Cashier" làm mặc định nếu rỗng
                 }),
             });
-
+            
             if (!response.ok) throw new Error((await response.json()).message || `Lỗi HTTP: ${response.status}`);
             const result = await response.json();
             if (result.status === "Success") {
@@ -228,7 +250,7 @@ const Info: React.FC = () => {
                     staffName: "",
                     dateOfBirth: "",
                     phoneNumer: "",
-                    role: roles.length > 0 ? roles[0].roleid : "Cashier",
+                    role: roles.length > 0 ? roles[0].roleid : "Cashier", // Lấy role đầu tiên hoặc để rỗng
                 });
             } else alert(`Lỗi: ${result.message}`);
         } catch (error: any) {
@@ -242,6 +264,7 @@ const Info: React.FC = () => {
     const handleDelete = async (staffIdToDelete: string): Promise<void> => {
         if (!window.confirm(`Bạn có chắc chắn muốn xóa nhân viên với ID: ${staffIdToDelete} không?`)) return;
         setLoading(true);
+        
         try {
             const authToken = localStorage.getItem('authToken');
             const response = await fetch(`http://localhost:5229/api/Staff/DeleteStaff?id=${staffIdToDelete}`, {
@@ -269,7 +292,7 @@ const Info: React.FC = () => {
                 dateOfBirth: staffToEdit.dayOfBirth,
                 phoneNumer: staffToEdit.staffPhoneNumber,
                 cinemaId: staffToEdit.cinemaId,
-                staffRole: staffToEdit.staffRole || "Cashier",
+                staffRole: staffToEdit.staffRole || "",
             });
         }
     };
@@ -333,7 +356,7 @@ const Info: React.FC = () => {
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "nhanvien" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("nhanvien")}>Danh sách nhân viên</button>
                         </div>
                     )}
-                    {process.env.NODE_ENV === "development" && <p className="text-white text-sm">Debug: userRole = {userRole}</p>}
+                    
                 </div>
                 <div className="flex-1 space-y-8 mt-8 md:mt-0">
                     <h1 className="text-white text-3xl font-bold text-center uppercase">Cinema xin chào! {userEmail}</h1>
@@ -403,11 +426,11 @@ const Info: React.FC = () => {
                                     </div>
                                     <div className="uiverse-pixel-input-wrapper">
                                         <label className="uiverse-pixel-label">Ngày tháng năm sinh</label>
-                                        <input type="date" value={addStaffFormData.dateOfBirth} onChange={(e) => handleAddStaffInputChange(e, "dateOfBirth")} className="uiverse-pixel-input" placeholder="Ngày tháng năm sinh" />
+                                        <input type="date" value={addStaffFormData.dateOfBirth} onChange={(e) => handleAddStaffInputChange(e, "dateOfBirth")} className="uiverse-pixel-input" placeholder="Ngày tháng năm sinh" required />
                                     </div>
                                     <div className="uiverse-pixel-input-wrapper">
                                         <label className="uiverse-pixel-label">SĐT</label>
-                                        <input type="tel" value={addStaffFormData.phoneNumer} onChange={(e) => handleAddStaffInputChange(e, "phoneNumer")} className="uiverse-pixel-input" placeholder="Số điện thoại" />
+                                        <input type="tel" value={addStaffFormData.phoneNumer} onChange={(e) => handleAddStaffInputChange(e, "phoneNumer")} className="uiverse-pixel-input" placeholder="Số điện thoại" required />
                                     </div>
                                     <div className="uiverse-pixel-input-wrapper">
                                         <label className="uiverse-pixel-label">Role</label>
@@ -452,8 +475,8 @@ const Info: React.FC = () => {
                                                         <td className="px-4 py-2">{staff.staffName}</td>
                                                         <td className="px-4 py-2">{staff.dayOfBirth}</td>
                                                         <td className="px-4 py-2">{staff.staffPhoneNumber}</td>
-                                                        <td className="px-4 py-2">{staff.cinemaName}</td> {/* Hiển thị cinemaName */}
-                                                        <td className="px-4 py-2">Cashier</td> {/* Hiển thị cố định "Cashier" */}
+                                                        <td className="px-4 py-2">{staff.cinemaId}</td>
+                                                        <td className="px-4 py-2">{staff.staffRole}</td>
                                                         <td className="px-4 py-2">
                                                             <button onClick={() => handleEdit(staff.staffId)} className="mr-2 bg-blue-500 text-white px-2 py-1 rounded">Sửa</button>
                                                             <button onClick={() => handleDelete(staff.staffId)} className="bg-red-500 text-white px-2 py-1 rounded">Xóa</button>
@@ -490,7 +513,7 @@ const Info: React.FC = () => {
                                         <div>
                                             <label className="block mb-2 font-semibold">Vai trò</label>
                                             <select value={editingStaff.staffRole} onChange={(e) => handleEditInputChange(e, "staffRole")} className="w-full border rounded-md px-4 py-2">
-                                                <option value="Cashier">Cashier</option> {/* Cố định vai trò là Cashier */}
+                                                {roles.map((role) => <option key={role.roleid} value={role.roleid}>{role.roleName}</option>)}
                                             </select>
                                         </div>
                                     </div>
