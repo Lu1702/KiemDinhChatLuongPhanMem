@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
-
 // Define interfaces
 interface Service {
     id: number;
@@ -1132,12 +1131,6 @@ const Info: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <h3>Xin chào quản lý</h3>
                         <div style={{ position: 'relative' }}>
-                            <span
-                                style={{ fontSize: '28px', cursor: 'pointer' }}
-                                onClick={() => setShowAccountMenu(!showAccountMenu)}
-                            >
-                                👤
-                            </span>
                             {showAccountMenu && (
                                 <div
                                     style={{

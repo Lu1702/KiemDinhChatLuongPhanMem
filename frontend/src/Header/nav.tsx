@@ -28,9 +28,26 @@ function Nav() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const navigate = useNavigate();
 
+
+    //tạo giả định để find nóa
+    const mockMovies = [
+        { id: 1, title: "Avengers: Endgame" },
+        { id: 2, title: "Spider-Man: No Way Home" },
+        { id: 3, title: "Doctor Strange" },
+        { id: 4, title: "Black Panther" },
+        { id: 5, title: "Iron Man" },
+        { id: 6, title: "Conan" },
+        { id: 7, title: "Thám tử Read" },
+        { id: 8, title: "Doraemon" },
+    ];
+    const [searchResults, setSearchResults] = useState<{ id: number; title: string }[]>([]);
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log('Tìm kiếm:', searchTerm);
+        const results = mockMovies.filter((movie) =>
+            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setSearchResults(results);
+        console.log("Kết quả tìm kiếm:", results);
     };
 
     return (
@@ -74,6 +91,25 @@ function Nav() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)} />
                         <button type="submit" className="bg-purple-600 text-white px-4 py-2 hover:bg-purple-800 transition">Tìm</button>
+                        {/* Phần giả định dữ liệu */}
+                        {searchResults.length > 0 && (
+                            <div className="absolute top-full mt-2 bg-white text-black rounded shadow-md w-[250px] z-50">
+                                {searchResults.map((movie) => (
+                                    <div
+                                        key={movie.id}
+                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                        onClick={() => {
+                                            console.log("Chọn phim:", movie.title);
+                                            setSearchTerm(movie.title); // Set lại input nếu muốn
+                                            setSearchResults([]);
+                                        }}
+                                    >
+                                        {movie.title}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                     </form>
                     {userEmail ? (
                         <div className="flex items-center gap-2">

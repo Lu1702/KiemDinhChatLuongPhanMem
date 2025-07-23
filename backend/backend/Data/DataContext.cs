@@ -53,6 +53,8 @@ namespace backend.Data
         
         public DbSet<EmailList> EmailList { get; set; }
 
+        public DbSet<EmailList> EmailList { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -68,13 +70,13 @@ namespace backend.Data
             modelBuilder.Entity<Staff>()
                 .HasIndex(ms => new { ms.userID })
                 .IsUnique();
-            
+
             // unique Phim phim , ngay , gio
             modelBuilder.Entity<movieSchedule>()
                 .HasIndex(ms => new { ms.movieId, ms.ScheduleDate, ms.HourScheduleID })
                 .HasFilter("[IsDelete] = CAST(0 AS BIT)")
                 .IsUnique();
-            
+
             // unique Lichj chieu Phong , Ngay , Gio
             modelBuilder.Entity<movieSchedule>()
                 .HasIndex(ms => new { ms.cinemaRoomId, ms.ScheduleDate, ms.HourScheduleID})
@@ -105,13 +107,13 @@ namespace backend.Data
             // Seed Data for UserInformation
             var userId1 = "a1b2c3d4-e5f6-7a8b-c9d0-e1f2a3b4c5d6";
             var userId2 = "b2c3d4e5-f6a7-8b9c-d0e1-f2a3b4c5d6e7";
-            
+
             // Đây là ngời có Role là QL rap
 
             string UserDirectorId = "e4e1f7d8-c3b2-4a90-8c67-2f5a1b3d9e0c";
             string UserTheaterManagerId = "7b5d2c1e-9f8a-3e7b-c1d2-a0e9f8c7b6a5";
             string UserFacilitiesManagerId = "f1a0e9b8-d7c6-5e4f-a3b2-1d0c9b8a7f6e";
-            
+
             modelBuilder.Entity<userInformation>().HasData(
                 new userInformation
                 {
@@ -124,24 +126,24 @@ namespace backend.Data
                     userId = userId2,
                     loginUserEmail = "user@example.com",
                     loginUserPassword = "$2a$12$ADqBiSquthm1g7bLZvg6UulJ5QJFQQ6olUQzf66AQfJDGbQ2W1wlG",
-                } ,
+                },
                 // Mk la anhduc9a5
                 new userInformation
                 {
-                    userId = UserDirectorId ,
+                    userId = UserDirectorId,
                     loginUserEmail = "director@example.com",
                     loginUserPassword = "$2a$12$91JfhncA5t3ssFtiaoKjSOrbMj7zON.wtL/n3cjme/wvK2kDCgZ7K"
-                } ,
+                },
                 new userInformation()
                 {
-                    userId = UserTheaterManagerId ,
+                    userId = UserTheaterManagerId,
                     loginUserEmail = "theater@example.com",
                     loginUserPassword = "$2a$12$FeLXQjfW3gfNFfELxTJS3.gH8o9Y2CB5WSGcDZxKMrPEJiR2RcxIS"
                 },
                 new userInformation()
                 {
-                    userId = UserFacilitiesManagerId ,
-                        loginUserEmail = "facilities@example.com",
+                    userId = UserFacilitiesManagerId,
+                    loginUserEmail = "facilities@example.com",
                     loginUserPassword = "$2a$12$CkugZHMrWhxG0h6hUqOAf.fX9QQFkLnfnLlI.xWCNZ1y/PivtfN2O"
                 }
             );
@@ -162,14 +164,14 @@ namespace backend.Data
             // Seed Data for UserRoleInformation (linking users to roles) (KHÔNG THAY ĐỔI)
             modelBuilder.Entity<userRoleInformation>().HasData(
                 new userRoleInformation { userId = userId1, roleId = MovieManagerId },
-                new userRoleInformation { userId = userId2, roleId = customerId } ,
-                new userRoleInformation { userId = UserTheaterManagerId, roleId = TheaterManagerId } ,
-                new userRoleInformation { userId = UserFacilitiesManagerId, roleId = FacilitiesManagerId } ,
-                new userRoleInformation() { userId = UserDirectorId, roleId = DirectorId } ,
-                new userRoleInformation(){userId = UserDirectorId , roleId = FacilitiesManagerId} ,
-                new userRoleInformation() { userId = UserDirectorId, roleId = TheaterManagerId } , 
-                new userRoleInformation() { userId = UserDirectorId, roleId = MovieManagerId } ,
-                new userRoleInformation() {userId = UserDirectorId , roleId = cashierId}
+                new userRoleInformation { userId = userId2, roleId = customerId },
+                new userRoleInformation { userId = UserTheaterManagerId, roleId = TheaterManagerId },
+                new userRoleInformation { userId = UserFacilitiesManagerId, roleId = FacilitiesManagerId },
+                new userRoleInformation() { userId = UserDirectorId, roleId = DirectorId },
+                new userRoleInformation() { userId = UserDirectorId, roleId = FacilitiesManagerId },
+                new userRoleInformation() { userId = UserDirectorId, roleId = TheaterManagerId },
+                new userRoleInformation() { userId = UserDirectorId, roleId = MovieManagerId },
+                new userRoleInformation() { userId = UserDirectorId, roleId = cashierId }
             );
 
             // =====================================================================

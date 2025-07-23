@@ -8,6 +8,7 @@ using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 using System.Linq;
+using backend.Model.Booking;
 using backend.ModelDTO.ScheduleDTO;
 
 namespace backend.Services.Schedule
@@ -68,6 +69,7 @@ namespace backend.Services.Schedule
                     foreach (var movieScheduleDTO in scheduleRequestDTO.scheduleDateDTOs)
                     {
                         if (!movieScheduleDTO.ScheduleVisualFormatDTOs.Any())
+
                         {
                             return new GenericRespondDTOs()
                             {
@@ -114,8 +116,7 @@ namespace backend.Services.Schedule
                                     return new GenericRespondDTOs()
                                     {
                                         Status = GenericStatusEnum.Failure.ToString(),
-                                        message =
-                                            "Phòng chiếu này đã có một bộ phim khác được lên lịch vào đúng thời gian bạn chọn.\n\nVui lòng chọn một phòng chiếu khác hoặc một giờ chiếu khác cho lịch trình của bạn."
+                                        message =  "Phòng chiếu này đã có một bộ phim khác được lên lịch vào đúng thời gian bạn chọn.\n\nVui lòng chọn một phòng chiếu khác hoặc một giờ chiếu khác cho lịch trình của bạn."
                                     };
                                 }
 
@@ -170,15 +171,80 @@ namespace backend.Services.Schedule
                 }
             }
         }
+        
+        // Lưu ý : Nghiệp vụ ở đây có chút khác biệt so với các nghiệp vụ sửa khác 
          
-        public async Task<bool> edit(string Movieid, ScheduleRequestDTO scheduleRequestDTO)
+        public async Task<GenericRespondDTOs> edit(string Movieid, ScheduleRequestDTO scheduleRequestDTO)
         {
             return false;
         }
 
-        public async Task<bool> delete(string id, string options)
+        public async Task<GenericRespondDTOs> delete(string id)
         {
-            return false;
+            if (String.IsNullOrEmpty(id))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Id Bi Thieu"
+                };
+            }
+            
+            var findMovieSchedule = await _dataContext.movieSchedule.FindAsync(id);
+            if (findMovieSchedule == null)
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Không tìm thấy lịch chiếu phim"
+                };
+            }
+            
+            // Tiep Tuc Tim Kiem Trong Bảng OrderTicket
+        var findTickets = _dataContext
+            .TicketOrderDetail
+            .Where(x => x.movieScheduleID == id)
+            .Include(x => x.Order);
+        
+            // TIep Tuc Tiem Kiem Trong Bang 
+            // Neu Co Khong Duoc Xoa
+            if (findTickets.Any(x =>
+                    x.Order.PaymentStatus.Equals(PaymentStatus.PaymentSuccess.ToString())
+                    && x.Order.PaymentStatus.Equals(PaymentStatus.Pending.ToString())))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Không xóa được , Đã có người đặt vé hoặc đang trong thoi gian chờ đặt vé"
+                };
+            }
+            // Nếu chưa có ai mua thì sẽ được xóa // Tiến hành xóa các Order Lieen quan
+            await using var Transaction = await _dataContext.Database.BeginTransactionAsync();
+            try
+            {
+                var findOrder = _dataContext.Order
+                    .Where(x => findTickets.Select(x => x.orderId).Contains(x.orderId));
+                _dataContext.movieSchedule.Remove(findMovieSchedule);
+                _dataContext.Order.RemoveRange(findOrder);
+                _dataContext.TicketOrderDetail.RemoveRange(findTickets);
+                await _dataContext.SaveChangesAsync();
+                await Transaction.CommitAsync();
+                
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Xoa thanh cong"
+                };
+            }
+            catch (Exception e)
+            {
+                await Transaction.RollbackAsync();
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Loi Database"
+                };
+            }
         }
 
         public GenericRespondWithObjectDTO<List<GetListScheduleDTO>> getAlSchedulesByMovieName(string movieName)
