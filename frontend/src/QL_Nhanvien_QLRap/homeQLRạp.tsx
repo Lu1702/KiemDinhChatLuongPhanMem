@@ -209,7 +209,23 @@ const Info: React.FC = () => {
 
     const roleName = localStorage.getItem('role') || '';
     const roles1: string[] = roleName ? roleName.split(',') : [];
-
+    const [isCheckingRoles, setIsCheckingRoles] = useState(false);
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    useEffect(() => {
+        setIsCheckingRoles(true);
+        const timer = setTimeout(() => {
+          if (roles1.includes('FacilitiesManager')|| roles1.includes('Director') || roles1.includes('MovieManager')||roles1.includes('MovieManager') || roles1.includes('Cashier') ) {
+            alert('Chào mừng trở lại!');
+            setIsAuthorized(true);
+            setIsCheckingRoles(false);
+          } else {
+            alert('Không được phép vào trang này');
+            navigate('/login');
+          }
+        }, 1000); // 1-second delay to show spinner
+        return () => clearTimeout(timer);
+      }, []); // Empty dependency array for mount-only execution
+    
     useEffect(() => {
         const fetchCinemas = async () => {
             try {
