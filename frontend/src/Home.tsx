@@ -259,7 +259,7 @@ function Home() {
             <MovieSlider />
             <QuickBooking />
             <section>
-              <h2 className="text-3xl text-white font-bold pt-10 pb-24 uppercase text-center">-- Phim đang chiếu --</h2>
+              <h2 className="text-3xl text-white font-bold pt-10 mb-5 uppercase text-center">-- Phim đang chiếu --</h2>
               <div className="px-4 sm:px-6 lg:px-8">
                 <Swiper
                   breakpoints={{
@@ -298,7 +298,7 @@ function Home() {
               </button>
             </div>
             <section>
-              <h2 className="text-3xl text-white font-bold pt-10 pb-24 uppercase text-center">-- Phim sắp chiếu --</h2>
+              <h2 className="text-3xl text-white font-bold pt-10 mb-5 uppercase text-center">-- Phim sắp chiếu --</h2>
               <div className="px-4 sm:px-6 lg:px-8">
                 <Swiper
                   breakpoints={{
