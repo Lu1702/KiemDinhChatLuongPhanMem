@@ -9,7 +9,7 @@ namespace backend.Model.MinimumAge
     {
         public string minimumAgeID { get; set; } = string.Empty;
 
-        public int minimumAgeInfo { get; set; } 
+        public string minimumAgeInfo { get; set; } = string.Empty;
 
         public string minimumAgeDescription { get; set; } = string.Empty;
 

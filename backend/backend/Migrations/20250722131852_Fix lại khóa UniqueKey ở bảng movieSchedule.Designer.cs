@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
 
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250722131852_Fix lại khóa UniqueKey ở bảng movieSchedule")]
+    partial class FixlạikhóaUniqueKeyởbảngmovieSchedule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -574,39 +577,6 @@ namespace backend.Migrations
                         });
                 });
 
-            modelBuilder.Entity("backend.Model.Email.EmailList", b =>
-                {
-                    b.Property<string>("EmailId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("EmailCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ExpirationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ResetToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<bool>("isUsed")
-                        .HasColumnType("bit");
-
-                    b.HasKey("EmailId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EmailList");
-                });
-
             modelBuilder.Entity("backend.Model.MinimumAge.minimumAge", b =>
                 {
                     b.Property<string>("minimumAgeID")
@@ -616,9 +586,8 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("minimumAgeInfo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("minimumAgeInfo")
+                        .HasColumnType("int");
 
                     b.HasKey("minimumAgeID");
 
@@ -635,25 +604,25 @@ namespace backend.Migrations
                         {
                             minimumAgeID = "6a7b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d",
                             minimumAgeDescription = "Phim phù hợp với mọi lứa tuổi.",
-                            minimumAgeInfo = "P"
+                            minimumAgeInfo = 0
                         },
                         new
                         {
                             minimumAgeID = "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d",
                             minimumAgeDescription = "Phim dành cho khán giả từ 13 tuổi trở lên.",
-                            minimumAgeInfo = "T13"
+                            minimumAgeInfo = 13
                         },
                         new
                         {
                             minimumAgeID = "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e",
                             minimumAgeDescription = "Phim dành cho khán giả từ 16 tuổi trở lên.",
-                            minimumAgeInfo = "T16"
+                            minimumAgeInfo = 16
                         },
                         new
                         {
                             minimumAgeID = "9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f",
                             minimumAgeDescription = "Phim dành cho khán giả từ 18 tuổi trở lên.",
-                            minimumAgeInfo = "T18"
+                            minimumAgeInfo = 18
                         });
                 });
 
@@ -1537,17 +1506,6 @@ namespace backend.Migrations
                     b.Navigation("movieVisualFormat");
                 });
 
-            modelBuilder.Entity("backend.Model.Email.EmailList", b =>
-                {
-                    b.HasOne("backend.Model.Auth.userInformation", "userInformation")
-                        .WithMany("EmailList")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("userInformation");
-                });
-
             modelBuilder.Entity("backend.Model.Movie.movieCommentDetail", b =>
                 {
                     b.HasOne("backend.Model.Staff_Customer.Customer", "Customer")
@@ -1725,8 +1683,6 @@ namespace backend.Migrations
                 {
                     b.Navigation("Customer")
                         .IsRequired();
-
-                    b.Navigation("EmailList");
 
                     b.Navigation("Staff")
                         .IsRequired();

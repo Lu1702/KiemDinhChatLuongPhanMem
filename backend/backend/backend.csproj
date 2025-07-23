@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Interface\StaffOrderInterface\" />
     <Folder Include="ModelDTO\PaginiationDTO\Request\" />
   </ItemGroup>
 
