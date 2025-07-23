@@ -210,10 +210,10 @@ namespace backend.Data
             string minAge16Id = "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e"; // 16+
             string minAge18Id = "9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f"; // 18+
             modelBuilder.Entity<minimumAge>().HasData(
-                new minimumAge { minimumAgeID = minAgePId, minimumAgeInfo = 0, minimumAgeDescription = "Phim phù hợp với mọi lứa tuổi." },
-                new minimumAge { minimumAgeID = minAge13Id, minimumAgeInfo = 13, minimumAgeDescription = "Phim dành cho khán giả từ 13 tuổi trở lên." },
-                new minimumAge { minimumAgeID = minAge16Id, minimumAgeInfo = 16, minimumAgeDescription = "Phim dành cho khán giả từ 16 tuổi trở lên." },
-                new minimumAge { minimumAgeID = minAge18Id, minimumAgeInfo = 18, minimumAgeDescription = "Phim dành cho khán giả từ 18 tuổi trở lên." }
+                new minimumAge { minimumAgeID = minAgePId, minimumAgeInfo = "P", minimumAgeDescription = "Phim phù hợp với mọi lứa tuổi." },
+                new minimumAge { minimumAgeID = minAge13Id, minimumAgeInfo = "T13", minimumAgeDescription = "Phim dành cho khán giả từ 13 tuổi trở lên." },
+                new minimumAge { minimumAgeID = minAge16Id, minimumAgeInfo = "T16", minimumAgeDescription = "Phim dành cho khán giả từ 16 tuổi trở lên." },
+                new minimumAge { minimumAgeID = minAge18Id, minimumAgeInfo = "T18", minimumAgeDescription = "Phim dành cho khán giả từ 18 tuổi trở lên." }
             );
 
             // --- Seed Data for MovieInformation ---
