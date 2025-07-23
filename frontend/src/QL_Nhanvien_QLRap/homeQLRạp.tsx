@@ -3,6 +3,25 @@ import React, { useState, useEffect, useCallback } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
+
+
+interface VisualFormat {
+  movieVisualId: string;
+  movieVisualFormatDetail: string;
+}
+
+interface CinemaRoom {
+  roomNumber: number;
+  cinemaID: string;
+  visualFormatID: string;
+  seatsNumber: string[];
+}
+
+interface ApiResponse<T> {
+  status: string;
+  message: string;
+  data: T;
+}
 // Define interfaces
 interface Service {
     id: number;
@@ -19,8 +38,11 @@ interface FoodDrinkItem {
     // Add other fields if your API returns them
 }
 interface Cinema {
-    cinemaId: string;
-    cinemaName: string;
+  cinemaId: string;
+  cinemaName: string;
+  cinemaLocation: string;
+  cinemaDescription?: string;
+  cinemaContactNumber?: string;
 }
 
 interface Role {
@@ -63,7 +85,7 @@ interface EditingStaff {
 const formatDate = (dateStr: string) => dateStr ? new Date(dateStr).toISOString() : "";
 
 const Info: React.FC = () => {
-  
+      const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
       const [filterText, setFilterText] = useState('');
       const [services, setServices] = useState<Service[]>([
           { id: 1, name: 'Bắp caramel', quantity: 1, orderID: 'ORD001' },
@@ -71,12 +93,14 @@ const Info: React.FC = () => {
           { id: 3, name: 'Coca', quantity: 1, orderID: 'ORD002' },
           { id: 4, name: 'Không thêm dịch vụ', quantity: 1, orderID: 'ORD003' },
       ]);
+      const [successMessage, setSuccessMessage] = useState<string | null>(null);
       const [isAddingService, setIsAddingService] = useState(false);
       const [showLogoutModal, setShowLogoutModal] = useState(false);
       const [showAccountMenu, setShowAccountMenu] = useState(false);
       const [isLoading, setIsLoading] = useState(false);
       const userEmail = localStorage.getItem("userEmail");
       const navigate = useNavigate();
+      const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
       const [movieName, setMovieName] = useState<string>('');
       const [movieImageFile, setMovieImageFile] = useState<File | null>(null);
       const [movieImageFileName, setMovieImageFileName] = useState<string>('');
@@ -85,13 +109,74 @@ const Info: React.FC = () => {
       const [movieActor, setMovieActor] = useState<string>('');
       const [movieTrailerUrl, setMovieTrailerUrl] = useState<string>('');
       const [movieDuration, setMovieDuration] = useState<number>(0);
+      const [visualFormats, setVisualFormats] = useState<VisualFormat[]>([]);
       const [minimumAgeID, setMinimumAgeID] = useState<string>('');
       const [languageId, setLanguageId] = useState<string>('');
       const [releaseDate, setReleaseDate] = useState<string>(new Date().toISOString().substring(0, 16)); // YYYY-MM-DDTHH:MM
       const [visualFormatList, setVisualFormatList] = useState<string[]>(['']);
       const [movieGenreList, setMovieGenreList] = useState<string[]>(['']);
       const [foodDrinkItems, setFoodDrinkItems] = useState<FoodDrinkItem[]>([]);
-      
+      const [newRoom, setNewRoom] = useState<CinemaRoom>({
+          roomNumber: 0,
+          cinemaID: '',
+          visualFormatID: '',
+          seatsNumber: [],
+        });
+        const [newCinema, setNewCinema] = useState({
+            cinemaName: '',
+            cinemaLocation: '',
+            cinemaDescription: '',
+            cinemaContactNumber: '',
+          });
+        const [selectedCinemaId, setSelectedCinemaId] = useState<string>('');
+        const [seatInput, setSeatInput] = useState<string>('');
+        const handleRoomInputChange = (
+            e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+          ) => {
+            const { name, value } = e.target;
+            setNewRoom((prev) => ({
+              ...prev,
+              [name]: name === 'roomNumber' ? Number(value) : value,
+            }));
+          };
+        
+          const handleAddSeat = () => {
+            if (seatInput.trim()) {
+              setNewRoom((prev) => ({
+                ...prev,
+                seatsNumber: [...prev.seatsNumber, seatInput.trim()],
+              }));
+              setSeatInput('');
+            }
+          };
+          const handleDeleteCinema = async () => {
+            if (!selectedCinemaId) {
+            setError('Vui lòng chọn một rạp để xóa');
+            return;
+            }
+
+            try {
+            const response = await fetch(`http://localhost:5229/api/Cinema/deleteCinema/${selectedCinemaId}`, {
+                method: 'DELETE',
+                headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete cinema');
+            }
+
+            setIsDeleteModalOpen(false);
+            setSelectedCinemaId('');
+            fetchCinemas();
+            setSuccessMessage('Đã xóa rạp thành công');
+            setTimeout(() => setSuccessMessage(null), 3000);
+            } catch (err) {
+            setError('Failed to delete cinema');
+            }
+        };
       const handleSubmitService = (e: React.FormEvent) => {
               e.preventDefault();
               if (newServiceName.trim() && selectedOrderID.trim()) {
@@ -225,7 +310,7 @@ const Info: React.FC = () => {
       setMovieGenreList(newList.length > 0 ? newList : ['']); // Ensure at least one empty input
     }
   };
-
+  
   const handleListItemChange = (listType: 'visual' | 'genre', index: number, value: string) => {
     if (listType === 'visual') {
       const newList = [...visualFormatList];
@@ -317,7 +402,7 @@ const Info: React.FC = () => {
   };
 
     const [userRole, setUserRole] = useState<string | null>(localStorage.getItem("role") || null);
-    const [activeTab, setActiveTab] = useState< "password" | "nhanvien"|"quanlynoidung"| "doanhthu"|"xacdinhdichvu" |"csphongrap">("password");
+    const [activeTab, setActiveTab] = useState< "password" | "nhanvien"|"quanlynoidung"| "doanhthu"|"xacdinhdichvu" |"csphongrap"|"room">("password");
     const [addStaffFormData, setAddStaffFormData] = useState<AddStaffFormData>({
         staffId: "",
         cinemaId: "",
@@ -342,11 +427,10 @@ const Info: React.FC = () => {
     const [isCheckingRoles, setIsCheckingRoles] = useState(false);
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [employeeId] = useState(localStorage.getItem("authToken"));
-    useEffect(() => {
+useEffect(() => {
         setIsCheckingRoles(true);
         const timer = setTimeout(() => {
           if (roles1.includes('FacilitiesManager')|| roles1.includes('Director') || roles1.includes('MovieManager')||roles1.includes('MovieManager') || roles1.includes('Cashier') ) {
-            alert('Chào mừng trở lại!');
             setIsAuthorized(true);
             setIsCheckingRoles(false);
           } else {
@@ -373,9 +457,169 @@ const Info: React.FC = () => {
         };
         fetchCinemas();
     }, []);
+    useEffect(() => {
+    const fetchCinemas = async () => {
+      try {
+        const response = await fetch('http://localhost:5229/api/Cinema/getCinemaList', {
+          headers: {
+            'accept': '*/*',
+          },
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        if (data.status === 'Success' && data.data) {
+          setCinemas(data.data);
+          if (data.data.length > 0) setAddStaffFormData(prev => ({ ...prev, cinemaId: data.data[0].cinemaId }));
+        }
+      } catch (error) {
+        alert('Không thể tải danh sách rạp. Vui lòng thử lại sau.');
+      }
+    };
 
+    const fetchVisualFormats = async () => {
+      try {
+        const response = await fetch('http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList', {
+          headers: {
+            'accept': '*/*',
+          },
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        if (data.status === 'Success' && data.data) {
+          setVisualFormats(data.data);
+        }
+      } catch (error) {
+        alert('Không thể tải danh sách định dạng hình ảnh. Vui lòng thử lại sau.');
+      }
+    };
+
+    fetchCinemas();
+    fetchVisualFormats();
+  }, []);
+    const handleSaveCinema = async () => {
+    try {
+      const response = await fetch('http://localhost:5229/api/Cinema/addCinema', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify(newCinema),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add cinema');
+      }
+
+      setIsAddModalOpen(false);
+      setNewCinema({
+        cinemaName: '',
+        cinemaLocation: '',
+        cinemaDescription: '',
+        cinemaContactNumber: '',
+      });
+      fetchCinemas();
+      setSuccessMessage('Đã tạo rạp thành công');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setError('Failed to add cinema');
+    }
+  };
+  const handleCinemaInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setNewCinema((prev) => ({ ...prev, [name]: value }));
+    };
+
+  
+
+  const handleSaveRoom = async () => {
+    if (!newRoom.cinemaID || !newRoom.visualFormatID || newRoom.roomNumber < 0) {
+      setError('Vui lòng điền đầy đủ thông tin phòng chiếu');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5229/api/CinemaRoom/CreateRoom', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify(newRoom),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create room');
+      }
+
+      setNewRoom({
+        roomNumber: 0,
+        cinemaID: '',
+        visualFormatID: '',
+        seatsNumber: [],
+      });
+      setSeatInput('');
+      setSuccessMessage('Đã tạo phòng chiếu thành công');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setError('Failed to create room');
+    }
+  };
+
+     useEffect(() => {
+  fetchCinemas();
+  fetchVisualFormats();
+}, []);
+        const fetchCinemas = async () => {
+        setLoading(true);
+        try {
+        const response = await axios.get<ApiResponse<Cinema[]>>('http://localhost:5229/api/Cinema/getCinemaList', {
+            headers: {
+            'accept': '*/*'
+            },
+        });
+        console.log('Cinema API Response:', response.data);
+        const cinemaData = response.data.data;
+        if (Array.isArray(cinemaData)) {
+            setCinemas(cinemaData);
+        } else {
+            setError('Cinema API response data is not an array');
+            setCinemas([]);
+        }
+        } catch (err) {
+        setError('Failed to fetch cinema list');
+        setCinemas([]);
+        } finally {
+        setLoading(false);
+        }
+    };
+
+    const fetchVisualFormats = async () => {
+        setLoading(true);
+        try {
+        const response = await axios.get<VisualFormat[]>('http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList',{
+                headers: {
+                    'accept': '*/*',
+                },
+            }
+        );
+        console.log('Visual Format API Response:', response.data);
+        if (Array.isArray(response.data)) {
+            setVisualFormats(response.data);
+        } else {
+            setError('Visual Format API response data is not an array');
+            setVisualFormats([]);
+        }
+        } catch (err) {
+        setError('Failed to fetch visual format list');
+        setVisualFormats([]);
+        } finally {
+        setLoading(false);
+        }
+    };
     // Fetch roles
     useEffect(() => {
+   
     const fetchRoles = async () => {
         const authToken = localStorage.getItem('authToken');
         if (!authToken) {
@@ -659,7 +903,7 @@ const Info: React.FC = () => {
                     {roles1.includes('FacilitiesManager')  && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản trị viên hệ thống</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => navigate('/Quantrivienhethong/QLRapPhongChieu')}>Chỉnh sửa rạp/phòng chiếu</button>
+                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
                         </div>
                     )}
                 </div>
@@ -715,7 +959,7 @@ const Info: React.FC = () => {
             </div>
                     )}
                     {activeTab === "nhanvien" && roles1.includes('TheaterManager') && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
+                       <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl ">
                             <h2 className="text-2xl font-bold mb-6">Thêm Nhân Viên</h2>
                             <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "16px", maxWidth: "1000px", marginTop: "25px", justifyContent: "space-between", alignItems: "flex-start" }}>
                                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "16px", minWidth: "280px" }}>
@@ -1131,6 +1375,12 @@ const Info: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <h3>Xin chào quản lý</h3>
                         <div style={{ position: 'relative' }}>
+                            <span
+                                style={{ fontSize: '28px', cursor: 'pointer' }}
+                                onClick={() => setShowAccountMenu(!showAccountMenu)}
+                            >
+                                👤
+                            </span>
                             {showAccountMenu && (
                                 <div
                                     style={{
@@ -1348,7 +1598,152 @@ const Info: React.FC = () => {
             </div>
                     )}
                     {activeTab === "csphongrap" && roles1.includes('FacilitiesManager') && (
-                        <div></div>
+                        <div>
+                        <div className="flex justify-between text-white items-center mb-4">
+                        <h2 className="text-2xl font-bold">Danh sách rạp</h2>
+                        <div className="space-x-2">
+                            <button
+                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            onClick={() => navigate('/ThuNgan/DichVuThem')}
+                            >
+                            Chỉnh sửa rạp
+                            </button>
+                            <button
+                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            onClick={() => navigate('/ThuNgan/DichVuThem')}
+                            >
+                            Chỉnh sửa phòng chiếu
+                            </button>
+                        </div>
+                        </div>
+                        {loading && <p>Đang tải...</p>}
+                        {successMessage && <p className="text-green-500">{successMessage}</p>}
+                        {!loading && !error && cinemas.length === 0 && <p>Không có rạp nào để hiển thị.</p>}
+                        {cinemas.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {cinemas.map((cinema) => (
+                            <div key={cinema.cinemaId} className="bg-white p-4 rounded shadow">
+                                <h3 className="text-lg font-semibold">{cinema.cinemaName}</h3>
+                                <p className="text-gray-600">{cinema.cinemaLocation}</p>
+                                {cinema.cinemaDescription && <p className="text-gray-500">{cinema.cinemaDescription}</p>}
+                                {cinema.cinemaContactNumber && (
+                                <p className="text-gray-500">Số điện thoại: {cinema.cinemaContactNumber}</p>
+                                )}
+                            </div>
+                            ))}
+                        </div>
+                        )}
+                    </div>
+                    )}
+                    
+                    {/* Add Cinema Modal */}
+                    {isAddModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                        <h3 className="text-xl font-bold mb-4">Thêm Rạp Mới</h3>
+                        <div className="space-y-4">
+                            <div>
+                            <label className="block text-sm font-medium text-gray-700">Tên Rạp</label>
+                            <input
+                                type="text"
+                                name="cinemaName"
+                                value={newCinema.cinemaName}
+                                onChange={handleCinemaInputChange}
+                                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                required
+                            />
+                            </div>
+                            <div>
+                            <label className="block text-sm font-medium text-gray-700">Địa điểm</label>
+                            <input
+                                type="text"
+                                name="cinemaLocation"
+                                value={newCinema.cinemaLocation}
+                                onChange={handleCinemaInputChange}
+                                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                required
+                            />
+                            </div>
+                            <div>
+                            <label className="block text-sm font-medium text-gray-700">Mô tả</label>
+                            <textarea
+                                name="cinemaDescription"
+                                value={newCinema.cinemaDescription}
+                                onChange={handleCinemaInputChange}
+                                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                            />
+                            </div>
+                            <div>
+                            <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                            <input
+                                type="text"
+                                name="cinemaContactNumber"
+                                value={newCinema.cinemaContactNumber}
+                                onChange={handleCinemaInputChange}
+                                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                            />
+                            </div>
+                        </div>
+                        <div className="mt-6 flex justify-end space-x-2">
+                            <button
+                            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                            onClick={() => setIsAddModalOpen(false)}
+                            >
+                            Hủy
+                            </button>
+                            <button
+                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            onClick={handleSaveCinema}
+                            >
+                            Lưu
+                            </button>
+                        </div>
+                        </div>
+                    </div>
+                    )}
+
+                    {/* Delete Cinema Modal */}
+                    {isDeleteModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                        <h3 className="text-xl font-bold mb-4">Xóa Rạp</h3>
+                        <div className="space-y-4">
+                            <div>
+                            <label className="block text-sm font-medium text-gray-700">Chọn Rạp</label>
+                            <select
+                                value={selectedCinemaId}
+                                onChange={(e) => setSelectedCinemaId(e.target.value)}
+                                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                            >
+                                <option value="">-- Chọn rạp để xóa --</option>
+                                {cinemas.map((cinema) => (
+                                <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                                    {cinema.cinemaName} (ID: {cinema.cinemaId})
+                                </option>
+                                ))}
+                            </select>
+                            </div>
+                        </div>
+                        <div className="mt-6 flex justify-end space-x-2">
+                            <button
+                            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                            onClick={() => {
+                                setIsDeleteModalOpen(false);
+                                setSelectedCinemaId('');
+                            }}
+                            >
+                            Hủy
+                            </button>
+                            <button
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                            onClick={handleDeleteCinema}
+                            disabled={!selectedCinemaId}
+                            >
+                            Xóa
+                            </button>
+                        </div>
+                        </div>
+                    </div>
                     )}
                 </div>
             </div>
@@ -1365,6 +1760,7 @@ const Info: React.FC = () => {
             <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointer">↑</button>
             <div className="sticky mx-auto mt-28"><Bottom /></div>
         </div>
+        
     );
 };
 
