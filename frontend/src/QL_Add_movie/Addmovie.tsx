@@ -62,7 +62,7 @@ const AddMovie = () => {
     const [selectedDinhdang, setSelectedDinhdang] = useState<string[]>([]);
     const [movies, setMovies] = useState<any[]>([]);
     const [form, setForm] = useState<any>({
-        name: "",
+        movieName: "",
         director: "",
         cast: "",
         duration: "",
@@ -77,10 +77,6 @@ const AddMovie = () => {
     const [editIndex, setEditIndex] = useState<number | null>(null);
     const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
-
-    const removeGenre = (genreToRemove: string) => {
-        setSelectedGenres(selectedGenres.filter((genre) => genre !== genreToRemove));
-    };
 
     const removeDinhdang = (toRemove: string) => {
         setSelectedDinhdang(selectedDinhdang.filter((item) => item !== toRemove));
@@ -104,8 +100,7 @@ const AddMovie = () => {
     const [selectedAgeId, setSelectedAgeId] = useState("");
     const [selectedLanguageId, setSelectedLanguageId] = useState("");
     const [releaseDate, setReleaseDate] = useState(new Date());
-    const [movieGenreList, setMovieGenreList] = useState<string[]>([]);
-    const [visualFormatList, setVisualFormatList] = useState<string[]>([]);
+
 
     const handleSubmit = async () => {
         const formData = new FormData();
@@ -120,11 +115,11 @@ const AddMovie = () => {
         formData.append("languageId", selectedLanguageId);
         formData.append("releaseDate", releaseDate.toISOString());
 
-        movieGenreList.forEach((genre) => {
+        selectedGenres.forEach((genre) => {
             formData.append("movieGenreList", genre);
         });
 
-        visualFormatList.forEach((format) => {
+        selectedDinhdang.forEach((format) => {
             formData.append("visualFormatList", format);
         });
 
@@ -134,11 +129,46 @@ const AddMovie = () => {
                     "Content-Type": "multipart/form-data",
                 },
             });
+
+            // ✅ Thêm vào bảng
+            const newMovie = {
+                name: movieName,
+                image: movieImage,
+                description: movieDescription,
+                director: movieDirector,
+                cast: movieActor,
+                trailer: movieTrailerUrl,
+                duration: movieDuration,
+                ageLimit: selectedAgeId,
+                language: selectedLanguageId,
+                releaseDate: releaseDate.toISOString().split("T")[0], // hiển thị ngày
+                genres: selectedGenres,
+                dinhdang: selectedDinhdang,
+            };
+
+            setMovies(prev => [...prev, newMovie]);
+
+            // ✅ Reset form
+            setMovieName("");
+            setMovieImage(null);
+            setMovieDescription("");
+            setMovieDirector("");
+            setMovieActor("");
+            setMovieTrailerUrl("");
+            setMovieDuration(0);
+            setSelectedAgeId("");
+            setSelectedLanguageId("");
+            setReleaseDate(new Date());
+            setSelectedGenres([]);
+            setSelectedDinhdang([]);
+
             alert("Tạo phim thành công!");
         } catch (err) {
             console.error("Lỗi khi gửi form:", err);
         }
     };
+
+
 
     const handleEdit = (index: number) => {
         const movie = movies[index];
@@ -234,6 +264,7 @@ const AddMovie = () => {
                                 <p className=" border-e-2 pr-3 text-slate-300">Chọn thời gian ra mắt</p>
                                 <input name="releaseDate" value={form.releaseDate} onChange={handleInputChange} type="date" className=" pl-20 bg-transparent text-slate-300 " />
                             </div>
+                            <input type="url" name="trailer" value={form.trailer} onChange={handleInputChange} placeholder="Chèn URL Trailer" className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 col-span-2" />
                             <textarea name="description" value={form.description} onChange={handleInputChange} rows={5} placeholder="Mô tả phim" className="p-2 border rounded col-span-2 bg-transparent placeholder:font-normal placeholder:text-slate-300 font-medium text-white" />
                         </div>
 
