@@ -43,14 +43,14 @@ namespace backend.Controllers
 
         [HttpDelete("removeSchedule/{id}")]
         [Authorize(Policy = "TheaterManager")]
-        public async Task<IActionResult> removeSchedule(string id, string options)
+        public async Task<IActionResult> removeSchedule(string id)
         {
-            var status = await scheduleServices.delete(id, options);
-            if (status) 
+            var status = await scheduleServices.delete(id);
+            if (status.Status.Equals(GenericStatusEnum.Failure.ToString())) 
             {
-                return Ok(new { message = "Đã xóa thành công" });
+                return BadRequest(status);
             }
-            return BadRequest(new {message = "Xóa thất bại do có người đã đặt lịch này"});
+            return Ok(status);
         }
 
         [HttpGet("getScheduleByName")]

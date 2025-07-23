@@ -173,10 +173,10 @@ namespace backend.Services.Schedule
         }
         
         // Lưu ý : Nghiệp vụ ở đây có chút khác biệt so với các nghiệp vụ sửa khác 
-         
-        public async Task<GenericRespondDTOs> edit(string Movieid, ScheduleRequestDTO scheduleRequestDTO)
+
+        public Task<bool> edit(string id, ScheduleRequestDTO scheduleRequestDTO)
         {
-            return false;
+            return null!;
         }
 
         public async Task<GenericRespondDTOs> delete(string id)
