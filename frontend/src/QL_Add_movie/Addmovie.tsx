@@ -1,25 +1,64 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
-import { useNavigate } from "react-router";
 import bg from "../image/bg.png";
+import axios from "axios";
 
-const Theloai = [
-    "Hành động",
-    "Hài hước",
-    "Tình cảm",
-    "Kinh dị",
-    "Phiêu lưu",
-    "Hoạt hình",
-    "Khoa học viễn tưởng",
-    "Tài liệu",
-];
-
-const Dinhdang = ["2D", "3D"];
+interface Genre {
+    genreId: string;
+    genreName: string;
+}
 
 const AddMovie = () => {
-    const navigate = useNavigate();
+    type AgeOption = {
+        minimumAgeID: string;
+        minimumAgeInfo: number;
+        minimumAgeDescription: string;
+    };
+    //Phần Thể loại
+    const [theloaiOptions, setTheloaiOptions] = useState<Genre[]>([]);
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    useEffect(() => {
+        fetch("http://localhost:5229/api/MovieGenre/GetMovieGenreList")
+            .then((res) => res.json())
+            .then((data: Genre[]) => {
+                setTheloaiOptions(data);
+            })
+            .catch((err) => {
+                console.error("Lỗi khi gọi API thể loại:", err);
+            });
+    }, []);
+
+    //Phần Định dạng
+    const [dinhDangOptions, setDinhDangOptions] = useState<string[]>([]);
+    useEffect(() => {
+        fetch("http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList")
+            .then(res => res.json())
+            .then(data => {
+                const formats = data.map((item: any) => item.movieVisualFormatDetail);
+                setDinhDangOptions(formats);
+            })
+            .catch(err => console.error("Lỗi khi gọi API định dạng:", err));
+    }, []);
+
+    // Phần Độ tuổi
+    const [ageOptions, setAgeOptions] = useState<AgeOption[]>([]);
+
+    useEffect(() => {
+        fetch("http://localhost:5229/api/MinimumAge/GetMinimumAge")
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to fetch age limits");
+                return res.json();
+            })
+            .then((data) => {
+                setAgeOptions(data);
+            })
+            .catch((error) => {
+                console.error("Lỗi khi gọi API độ tuổi:", error);
+            });
+    }, []);
+
     const [selectedDinhdang, setSelectedDinhdang] = useState<string[]>([]);
     const [movies, setMovies] = useState<any[]>([]);
     const [form, setForm] = useState<any>({
@@ -55,38 +94,50 @@ const AddMovie = () => {
             setForm({ ...form, [name]: value });
         }
     };
+    const [movieName, setMovieName] = useState("");
+    const [movieImage, setMovieImage] = useState<File | null>(null);
+    const [movieDescription, setMovieDescription] = useState("");
+    const [movieDirector, setMovieDirector] = useState("");
+    const [movieActor, setMovieActor] = useState("");
+    const [movieTrailerUrl, setMovieTrailerUrl] = useState("");
+    const [movieDuration, setMovieDuration] = useState<number>(0);
+    const [selectedAgeId, setSelectedAgeId] = useState("");
+    const [selectedLanguageId, setSelectedLanguageId] = useState("");
+    const [releaseDate, setReleaseDate] = useState(new Date());
+    const [movieGenreList, setMovieGenreList] = useState<string[]>([]);
+    const [visualFormatList, setVisualFormatList] = useState<string[]>([]);
 
-    const handleAddMovie = () => {
-        const newMovie = {
-            ...form,
-            genres: selectedGenres,
-            dinhdang: selectedDinhdang,
-            createdAt: new Date().toLocaleString(),
-        };
+    const handleSubmit = async () => {
+        const formData = new FormData();
+        formData.append("movieName", movieName);
+        if (movieImage) formData.append("movieImage", movieImage);
+        formData.append("movieDescription", movieDescription);
+        formData.append("movieDirector", movieDirector);
+        formData.append("movieActor", movieActor);
+        formData.append("movieTrailerUrl", movieTrailerUrl);
+        formData.append("movieDuration", movieDuration.toString());
+        formData.append("minimumAgeID", selectedAgeId);
+        formData.append("languageId", selectedLanguageId);
+        formData.append("releaseDate", releaseDate.toISOString());
 
-        if (editIndex !== null) {
-            const updated = [...movies];
-            updated[editIndex] = newMovie;
-            setMovies(updated);
-            setEditIndex(null);
-        } else {
-            setMovies([...movies, newMovie]);
-        }
-
-        setForm({
-            name: "",
-            director: "",
-            cast: "",
-            duration: "",
-            language: "",
-            ageLimit: "",
-            trailer: "",
-            releaseDate: "",
-            description: "",
-            image: null,
+        movieGenreList.forEach((genre) => {
+            formData.append("movieGenreList", genre);
         });
-        setSelectedGenres([]);
-        setSelectedDinhdang([]);
+
+        visualFormatList.forEach((format) => {
+            formData.append("visualFormatList", format);
+        });
+
+        try {
+            await axios.post("http://localhost:5229/api/movie/createMovie", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            alert("Tạo phim thành công!");
+        } catch (err) {
+            console.error("Lỗi khi gửi form:", err);
+        }
     };
 
     const handleEdit = (index: number) => {
@@ -95,6 +146,12 @@ const AddMovie = () => {
         setSelectedGenres(movie.genres || []);
         setSelectedDinhdang(movie.dinhdang || []);
         setEditIndex(index);
+    };
+    const handleGenreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selected = e.target.value;
+        if (selected && !selectedGenres.includes(selected)) {
+            setSelectedGenres((prev) => [...prev, selected]);
+        }
     };
 
     const handleDelete = (index: number) => {
@@ -148,14 +205,27 @@ const AddMovie = () => {
                                 <option className="text-black bg-slate-600">Mỹ</option>
                                 <option className="text-black bg-slate-600">Trung Quốc</option>
                             </select>
-                            <select name="ageLimit" value={form.ageLimit} onChange={handleInputChange} className="p-2 border rounded bg-transparent text-slate-300 font-nomal" >
-                                <option className="text-black bg-slate-600" value="">Độ tuổi</option>
-                                <option className="text-black bg-slate-600">P</option>
-                                <option className="text-black bg-slate-600">K</option>
-                                <option className="text-black bg-slate-600">T13</option>
-                                <option className="text-black bg-slate-600">T16</option>
-                                <option className="text-black bg-slate-600">T18</option>
+                            <select
+                                name="ageLimit"
+                                value={form.ageLimit}
+                                onChange={handleInputChange}
+                                className="p-2 border rounded bg-transparent text-slate-300 font-normal"
+                            >
+                                <option className="text-black bg-slate-600" value="">
+                                    Độ tuổi
+                                </option>
+                                {ageOptions.map((age) => (
+                                    <option
+                                        key={age.minimumAgeID}
+                                        value={age.minimumAgeID}
+                                        className="text-black bg-slate-600"
+                                    >
+                                        {age.minimumAgeInfo} - {age.minimumAgeDescription}
+                                    </option>
+                                ))}
                             </select>
+
+
                             <div className="flex flex-row rounded border py-2 px-2">
                                 <p className=" border-e-2 pr-3 text-slate-300">Chọn poster phim</p>
                                 <input name="image" onChange={handleInputChange} type="file" className=" pl-10 bg-transparent text-slate-300 file:hidden" />
@@ -168,38 +238,65 @@ const AddMovie = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <label className="font-semibold block text-white">Thể loại</label>
-                            <div className="flex flex-wrap gap-2">
-                                {selectedGenres.map(g => (
-                                    <span key={g} className="bg-slate-500 px-3 py-1 rounded text-white ">
-                                        {g} <button className="text-yellow-400" onClick={() => removeGenre(g)}>✕</button>
-                                    </span>
-                                ))}
+                            <label className="block text-white mb-2">Thể loại</label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {selectedGenres.map((id) => {
+                                    const genre = theloaiOptions.find((g) => g.genreName === id);
+                                    return (
+                                        <span
+                                            key={id}
+                                            className="bg-slate-500 px-3 py-1 rounded text-white flex items-center"
+                                        >
+                                            {genre?.genreName}
+                                            <button
+                                                className="text-yellow-300 ml-2"
+                                                onClick={() =>
+                                                    setSelectedGenres((prev) => prev.filter((gid) => gid !== id))
+                                                }
+                                            >
+                                                ✕
+                                            </button>
+                                        </span>
+                                    );
+                                })}
                             </div>
-                            <select onChange={(e) => {
-                                const g = e.target.value;
-                                if (g && !selectedGenres.includes(g)) setSelectedGenres([...selectedGenres, g]);
-                            }} className="w-full p-2 border rounded bg-transparent text-white">
-                                <option className="text-black bg-slate-600" value="">-- Chọn thể loại --</option>
-                                {Theloai.filter(g => !selectedGenres.includes(g)).map(g => (
-                                    <option className="text-black bg-slate-600" key={g} value={g}>{g}</option>
-                                ))}
-                            </select>
 
+                            <select
+                                onChange={handleGenreChange}
+                                className="w-full p-2 border rounded bg-transparent text-white"
+                            >
+                                <option className="text-black bg-slate-600" value="">
+                                    -- Chọn thể loại --
+                                </option>
+                                {theloaiOptions
+                                    .filter((g) => !selectedGenres.includes(g.genreName))
+                                    .map((g) => (
+                                        <option
+                                            className="text-black bg-slate-600"
+                                            key={g.genreName}
+                                            value={g.genreName}>
+                                            {g.genreName}
+                                        </option>
+                                    ))}
+                            </select>
                             <label className="font-semibold block mt-4 text-white">Định dạng</label>
                             <div className="flex flex-wrap gap-2">
                                 {selectedDinhdang.map(d => (
                                     <span key={d} className="bg-slate-500 px-3 py-1 rounded text-white">
-                                        {d} <button onClick={() => removeDinhdang(d)}>✕</button>
+                                        {d} <button className="text-yellow-300" onClick={() => removeDinhdang(d)}>✕</button>
                                     </span>
                                 ))}
                             </div>
-                            <select onChange={(e) => {
-                                const d = e.target.value;
-                                if (d && !selectedDinhdang.includes(d)) setSelectedDinhdang([...selectedDinhdang, d]);
-                            }} className="w-full p-2 border rounded bg-transparent text-white">
+                            <select
+                                onChange={(e) => {
+                                    const d = e.target.value;
+                                    if (d && !selectedDinhdang.includes(d)) {
+                                        setSelectedDinhdang([...selectedDinhdang, d]);
+                                    }
+                                }}
+                                className="w-full p-2 border rounded bg-transparent text-white">
                                 <option className="text-black bg-slate-600" value="">-- Chọn định dạng --</option>
-                                {Dinhdang.filter(d => !selectedDinhdang.includes(d)).map(d => (
+                                {dinhDangOptions.filter(d => !selectedDinhdang.includes(d)).map((d) => (
                                     <option className="text-black bg-slate-600" key={d} value={d}>{d}</option>
                                 ))}
                             </select>
@@ -207,7 +304,7 @@ const AddMovie = () => {
 
                         <div className="text-right mt-4 py-5">
                             <button
-                                onClick={handleAddMovie}
+                                onClick={handleSubmit}
                                 className=" cursor-pointer bg-gradient-to-b from-indigo-500 to-indigo-600 shadow-[0px_4px_32px_0_rgba(99,102,241,.70)] px-6 py-3 rounded-xl border-[1px] border-slate-500 text-white font-medium group">
                                 <div className="relative overflow-hidden">
                                     <p
