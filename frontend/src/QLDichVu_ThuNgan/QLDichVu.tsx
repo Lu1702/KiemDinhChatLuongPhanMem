@@ -117,7 +117,7 @@ const QuanLy: React.FC = () => {
             alert(`Đã lưu với thay đổi ở Order: ${filterText}`);
             setIsLoading(false); // Hide spinner after process
             // Navigate to /payment after the process is complete and spinner is hidden
-            navigate('/payment');
+            navigate('/QuanLyRap/QLNV');
         }, 2000); // 2 second delay for demonstration
     };
 

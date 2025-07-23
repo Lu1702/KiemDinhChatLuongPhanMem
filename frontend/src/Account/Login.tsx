@@ -48,9 +48,10 @@ function Login() {
                     localStorage.setItem('authToken', data.tokenID);
                     localStorage.setItem('role',data.roleName);
                     localStorage.setItem('Password',password)
-                    localStorage.setItem('Email',email)
+                    localStorage.setItem('Email',email);
+                    localStorage.setItem('IDND',data.userID);
                 }
-                console.log(localStorage.getItem('authToken'));
+                console.log(localStorage.getItem('IDND'));
                 // Assuming your API returns a token or user data upon successful login
                 // You might want to store a token here, e.g., localStorage.setItem('authToken', data.token);
                 localStorage.setItem('userEmail', email); // Storing email as an example, replace with token if available

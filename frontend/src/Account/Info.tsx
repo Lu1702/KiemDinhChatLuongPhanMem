@@ -13,8 +13,128 @@ const Info: React.FC = () => {
         navigate("/login");
     };
 
+    const [userName, setUserName] = useState('');
+    const [dateOfBirth, setDateOfBirth] = useState(''); // Định dạng YYYY-MM-DD từ input type="date"
+    const [phoneNumber, setPhoneNumber] = useState('');
+
+    // 2. Hàm xử lý khi người dùng click nút "Lưu thông tin"
+    const handleChangeAccountInfo = async () => {
+        setMessage1(''); // Xóa thông báo cũ
+
+        // Kiểm tra cơ bản các trường không rỗng (có thể thêm validation phức tạp hơn)
+        if (!userName || !dateOfBirth || !phoneNumber) {
+            setMessage1('Vui lòng điền đầy đủ tất cả các trường thông tin.');
+            return;
+        }
+
+        // Chuyển đổi dateOfBirth sang định dạng ISO 8601 (ví dụ: "2025-07-23T00:00:00.000Z")
+        // Nếu dateOfBirth là chuỗi rỗng hoặc không hợp lệ, new Date() sẽ trả về Invalid Date
+        // Nên cần kiểm tra trước khi gọi toISOString()
+        let formattedDateOfBirth = null;
+        try {
+            const dateObj = new Date(dateOfBirth);
+            if (!isNaN(dateObj.getTime())) { // Kiểm tra xem ngày có hợp lệ không
+                formattedDateOfBirth = dateObj.toISOString();
+            } else {
+                setMessage1('Ngày sinh không hợp lệ. Vui lòng kiểm tra lại.');
+                return;
+            }
+        } catch (error) {
+            setMessage1('Lỗi định dạng ngày sinh. Vui lòng kiểm tra lại.');
+            console.error('Date parsing error:', error);
+            return;
+        }
+
+        // Tạo payload dữ liệu theo định dạng API yêu cầu
+        const payload = {
+            userName: userName,
+            dateOfBirth: formattedDateOfBirth,
+            phoneNumber: phoneNumber,
+        };
+
+        // URL API của bạn, sử dụng userID được truyền vào và Userid (chữ U viết hoa)
+        const apiUrl = `http://localhost:5229/api/Account/ChangeAccountInformation?Userid=${localStorage.getItem('IDND')}`;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'accept': '*/*',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload), // Chuyển đổi payload thành chuỗi JSON
+            });
+
+            if (response.ok) {
+                // API trả về thành công (status 2xx)
+                // Có thể không cần đọc response.json() nếu API không trả về dữ liệu cụ thể
+                setMessage1('Thông tin cá nhân đã được cập nhật thành công!');
+                console.log('API Response: Thông tin đã được cập nhật.');
+                // Giữ lại giá trị trong form hoặc reset tùy ý
+            } else {
+                // API trả về lỗi (status 4xx, 5xx)
+                const errorData = await response.json(); // Thử đọc lỗi dưới dạng JSON
+                setMessage1(`Lỗi: ${errorData.message || 'Có lỗi xảy ra khi cập nhật thông tin.'}`);
+                console.error('API Error:', response.status, errorData);
+            }
+        } catch (error) {
+            // Lỗi mạng hoặc lỗi không xác định
+            setMessage1('Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.');
+            console.error('Network or unexpected error:', error);
+        }
+    };
     const [activeTab, setActiveTab] = useState<"info" | "history" | "password">("info");
 
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    // Đã đổi tên biến trạng thái và hàm cập nhật
+    const [message1, setMessage1] = useState(''); 
+
+    const handleChangePassword = async () => {
+        setMessage1(''); // Xóa thông báo cũ
+
+        if (newPassword !== confirmPassword) {
+            setMessage1('Mật khẩu mới và xác nhận mật khẩu không khớp!');
+            return;
+        }
+
+        const payload = {
+            oldPassword: oldPassword,
+            newPassword: newPassword,
+            confirmPassword: confirmPassword,
+        };
+
+        const apiUrl = `http://localhost:5229/api/Account/changePassword?userID=${localStorage.getItem('IDND')}`;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'accept': '*/*',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                setMessage1('Mật khẩu đã được cập nhật thành công!');
+                setOldPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                console.log('API Response:', await response.json());
+            } else {
+                const errorData = await response.json();
+                setMessage1(`Lỗi: ${errorData.message || 'Có lỗi xảy ra khi đổi mật khẩu.'}`);
+                console.error('API Error:', response.status, errorData);
+            }
+        } catch (error) {
+            setMessage1('Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.');
+            console.error('Network or unexpected error:', error);
+        }
+    };
     return (
         <div
             className="min-h-screen bg-fixed bg-cover bg-center"
@@ -61,36 +181,56 @@ const Info: React.FC = () => {
                     </h1>
                     {activeTab === "info" && (
                         <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                            <h2 className="text-2xl font-bold mb-6">Thông tin cá nhân</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block mb-2 font-semibold">Họ và tên:</label>
-                                    <input type="text" className="w-full border rounded-md px-4 py-2 bg-white/50" />
-                                </div>
-                                <div>
-                                    <label className="block mb-2 font-semibold">Ngày sinh:</label>
-                                    <input type="date" className="w-full border rounded-md px-4 py-2 bg-white/50" />
-                                </div>
-                                <div>
-                                    <label className="block mb-2 font-semibold">Email:</label>
-                                    <input type="email" className="w-full border rounded-md px-4 py-2 bg-white/50" />
-                                </div>
-                                <div>
-                                    <label className="block mb-2 font-semibold">Địa chỉ:</label>
-                                    <input type="text" className="w-full border rounded-md px-4 py-2 bg-white/50" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block mb-2 font-semibold">CCCD:</label>
-                                    <input type="number" className="w-full border rounded-md px-4 py-2 bg-white/50" />
-                                </div>
-                            </div>
-                            <div className="mt-6 text-center">
-                                <button className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group">
-                                    <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
-                                    Lưu thông tin
-                                </button>
-                            </div>
-                        </div>
+                <h2 className="text-2xl font-bold mb-6">Thông tin cá nhân</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Input Họ và tên (userName) */}
+                    <div>
+                        <label className="block mb-2 font-semibold">Họ và tên:</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded-md px-4 py-2 bg-white/50"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                        />
+                    </div>
+                    {/* Input Ngày sinh (dateOfBirth) */}
+                    <div>
+                        <label className="block mb-2 font-semibold">Ngày sinh:</label>
+                        <input
+                            type="date"
+                            className="w-full border rounded-md px-4 py-2 bg-white/50"
+                            value={dateOfBirth}
+                            onChange={(e) => setDateOfBirth(e.target.value)}
+                        />
+                    </div>
+                    {/* Input Số điện thoại (phoneNumber) - Đã thêm mới */}
+                    <div>
+                        <label className="block mb-2 font-semibold">Số điện thoại:</label>
+                        <input
+                            type="tel" // Sử dụng type="tel" cho số điện thoại
+                            className="w-full border rounded-md px-4 py-2 bg-white/50"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                        />
+                    </div>
+                    {/* Các input Email, Địa chỉ, CCCD đã được xóa bỏ */}
+                </div>
+                {/* Hiển thị thông báo */}
+                {message1 && (
+                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
+                        {message1}
+                    </p>
+                )}
+                <div className="mt-6 text-center">
+                    <button
+                        className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
+                        onClick={handleChangeAccountInfo} // Gắn hàm xử lý vào đây
+                    >
+                        <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
+                        Lưu thông tin
+                    </button>
+                </div>
+            </div>
                     )}
                     {activeTab === "history" && (
                         <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
@@ -99,28 +239,51 @@ const Info: React.FC = () => {
                     )}
                     {activeTab === "password" && (
                         <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                            <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
-                                    <input type="password" className="w-full border rounded-md px-4 py-2 bg-white/50" />
-                                </div>
-                                <div>
-                                    <label className="block mb-2 font-semibold">Mật khẩu mới</label>
-                                    <input type="password" className="w-full border rounded-md px-4 py-2 bg-white/50" />
-                                </div>
-                                <div>
-                                    <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
-                                    <input type="password" className="w-full border rounded-md px-4 py-2 bg-white/50" />
-                                </div>
-                            </div>
-                            <div className="mt-6 text-center">
-                                <button className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group">
-                                    <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
-                                    Cập nhật mật khẩu
-                                </button>
-                            </div>
-                        </div>
+                <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
+                        <input
+                            type="password"
+                            className="w-full border rounded-md px-4 py-2 bg-white/50"
+                            value={oldPassword}
+                            onChange={(e) => setOldPassword(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block mb-2 font-semibold">Mật khẩu mới</label>
+                        <input
+                            type="password"
+                            className="w-full border rounded-md px-4 py-2 bg-white/50"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
+                        <input
+                            type="password"
+                            className="w-full border rounded-md px-4 py-2 bg-white/50"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+                    </div>
+                </div>
+                {/* Đã sử dụng biến mới message1 để hiển thị */}
+                {message1 && (
+                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
+                        {message1}
+                    </p>
+                )}
+                <div className="mt-6 text-center">
+                    <button
+                        className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
+                        onClick={handleChangePassword}
+                    >
+                        <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>Cập nhật mật khẩu
+                    </button>
+                </div>
+            </div>
                     )}
                 </div>
             </div>
