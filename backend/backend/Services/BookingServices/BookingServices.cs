@@ -6,6 +6,7 @@ using backend.Model.Booking;
 using backend.Model.Price;
 using backend.ModelDTO.Customer.OrderRequest;
 using backend.ModelDTO.Customer.OrderRespond;
+using backend.ModelDTO.GenericRespond;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Http; // Ensure this namespace is present
@@ -23,206 +24,281 @@ namespace backend.Services.BookingServices
             _vnpayService = vnpayService; // Assigned to the renamed field
         }
 
-        public async Task<OrderRespondDTO> booking(OrderRequestDTO orderRequestDTO, HttpContext httpContext)
+        public async Task<GenericRespondWithObjectDTO<Dictionary<string , string>>> booking(OrderRequestDTO orderRequestDTO, HttpContext httpContext)
         {
-            // --- Input Validation and Pre-checks ---
-            if (string.IsNullOrEmpty(orderRequestDTO.userId)) // Using IsNullOrEmpty for string IDs
+            // Phần Booking vé
+            if (String.IsNullOrEmpty(orderRequestDTO.movieScheduleId))
             {
-                return new OrderRespondDTO { Error = "Error: User ID is missing." };
-            }
-            var customer = await _dataContext.Customers
-                                             .FirstOrDefaultAsync(c => c.userID == orderRequestDTO.userId); // Use FirstOrDefaultAsync
-            if (customer == null)
-            {
-                return new OrderRespondDTO { Error = "Error: User not found." };
-            }
-
-            if (string.IsNullOrEmpty(orderRequestDTO.movieScheduleId)) // Using IsNullOrEmpty for string IDs
-            {
-                return new OrderRespondDTO { Error = "Error: Movie schedule is empty." };
-            }
-
-            var requestedTotalSeats = orderRequestDTO.seatsRequestDTOs?.Count() ?? 0;
-            var userTypeQuantitySum = orderRequestDTO.userTypeRequestDTO?.Sum(x => x.quantity) ?? 0;
-
-            if (requestedTotalSeats == 0 || requestedTotalSeats != userTypeQuantitySum)
-            {
-                return new OrderRespondDTO { Error = "Error: Number of seats selected is incorrect or missing." };
-            }
-
-            var movieSchedule = await _dataContext.movieSchedule
-                                                .FirstOrDefaultAsync(ms => ms.movieScheduleId == orderRequestDTO.movieScheduleId && !ms.IsDelete);
-            if (movieSchedule == null)
-            {
-                return new OrderRespondDTO { Error = "Error: Movie schedule not found." };
-            }
-
-            var requestedSeatIds = orderRequestDTO.seatsRequestDTOs.Select(s => s.seatID).ToList();
-            if (!requestedSeatIds.Any()) // Check if any seat IDs were actually provided
-            {
-                return new OrderRespondDTO { Error = "Error: No seats selected for booking." };
-            }
-
-            var existingTakenSeats = await _dataContext.Seats
-                .Where(s => requestedSeatIds.Contains(s.seatsId) && s.isTaken)
-                .ToListAsync();
-
-            if (existingTakenSeats.Any())
-            {
-                var takenSeatNumbers = string.Join(", ", existingTakenSeats.Select(s => s.seatsNumber));
-                return new OrderRespondDTO
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
                 {
-                    Error = $"Error: The following seats are already taken. Please choose different seats: {takenSeatNumbers}"
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi lịch chiếu đã bị xóa"
                 };
             }
 
-            // --- Calculate Total Amount ---
-            long totalAmount = 0;
-            string movieVisualId = movieSchedule.movieVisualFormatID.IsNullOrEmpty() ? "NullAble" : movieSchedule.movieVisualFormatID;
-
-            // Calculate ticket price
-            if (orderRequestDTO.userTypeRequestDTO != null && orderRequestDTO.userTypeRequestDTO.Any())
+            if (_dataContext.movieSchedule.Any(x => x.movieScheduleId.Equals
+                    (orderRequestDTO.movieScheduleId) && x.IsDelete))
             {
-                var userTypeRequests = orderRequestDTO.userTypeRequestDTO.ToDictionary(x => x.userTypeID, x => x.quantity);
-                var userTypeIds = userTypeRequests.Keys;
-
-                // Get relevant price information mappings
-                var priceMappings = await _dataContext.priceInformationForEachUserFilmType
-                    .Where(x => userTypeIds.Contains(x.userTypeId) && x.movieVisualFormatId == movieVisualId)
-                    .ToDictionaryAsync(x => x.userTypeId, x => x.priceInformationID);
-
-                // Get actual prices
-                var priceInformationIds = priceMappings.Values;
-                var prices = await _dataContext.priceInformation
-                    .Where(p => priceInformationIds.Contains(p.priceInformationId))
-                    .ToDictionaryAsync(p => p.priceInformationId, p => p.priceAmount);
-
-                foreach (var userTypeReq in userTypeRequests)
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
                 {
-                    if (priceMappings.TryGetValue(userTypeReq.Key, out string priceInfoId))
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = ""
+                };
+            }
+
+            var getData =
+                await _dataContext.Customers.FirstOrDefaultAsync(x => x.userID.Equals(orderRequestDTO.userId));
+            if (getData == null)
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Khong Tim Thay Nguoi Dung"
+                };
+            }
+            
+            var Schedules = await _dataContext.movieSchedule.FirstOrDefaultAsync(x => x.movieScheduleId.Equals(orderRequestDTO.movieScheduleId));
+    
+            bool checkSeats = false;
+            if (Schedules != null)
+            {
+                var selectCinemaRoomID = Schedules.cinemaRoomId;
+        
+                // **CRITICAL FIX HERE:** Materialize the seats list using ToListAsync()
+                var getSeatsListsInRoom = await _dataContext.Seats
+                    .Where(x => x.cinemaRoomId.Equals(selectCinemaRoomID)).ToListAsync(); // <--- This closes the DataReader
+        
+                // Improved logic for checking if selected seats belong to the room
+                // Assuming orderRequestDTO.userTypeRequestDTO contains selected seats:
+                var selectedSeatIdsInRequest = orderRequestDTO.userTypeRequestDTO
+                    .SelectMany(x => x.SeatsList)
+                    .Select(s => s.seatID)
+                    .ToHashSet(); // Using HashSet for efficient lookups
+
+                // Check if all selected seats exist in the room's seats
+                checkSeats = selectedSeatIdsInRequest.All(seatId => 
+                    getSeatsListsInRoom.Any(s => s.seatsId.Equals(seatId)));
+            }
+
+            if (!checkSeats)
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Loi , Ghe Khong Thuoc Ve Phong"
+                };
+            }
+
+            if (!orderRequestDTO.userTypeRequestDTO.Any())
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Loi Chưa có chọn thể loại người dùng"
+                };
+            }
+
+            if (orderRequestDTO.userTypeRequestDTO.Any(x => !x.SeatsList.Any()))
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Ban Chua Chon Ghe"
+                };
+            }
+            
+            // Tien Hanh Lay data
+            var getMovieScheduleData = _dataContext.movieSchedule
+                .FirstOrDefault(x => x.movieScheduleId == orderRequestDTO.movieScheduleId && !x.IsDelete);
+            if (getMovieScheduleData == null)
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Khong Tim Thay Lich Chieu"
+                };
+            }
+
+            var selectMovieVisualFormat = getMovieScheduleData.movieVisualFormatID;
+            if (String.IsNullOrEmpty(selectMovieVisualFormat))
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Khong Tim Thay Dinh Dang Hinh Anh"
+                };
+            }
+            
+            // Bắt lôix
+            if(orderRequestDTO.userTypeRequestDTO.Any(x => x.quantity > x.SeatsList.Count))
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Ban Dat Thiếu Ghe Roi"
+                };
+            }
+            
+            if(orderRequestDTO.userTypeRequestDTO.Any(x => x.quantity < x.SeatsList.Count))
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Ban Dat Du Ghe Roi"
+                };
+            }
+            
+            // Chon ra nhung the loai nguoi dung kem gia
+            var ToDictionayDataPriceWithUserType
+                = _dataContext.priceInformationForEachUserFilmType
+                    .Where(x => x.movieVisualFormatId.Equals(selectMovieVisualFormat)
+                    && orderRequestDTO.userTypeRequestDTO
+                        .Select(x => x.userTypeID)
+                        .Contains(x.userTypeId)).ToDictionary(x => 
+                        x.userTypeId , x => x.priceInformationID);
+            if (!ToDictionayDataPriceWithUserType.Any())
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Loi Khong Tim Thay Gia"
+                };
+            }
+            
+            Dictionary<string , long> PriceForUserType = new Dictionary<string , long>();
+            var selectedPriceForEachUserType = _dataContext.priceInformation.ToList();
+            foreach (var getSelectedPrice in selectedPriceForEachUserType)
+            {
+                foreach (var getKey in ToDictionayDataPriceWithUserType)
+                {
+                    if (getKey.Value == getSelectedPrice.priceInformationId)
                     {
-                        if (prices.TryGetValue(priceInfoId, out long pricePerUnit))
-                        {
-                            totalAmount += pricePerUnit * userTypeReq.Value;
-                        }
-                        else
-                        {
-                            // Log or handle case where price information is missing for a valid priceInfoId
-                            Console.WriteLine($"Warning: Price information not found for PriceInfoID: {priceInfoId}");
-                        }
-                    }
-                    else
-                    {
-                        // Log or handle case where a userTypeID doesn't have a valid price mapping
-                        Console.WriteLine($"Warning: Price mapping not found for UserTypeID: {userTypeReq.Key} and MovieVisualID: {movieVisualId}");
+                        PriceForUserType.Add(getKey.Key, getSelectedPrice.priceAmount);
                     }
                 }
             }
+            
+            // Tiep Tuc Cong Tru
 
-            // Calculate food price
-            if (orderRequestDTO.foodRequestDTOs != null && orderRequestDTO.foodRequestDTOs.Any())
+            long TotalAmount = 0;
+
+            foreach (var userTypeId in orderRequestDTO.userTypeRequestDTO)
             {
-                var foodRequests = orderRequestDTO.foodRequestDTOs.ToDictionary(f => f.foodID, f => f.quantity);
-                var foodIds = foodRequests.Keys;
-
-                var foodPrices = await _dataContext.foodInformation
-                    .Where(f => foodIds.Contains(f.foodInformationId))
-                    .ToDictionaryAsync(f => f.foodInformationId, f => f.foodPrice);
-
-                foreach (var foodReq in foodRequests)   
+                if (PriceForUserType.TryGetValue(userTypeId.userTypeID , out long price))
                 {
-                    if (foodPrices.TryGetValue(foodReq.Key, out long foodPrice))
-                    {
-                        totalAmount += foodPrice * foodReq.Value;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Warning: Food price not found for FoodID: {foodReq.Key}");
-                    }
+                    TotalAmount += price * userTypeId.quantity;
                 }
             }
 
-            // --- Generate Order ID and VNPAY URL ---
-            var orderId = Guid.NewGuid().ToString();
-            string vnpayUrl;
-            try
+            
+            if (orderRequestDTO.foodRequestDTOs.Any())
             {
-                vnpayUrl = _vnpayService.createURL(totalAmount, orderId, httpContext);
-            }
-            catch (Exception ex)
-            {
-                // Handle VNPAY URL creation failure
-                Console.WriteLine($"Error creating VNPAY URL: {ex.Message}");
-                return new OrderRespondDTO { Error = "Error: Failed to create payment URL." };
-            }
-
-            // --- Database Transaction ---
-            await using var transaction = await _dataContext.Database.BeginTransactionAsync(); 
-            try
-            {
-                // Create Order
-                var order = new Order
+                var getFoodInfo = await _dataContext.foodInformation.ToDictionaryAsync(x => x.foodInformationId , x => x.foodPrice);
+                if (!getFoodInfo.Any())
                 {
-                    orderId = orderId,
-                    paymentRequestCreatedDate = DateTime.Now,
+                    return new GenericRespondWithObjectDTO<Dictionary<string , string>>
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Lay Data Product That Bai"
+                    };
+                }
+
+                foreach (var tryGetFoodInfo in orderRequestDTO.foodRequestDTOs)
+                {
+                    if (getFoodInfo.TryGetValue(tryGetFoodInfo.foodID, out long price))
+                    {
+                        TotalAmount += price * tryGetFoodInfo.quantity;
+                    }
+                }
+            }
+            
+            using var Transaction = await _dataContext.Database.BeginTransactionAsync();
+            try
+            {
+                // Tien Hanh Them Vao Database Va Cap Nhat
+                // Thu Nhat Them Vao Bang order
+                var generateOrderId = Guid.NewGuid().ToString();
+                await _dataContext.Order.AddAsync(new Order()
+                {
+                    orderId = generateOrderId,
+                    customerID = getData.Id,
                     PaymentStatus = PaymentStatus.Pending.ToString(),
-                    totalAmount = totalAmount,
-                    customerID = customer.Id,
-                };
-                await _dataContext.Order.AddAsync(order);
+                    totalAmount = TotalAmount 
+                });
+                
+                // Sau Do Tien Hanh Update Database
 
-                // Create Ticket Order Details
-                var orderDetailTickets = orderRequestDTO.seatsRequestDTOs
-                    .Select(s => new orderDetailTicket
+                var ListFood = new List<orderDetailFood>();
+                if (orderRequestDTO.foodRequestDTOs.Any())
+                {
+                    foreach (var foodItems in orderRequestDTO.foodRequestDTOs)
                     {
-                        orderId = orderId,
-                        movieScheduleID = orderRequestDTO.movieScheduleId,
-                        seatsId = s.seatID
-                    })
-                    .ToList();
-                await _dataContext.TicketOrderDetail.AddRangeAsync(orderDetailTickets);
-
-                // Update Seat Status
-                var seatsToUpdate = await _dataContext.Seats
-                    .Where(s => requestedSeatIds.Contains(s.seatsId))
-                    .ToListAsync();
-
-                foreach (var seat in seatsToUpdate)
-                {
-                    seat.isTaken = true;
-                }
-                _dataContext.Seats.UpdateRange(seatsToUpdate);
-
-                // Create Food Order Details
-                if (orderRequestDTO.foodRequestDTOs != null && orderRequestDTO.foodRequestDTOs.Any())
-                {
-                    var orderDetailFoods = orderRequestDTO.foodRequestDTOs
-                        .Select(f => new orderDetailFood
+                        ListFood.Add(new orderDetailFood()
                         {
-                            orderId = orderId,
-                            quanlity = f.quantity,
-                            foodInformationId = f.foodID,
-                        })
-                        .ToList();
-                    await _dataContext.FoodOrderDetail.AddRangeAsync(orderDetailFoods);
+                            orderId = generateOrderId,
+                            foodInformationId = foodItems.foodID,
+                            quanlity = foodItems.quantity
+                        });
+                    }
                 }
 
-                await _dataContext.SaveChangesAsync();
-                await transaction.CommitAsync();
+                var ListTickets = new List<orderDetailTicket>();
+                var SeatsLists = new List<string>();
 
-                return new OrderRespondDTO
+                foreach (var getUserType in orderRequestDTO.userTypeRequestDTO)
                 {
-                    VnpayURL = vnpayUrl,
-                    TotalAmount = totalAmount
+                    foreach (var getSeats in getUserType.SeatsList)
+                    {
+                        ListTickets.Add(new orderDetailTicket()
+                        {
+                            seatsId = getSeats.seatID,
+                            orderId = generateOrderId,
+                            movieScheduleID = orderRequestDTO.movieScheduleId,
+                        });
+                        SeatsLists.Add(getSeats.seatID);
+                    }
+                }
+                
+                // Tien Hanh Set Trang Thai Ghe
+                
+                var getSeatsListsInDB =  
+                    _dataContext.Seats.Where(x => SeatsLists.Contains(x.seatsId)).ToList();
+                foreach (var setSeats in getSeatsListsInDB)
+                {
+                    setSeats.isTaken = true;
+                }
+                // Tien Hanh Luu
+                if (orderRequestDTO.foodRequestDTOs.Any())
+                {
+                    await _dataContext.FoodOrderDetail.AddRangeAsync(ListFood);
+                }
+                await _dataContext.TicketOrderDetail.AddRangeAsync(ListTickets);
+                _dataContext.Seats.UpdateRange(getSeatsListsInDB);
+                await _dataContext.SaveChangesAsync();
+                await Transaction.CommitAsync();
+
+                var generateVnpayUrl = _vnpayService
+                    .createURL(TotalAmount, generateOrderId, httpContext);
+                
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Order Thanh Cong" ,
+                    data = new Dictionary<string, string>()
+                    {
+                        {"VnpayURL" , generateVnpayUrl} ,
+                        {"TotalAmount" , TotalAmount.ToString() }
+                    }
                 };
+                
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                await transaction.RollbackAsync();
-                Console.WriteLine($"Database transaction error during booking: {ex.ToString()}"); // Log full exception
-                return new OrderRespondDTO
+                await Transaction.RollbackAsync();
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
                 {
-                    Error = "Error: System failed to save order to the database. Please try again."
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Loi Databases"
                 };
             }
         }

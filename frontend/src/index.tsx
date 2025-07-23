@@ -22,6 +22,8 @@ import Comment from './Cinema/Comment';
 import FutureFilm from './Bookig/FutureFilm';
 import Booking from './Bookig/Booking';
 import BookingHistory from './Account/BookingHistory';
+import Addmovie from './QL_Add_movie/Addmovie';
+
 
 
 
@@ -48,6 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/futurefilm" element={<FutureFilm />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/bookinghistory" element={<BookingHistory />} />
+        <Route path="/addmovie" element={<Addmovie />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

@@ -12,6 +12,9 @@ const Info: React.FC = () => {
         localStorage.removeItem("userEmail");
         navigate("/login");
     };
+    const handleaddmovie = () => {
+        navigate('/Addmovie')
+    }
 
     const [userName, setUserName] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState(''); // Định dạng YYYY-MM-DD từ input type="date"
@@ -173,6 +176,14 @@ const Info: React.FC = () => {
                             }`}
                         onClick={() => setActiveTab("password")}>
                         Đổi mật khẩu
+                    </button>
+                    <button
+                        className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "history"
+                            ? "bg-yellow-300 text-black"
+                            : "hover:bg-white/30 text-white"
+                            }`}
+                        onClick={handleaddmovie}>
+                        Lịch sử đặt vé
                     </button>
                 </div>
                 <div className="flex-1 space-y-8 mt-8 md:mt-0">
