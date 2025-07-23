@@ -116,4 +116,15 @@ public class CinemaRoomController : ControllerBase
         }
         return Ok(result);
     }
+
+    [HttpGet("GetRoomByCinemaIdAndVisualId")]
+    public IActionResult GetRoomByCinemaIdAndVisualId(string cinemaId, string visualId)
+    {
+        var result = _roomService.GetRoomListByVisualAndCinemaId(cinemaId, visualId);
+        if (result.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        {
+            return BadRequest(result);
+        }
+        return Ok(result);
+    }
 }

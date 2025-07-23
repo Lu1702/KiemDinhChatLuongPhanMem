@@ -6,7 +6,9 @@ using backend.ModelDTO.Account.AccountRespond;
 using backend.ModelDTO.GenericRespond;
 using Microsoft.Identity.Client;
 using backend.Interface.Account;
+using backend.ModelDTO.Account;
 using BCrypt.Net;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace backend.Services.AccountServices;
@@ -154,4 +156,97 @@ public class AccountService(DataContext _injectionContext , HashHelper hashHelpe
             };
         }
     }
+
+    public async Task<GenericRespondDTOs> ResetPassword(ReNewPasswordDTO dtos)
+    {
+        // Check Null
+        if (String.IsNullOrEmpty(dtos.NewPassword))
+        {
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Khong Duoc De Trong Mat Khau Moi"
+            };
+        }
+
+        if (String.IsNullOrEmpty(dtos.ReNewPassword))
+        {
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Khong Duoc De Trong Mat Khau Xac Nhan"
+            };
+        }
+
+        if (String.IsNullOrEmpty(dtos.ResetToken))
+        {
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Loi Thieu Token"
+            };
+        }
+
+        if (dtos.NewPassword != dtos.ReNewPassword)
+        {
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Mat Khau Xac Nhan Khong Giong Mat Khau Moi"
+            };
+        }
+        
+        await using var Transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // Tim Token
+            var findValidToken = _context.EmailList.FirstOrDefault
+                (x => x.ResetToken.Equals(dtos.ResetToken));
+            if (findValidToken != null)
+            {
+                // Tien Hanh Cho Doi Mat Khau
+                var findUser = await _context.userInformation.FirstOrDefaultAsync
+                    (x => x.userId.Equals(findValidToken.UserId));
+                if (findUser != null)
+                {
+                    var convertToBrcypt = BCrypt.Net.BCrypt.HashPassword(dtos.NewPassword);
+                    findUser.loginUserPassword = convertToBrcypt;
+                    findValidToken.isUsed = true;
+                    _context.EmailList.Update(findValidToken);
+                    _context.userInformation.Update(findUser);
+                    await _context.SaveChangesAsync();
+                    await Transaction.CommitAsync();
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Success.ToString(),
+                        message = "Thay Doi Mat Khau Thanh Cong"
+                    };
+                }
+
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Khong Tim Thay Nguoi Dung"
+                };
+            }
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Khong Tim Thay Token"
+            };
+        }
+        catch (Exception e)
+        {
+            await Transaction.RollbackAsync();
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Loi Database"
+            };
+        }
+        
+        
+    }
+
+    
 }

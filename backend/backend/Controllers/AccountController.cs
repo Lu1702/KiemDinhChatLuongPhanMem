@@ -1,5 +1,6 @@
 using backend.Enum;
 using backend.Interface.Account;
+using backend.ModelDTO.Account;
 using backend.ModelDTO.Account.AccountRequest;
 using backend.ModelDTO.Account.AccountRespond;
 using Microsoft.AspNetCore.Authorization;
@@ -48,5 +49,16 @@ public class AccountController(IAccountService IAccount) : ControllerBase
             return BadRequest(getstatus);
         }
         return Ok(getstatus);
+    }
+
+    [HttpPost("ResetPassword")]
+    public async Task<IActionResult> ResetPassword(ReNewPasswordDTO dtos)
+    {
+        var status = await _IAccount.ResetPassword(dtos);
+        if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
+        {
+            return BadRequest(status);
+        }
+        return Ok(status);
     }
 }

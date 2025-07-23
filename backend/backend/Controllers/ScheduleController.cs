@@ -19,10 +19,10 @@ namespace backend.Controllers
         }
         [HttpPost("addSchedule")]
         [Authorize(Policy = "TheaterManager")]
-        public async Task<IActionResult> addSchedule(ScheduleRequestDTO scheduleRequestDTO)
+        public async Task<IActionResult> addSchedule(string cinemaId ,ScheduleRequestDTO scheduleRequestDTO)
         {
-            var status = await scheduleServices.add(scheduleRequestDTO);
-            if (status.Status.StartsWith("F"))
+            var status = await scheduleServices.add(cinemaId, scheduleRequestDTO);
+            if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
                 return BadRequest(status);
             }
@@ -64,5 +64,17 @@ namespace backend.Controllers
             return Ok(findStatus);
         }
         
+        
+        [Authorize(Policy = "TheaterManager")]
+        [HttpGet("GetMovieVisualFormatByMovieId")]
+        public IActionResult getMovieVisualFormatById(string movieId)
+        {
+            var getStatus = scheduleServices.getVisualFormatListByMovieId(movieId);
+            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            {
+                return BadRequest();
+            }
+            return Ok(getStatus);
+        }
     }
 }
