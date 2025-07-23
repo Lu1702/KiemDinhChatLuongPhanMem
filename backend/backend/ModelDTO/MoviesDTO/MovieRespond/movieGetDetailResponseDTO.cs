@@ -12,7 +12,7 @@ namespace backend.ModelDTO.MoviesDTO.MovieRespond
         public string movieName { get; set; } = "";
         public string movieImage { get; set; } = string.Empty;
         public string movieDescription { get; set; } = "";
-        public int minimumAge { get; set; } = 0;
+        public string minimumAge { get; set; } = string.Empty;
         public string movieDirector { get; set; } = "";
         public string movieActor { get; set; } = "";
         public string movieTrailerUrl { get; set; } = "";

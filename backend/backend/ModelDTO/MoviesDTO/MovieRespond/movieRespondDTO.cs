@@ -22,7 +22,7 @@ namespace backend.ModelDTO.MoviesDTO.MovieRespond
 
         public string[] movieVisualFormat { get; set; } = [];
 
-        public int minimumAge;
+        public string minimumAge;
 
         public string minimumAgeDescription = string.Empty;
 
