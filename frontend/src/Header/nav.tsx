@@ -8,8 +8,17 @@ import { useNavigate } from 'react-router-dom';
 function Nav() {
     const userEmail = localStorage.getItem('userEmail');
     const handleInfo = () => {
+    // Retrieve roleName from localStorage and split into an array
+    const roleName = localStorage.getItem('role') || '';
+    const roles: string[] = roleName ? roleName.split(',') : [];
+
+    // Role-based navigation
+    if (roles.includes('Cashier') || roles.includes('TheaterManager') || roles.includes('Director') || roles.includes('MovieManager') || roles.includes('FacilitiesManager')) {
+        navigate('/QuanLyRap/QLNV');
+    } else if (roles.includes('Customer')) {
         navigate('/info');
     }
+};
     const handleBooking = () => {
         navigate('/booking');
     }

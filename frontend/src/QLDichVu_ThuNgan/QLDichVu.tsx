@@ -1,339 +1,214 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './style.css'; // Đảm bảo rằng file CSS này chứa các style cho uiverse-pixel-input và button2
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-interface Service {
-  id: number;
-  name: string;
-  quantity: number;
-  orderID: string;
+interface Cinema {
+  cinemaId: string;
+  cinemaName: string;
+  cinemaLocation: string;
+  cinemaDescription?: string;
+  cinemaContactNumber?: string;
 }
 
-const QuanLy: React.FC = () => {
-  const [employeeId] = useState('123456789');
-  const [filterText, setFilterText] = useState(''); // filterText sẽ lưu OrderID được chọn để lọc
-  // Khởi tạo dịch vụ với orderID mặc định
-  const [services, setServices] = useState<Service[]>([
-    { id: 1, name: 'Bắp caramel', quantity: 1, orderID: 'ORD001' },
-    { id: 2, name: 'Pepsi', quantity: 2, orderID: 'ORD001' },
-    { id: 3, name: 'Coca', quantity: 1, orderID: 'ORD002' },
-    { id: 4, name: 'Không thêm dịch vụ', quantity: 1, orderID: 'ORD003' },
-  ]);
-  const [isAddingService, setIsAddingService] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showAccountMenu, setShowAccountMenu] = useState(false);
-  // State for loading spinner
-  const [isLoading, setIsLoading] = useState(false);
+interface ApiResponse {
+  status: string;
+  message: string;
+  data: Cinema[];
+}
 
-  // Danh sách các dịch vụ có sẵn để chọn
-  const availableServices = ['Pepsi', 'Coca', '7up', 'Bắp phô mai', 'Bắp origin', 'Bắp Carameo'];
+const CinemaPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'cinema' | 'room'>('cinema');
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [newCinema, setNewCinema] = useState({
+    cinemaName: '',
+    cinemaLocation: '',
+    cinemaDescription: '',
+    cinemaContactNumber: '',
+  });
 
-  // State cho ô chọn dịch vụ và số lượng khi thêm
-  const [newServiceName, setNewServiceName] = useState(availableServices[0]);
-  const [newServiceQuantity, setNewServiceQuantity] = useState(1);
-  // State mới cho OrderID được chọn khi thêm dịch vụ
-  const [selectedOrderID, setSelectedOrderID] = useState('');
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (activeTab === 'cinema') {
+      fetchCinemas();
+    }
+  }, [activeTab]);
 
-  // Lấy danh sách các OrderID duy nhất từ các dịch vụ đã có
-  const existingOrderIDs = Array.from(new Set(services.map(service => service.orderID)));
-
-  const handleAddService = () => {
-    setIsAddingService(true);
-    setNewServiceName(availableServices[0]);
-    setNewServiceQuantity(1);
-    // Nếu có OrderID nào đã tồn tại, chọn cái đầu tiên làm mặc định, ngược lại để trống
-    setSelectedOrderID(existingOrderIDs.length > 0 ? existingOrderIDs[0] : '');
-  };
-
-  const handleSubmitService = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newServiceName.trim() && selectedOrderID.trim()) {
-      const newService: Service = {
-        id: services.length + 1,
-        name: newServiceName,
-        quantity: newServiceQuantity,
-        orderID: selectedOrderID
-      };
-      setServices([...services, newService]);
-      setNewServiceName(availableServices[0]);
-      setNewServiceQuantity(1);
-      setSelectedOrderID('');
-      setIsAddingService(false);
-    } else {
-      alert('Vui lòng chọn Order ID.');
+  const fetchCinemas = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get<ApiResponse>('http://localhost:5229/api/Cinema/getCinemaList');
+      console.log('API Response:', response.data);
+      const cinemaData = response.data.data;
+      if (Array.isArray(cinemaData)) {
+        setCinemas(cinemaData);
+      } else {
+        setError('API response data is not an array');
+        setCinemas([]);
+      }
+    } catch (err) {
+      setError('Failed to fetch cinema list');
+      setCinemas([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSave = () => {
-    setIsLoading(true); // Show spinner when saving
-    // Simulate an API call or a long process
-    setTimeout(() => {
-      alert(`Đã lưu với thay đổi ở Order: ${filterText}`);
-      setIsLoading(false); // Hide spinner after process
-      // Navigate to /payment after the process is complete and spinner is hidden
-      navigate('/payment');
-    }, 2000); // 2 second delay for demonstration
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewCinema((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Logic lọc vẫn giữ nguyên, lọc theo Order ID
-  const filteredServices = services.filter(service =>
-    filterText === '' || service.orderID.toLowerCase().includes(filterText.toLowerCase())
-  );
+  const handleSaveCinema = async () => {
+    try {
+      const response = await fetch('http://localhost:5229/api/Cinema/addCinema', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify(newCinema),
+      });
 
-  const modalOverlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0,0,0,0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
+      if (!response.ok) {
+        throw new Error('Failed to add cinema');
+      }
+
+      setIsModalOpen(false);
+      setNewCinema({
+        cinemaName: '',
+        cinemaLocation: '',
+        cinemaDescription: '',
+        cinemaContactNumber: '',
+      });
+      fetchCinemas(); // Refresh the cinema list
+    } catch (err) {
+      setError('Failed to add cinema');
+    }
   };
 
   return (
-    <div
-      className="min-h-screen relative"
-      style={{
-        backgroundImage: `url('/images/bg.png')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        color: 'white',
-      }}
-    >
-      <div className="absolute inset-0 bg-black opacity-50"></div>
-
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div
-        className="w-72 p-4 fixed top-0 left-0 h-screen z-10"
-        style={{ backgroundColor: '#231C60', borderRight: '2px solid white' }}
-      >
-        <div className="flex items-center mb-6">
-          <img src="/images/logocinema1.png" alt="Logo" className="h-10 mr-2" />
+      <div className="w-64 bg-white shadow-md">
+        <div className="p-4">
+          <h2 className="text-xl font-bold mb-4">Quản lý</h2>
+          <ul>
+            <li
+              className={`p-2 cursor-pointer ${activeTab === 'cinema' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
+              onClick={() => setActiveTab('cinema')}
+            >
+              Rạp
+            </li>
+            <li
+              className={`p-2 cursor-pointer ${activeTab === 'room' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
+              onClick={() => setActiveTab('room')}
+            >
+              Phòng chiếu
+            </li>
+          </ul>
         </div>
-        <button
-          className="button2 w-full text-black px-4 py-2 rounded"
-          onClick={handleAddService}
-        >
-          Dịch vụ thêm
-        </button>
       </div>
 
       {/* Main Content */}
-      <div className="ml-72 p-6 relative z-10">
-        <div style={{ flex: 1, padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <h3>Xin chào quản lý</h3>
-            <div style={{ position: 'relative' }}>
-              <span
-                style={{ fontSize: '28px', cursor: 'pointer' }}
-                onClick={() => setShowAccountMenu(!showAccountMenu)}
+      <div className="flex-1 p-6">
+        {activeTab === 'cinema' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Danh sách rạp</h2>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                onClick={() => setIsModalOpen(true)}
               >
-                👤
-              </span>
-              {showAccountMenu && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '36px',
-                    background: '#231C60',
-                    color: 'white',
-                    borderRadius: '4px',
-                    padding: '8px',
-                    minWidth: '100px',
-                    textAlign: 'center',
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      setShowLogoutModal(true);
-                      setShowAccountMenu(false);
-                    }}
-                    style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}
-                  >
-                    Đăng xuất
-                  </button>
-                </div>
-              )}
+                Thêm Rạp
+              </button>
             </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 p-4 rounded-lg mt-6">
-          <h2 className="text-xl font-bold mb-4">Thông tin nhân viên</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm">Mã nhân viên</label>
-              <div className="uiverse-pixel-input">
-                <input
-                  type="text"
-                  value={employeeId}
-                  readOnly
-                  className="w-full p-2 rounded text-white"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm">Chọn ID order muốn confirm</label>
-              <div className="uiverse-pixel-input-wrapper">
-                <select
-                  value={filterText}
-                  onChange={(e) => setFilterText(e.target.value)}
-                  className="uiverse-pixel-input w-full"
-                >
-                  <option value="">-- Chọn --</option>
-                  {existingOrderIDs.map(id => (
-                    <option key={id} value={id}>{id}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {isAddingService && (
-            <form onSubmit={handleSubmitService} className="mt-4 space-y-4">
-              <div className="flex gap-4 items-end">
-                <div className="flex-1">
-                  <label className="block text-sm">Tên dịch vụ</label>
-                  <div className="uiverse-pixel-input-wrapper">
-                    <select
-                      value={newServiceName}
-                      onChange={(e) => setNewServiceName(e.target.value)}
-                      className="uiverse-pixel-input w-full"
-                    >
-                      {availableServices.map(service => (
-                        <option key={service} value={service}>{service}</option>
-                      ))}
-                    </select>
+            {loading && <p>Đang tải...</p>}
+            {error && <p className="text-red-500">{error}</p>}
+            {!loading && !error && cinemas.length === 0 && <p>Không có rạp nào để hiển thị.</p>}
+            {cinemas.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {cinemas.map((cinema) => (
+                  <div key={cinema.cinemaId} className="bg-white p-4 rounded shadow">
+                    <h3 className="text-lg font-semibold">{cinema.cinemaName}</h3>
+                    <p className="text-gray-600">{cinema.cinemaLocation}</p>
+                    {cinema.cinemaDescription && <p className="text-gray-500">{cinema.cinemaDescription}</p>}
+                    {cinema.cinemaContactNumber && (
+                      <p className="text-gray-500">Số điện thoại: {cinema.cinemaContactNumber}</p>
+                    )}
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {activeTab === 'room' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Danh sách phòng chiếu</h2>
+            <p>Chưa có dữ liệu phòng chiếu.</p>
+          </div>
+        )}
+
+        {/* Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h3 className="text-xl font-bold mb-4">Thêm Rạp Mới</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Tên Rạp</label>
+                  <input
+                    type="text"
+                    name="cinemaName"
+                    value={newCinema.cinemaName}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm">Số lượng</label>
-                  <div className="uiverse-pixel-input-wrapper">
-                    <select
-                      value={newServiceQuantity}
-                      onChange={(e) => setNewServiceQuantity(parseInt(e.target.value))}
-                      className="uiverse-pixel-input w-24"
-                    >
-                      {[1, 2, 3, 4, 5].map(num => (
-                        <option key={num} value={num}>{num}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Ô chọn Order ID khi thêm dịch vụ */}
-              <div className="mt-4">
-                <label className="block text-sm">Order ID</label>
-                <div className="uiverse-pixel-input-wrapper">
-                  <select
-                    value={selectedOrderID}
-                    onChange={(e) => setSelectedOrderID(e.target.value)}
-                    className="uiverse-pixel-input w-full"
+                  <label className="block text-sm font-medium text-gray-700">Địa điểm</label>
+                  <input
+                    type="text"
+                    name="cinemaLocation"
+                    value={newCinema.cinemaLocation}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                     required
-                  >
-                    <option value="" disabled>-- Chọn Order ID --</option>
-                    {existingOrderIDs.map(id => (
-                      <option key={id} value={id}>{id}</option>
-                    ))}
-                  </select>
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Mô tả</label>
+                  <textarea
+                    name="cinemaDescription"
+                    value={newCinema.cinemaDescription}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                  <input
+                    type="text"
+                    name="cinemaContactNumber"
+                    value={newCinema.cinemaContactNumber}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  />
                 </div>
               </div>
-
-              <div className="flex justify-center mt-4">
+              <div className="mt-6 flex justify-end space-x-2">
                 <button
-                  className="button2 w-20 text-black px-4 py-2 rounded"
-                  onClick={handleSubmitService}
-                  style={{ width: '80px' }}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                  onClick={() => setIsModalOpen(false)}
                 >
-                  Thêm
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-
-        <div className="bg-gray-800 p-4 rounded-lg mt-6">
-          <h2 className="text-xl font-bold mb-4">Chi tiết vé</h2>
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-gray-700">
-                <th className="p-2 border-b">ID</th>
-                <th className="p-2 border-b">Tên dịch vụ</th>
-                <th className="p-2 border-b">Số lượng</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredServices.map((service) => (
-                <tr key={service.id} className="border-b">
-                  <td className="p-2">{service.id}</td>
-                  <td className="p-2">{service.name}</td>
-                  <td className="p-2">{service.quantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={() => {
-                      handleSave();
-                      navigate("/payment");
-                    }}
-            className="button2 bg-[#7e57c2] text-white px-4 py-2 rounded"
-            style={{ width: '250px' }}
-            disabled={isLoading} // Disable button when loading
-          >
-            {isLoading ? (
-              <div className="dot-spinner">
-                <div className="dot-spinner__dot"></div>
-                <div className="dot-spinner__dot"></div>
-                <div className="dot-spinner__dot"></div>
-                <div className="dot-spinner__dot"></div>
-                <div className="dot-spinner__dot"></div>
-                <div className="dot-spinner__dot"></div>
-                <div className="dot-spinner__dot"></div>
-                <div className="dot-spinner__dot"></div>
-              </div>
-            ) : (
-              'Yêu cầu thanh toán'
-            )}
-          </button>
-        </div>
-
-        {/* Modal Đăng xuất */}
-        {showLogoutModal && (
-          <div style={modalOverlayStyle}>
-            <div style={{ background: '#4c65a8', padding: '24px', borderRadius: '8px', textAlign: 'center', color: 'white', width: '300px' }}>
-              <div style={{ marginBottom: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                  <img src="/images/warning.png" alt="!" style={{ width: '40px' }} />
-                </div>
-              </div>
-              <p>Bạn chắc chắn muốn đăng xuất không?</p>
-              <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px' }}>
-                <button
-                  onClick={() => {
-                    alert('Đã đăng xuất');
-                    setShowLogoutModal(false);
-                    navigate('/');
-                  }}
-                  style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: 'lightgreen', color: 'black' }}
-                >
-                  Có
+                  Hủy
                 </button>
                 <button
-                  onClick={() => setShowLogoutModal(false)}
-                  style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: '#cc3380', color: 'white' }}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={handleSaveCinema}
                 >
-                  Không
+                  Lưu
                 </button>
               </div>
             </div>
@@ -344,4 +219,4 @@ const QuanLy: React.FC = () => {
   );
 };
 
-export default QuanLy;
+export default CinemaPage;

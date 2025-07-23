@@ -50,6 +50,8 @@ namespace backend.Data
         public DbSet<StaffOrderDetailFood> StaffOrderDetailFoods { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<minimumAge> minimumAges { get; set; }
+        
+        public DbSet<EmailList> EmailList { get; set; }
 
         public DbSet<EmailList> EmailList { get; set; }
 
@@ -77,7 +79,7 @@ namespace backend.Data
 
             // unique Lichj chieu Phong , Ngay , Gio
             modelBuilder.Entity<movieSchedule>()
-                .HasIndex(ms => new { ms.cinemaRoomId, ms.ScheduleDate, ms.HourScheduleID })
+                .HasIndex(ms => new { ms.cinemaRoomId, ms.ScheduleDate, ms.HourScheduleID})
                 .HasFilter("[IsDelete] = CAST(0 AS BIT)")
                 .IsUnique();
 

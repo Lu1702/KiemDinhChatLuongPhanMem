@@ -69,6 +69,7 @@ namespace backend.Services.Schedule
                     foreach (var movieScheduleDTO in scheduleRequestDTO.scheduleDateDTOs)
                     {
                         if (!movieScheduleDTO.ScheduleVisualFormatDTOs.Any())
+
                         {
                             return new GenericRespondDTOs()
                             {
@@ -115,8 +116,7 @@ namespace backend.Services.Schedule
                                     return new GenericRespondDTOs()
                                     {
                                         Status = GenericStatusEnum.Failure.ToString(),
-                                        message =
-                                            "Phòng chiếu này đã có một bộ phim khác được lên lịch vào đúng thời gian bạn chọn.\n\nVui lòng chọn một phòng chiếu khác hoặc một giờ chiếu khác cho lịch trình của bạn."
+                                        message =  "Phòng chiếu này đã có một bộ phim khác được lên lịch vào đúng thời gian bạn chọn.\n\nVui lòng chọn một phòng chiếu khác hoặc một giờ chiếu khác cho lịch trình của bạn."
                                     };
                                 }
 
@@ -176,18 +176,7 @@ namespace backend.Services.Schedule
          
         public async Task<GenericRespondDTOs> edit(string Movieid, ScheduleRequestDTO scheduleRequestDTO)
         {
-            if (String.IsNullOrEmpty(Movieid))
-            {
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Bạn chưa có thông tin veef phim cần xóa"
-                };
-            }
-            // Tim Kiem Lich Chieu 
-            // Logic nghiệp vụ :
-            // Nếu có người đã đặt vé hoặc dang trong trạng thái Pending thì sẽ không được chỉnh sửa
-            
+            return false;
         }
 
         public async Task<GenericRespondDTOs> delete(string id)
