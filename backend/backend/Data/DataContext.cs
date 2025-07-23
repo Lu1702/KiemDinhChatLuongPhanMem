@@ -53,8 +53,6 @@ namespace backend.Data
         
         public DbSet<EmailList> EmailList { get; set; }
 
-        public DbSet<EmailList> EmailList { get; set; }
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
