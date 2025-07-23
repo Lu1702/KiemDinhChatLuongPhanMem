@@ -6,13 +6,15 @@ namespace backend.Interface.Schedule
 {
     public interface IScheduleServices
     {
-        Task<GenericRespondDTOs> add(ScheduleRequestDTO scheduleRequestDTO);
+        Task<GenericRespondDTOs> add(string cinemaId ,ScheduleRequestDTO scheduleRequestDTO);
 
         Task<bool> edit(string id ,ScheduleRequestDTO scheduleRequestDTO);
 
         Task<bool> delete(string id , string options);
 
         GenericRespondWithObjectDTO<List<GetListScheduleDTO>> getAlSchedulesByMovieName(string movieName);
+        
+        GenericRespondWithObjectDTO<GetVisualFormatListByMovieIdDTO> getVisualFormatListByMovieId(string movieId);
 
     }
 }

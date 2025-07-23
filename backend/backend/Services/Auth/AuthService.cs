@@ -12,8 +12,10 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Logging;
 using System.Reflection.PortableExecutable;
+using backend.Enum;
 using backend.Helper;
 using backend.Model.Staff_Customer;
+using backend.ModelDTO.GenericRespond;
 using Microsoft.AspNetCore.Authorization;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
@@ -207,6 +209,82 @@ namespace backend.Services.Auth
             }
             return null! ;
         }
+
+        public GenericRespondWithObjectDTO<Dictionary<string , string>> VerifyEmailCode(string EmailAddress ,string code)
+        {
+            if (String.IsNullOrEmpty(EmailAddress))
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Email Khong Duoc De Trong"
+                };
+            }
+            if (String.IsNullOrEmpty(code))
+            {
+                return new GenericRespondWithObjectDTO<Dictionary<string , string>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Ban Chua Nhap Ma Code"
+                };
+            }
+            
+            var checkEmailAddress = _dataContext.userInformation.FirstOrDefault
+                (x => x.loginUserEmail.Equals(EmailAddress));
+            if (checkEmailAddress != null)
+            {
+                var checkOTP = _dataContext.EmailList.FirstOrDefault(x =>
+                    x.UserId.Equals(checkEmailAddress.userId) && !x.isUsed && DateTime.Now < x.ExpirationDate);
+                if (checkOTP != null)
+                {
+                    // Verify OTP 
+                    var VerifyOTP = _hashHelper.GetData(checkOTP.EmailCode);
+                    if (String.IsNullOrEmpty(VerifyOTP))
+                    {
+                        return new GenericRespondWithObjectDTO<Dictionary<string , string>>()
+                        {
+                            Status = GenericStatusEnum.Failure.ToString(),
+                            message = "Khong Tim Thay Ma OTP"
+                        };
+                    }
+
+                    if (VerifyOTP == code)
+                    {
+                        try
+                        {
+                            checkOTP.ResetToken = Guid.NewGuid().ToString();
+                            _dataContext.EmailList.Update(checkOTP);
+                            _dataContext.SaveChanges();
+
+                            return new GenericRespondWithObjectDTO<Dictionary<string , string>>()
+                            {
+                                Status = GenericStatusEnum.Success.ToString(),
+                                message = "Email Code Verified",
+                                data = new Dictionary<string, string>()
+                                {
+                                    {"Token" , checkOTP.ResetToken }
+                                }
+                            };
+                        }
+                        catch(Exception e)
+                        {
+                            return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                            {
+                                Status = GenericStatusEnum.Failure.ToString(),
+                                message = "Loi Database" 
+                            };
+                        }
+                    }
+                }
+            }
+
+            return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Khong Tim Thay Nguoi Dung"
+            };
+        }
+
 
         public async Task SaveChanges()
         {

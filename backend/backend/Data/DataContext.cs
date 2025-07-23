@@ -10,7 +10,8 @@ using backend.Model.ScheduleList;
 using System.Text;
 using backend.Model.Staff_Customer;
 using backend.Model.MinimumAge;
-using System; // Thêm namespace này cho Guid
+using System;
+using backend.Model.Email; // Thêm namespace này cho Guid
 
 namespace backend.Data
 {
@@ -49,6 +50,8 @@ namespace backend.Data
         public DbSet<StaffOrderDetailFood> StaffOrderDetailFoods { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<minimumAge> minimumAges { get; set; }
+        
+        public DbSet<EmailList> EmailList { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -69,11 +72,13 @@ namespace backend.Data
             // unique Phim phim , ngay , gio
             modelBuilder.Entity<movieSchedule>()
                 .HasIndex(ms => new { ms.movieId, ms.ScheduleDate, ms.HourScheduleID })
+                .HasFilter("[IsDelete] = CAST(0 AS BIT)")
                 .IsUnique();
             
             // unique Lichj chieu Phong , Ngay , Gio
             modelBuilder.Entity<movieSchedule>()
-                .HasIndex(ms => new { ms.cinemaRoomId, ms.ScheduleDate, ms.HourScheduleID })
+                .HasIndex(ms => new { ms.cinemaRoomId, ms.ScheduleDate, ms.HourScheduleID})
+                .HasFilter("[IsDelete] = CAST(0 AS BIT)")
                 .IsUnique();
 
             // =====================================================================
@@ -136,7 +141,7 @@ namespace backend.Data
                 new userInformation()
                 {
                     userId = UserFacilitiesManagerId ,
-                    loginUserEmail = "facilities@example.com",
+                        loginUserEmail = "facilities@example.com",
                     loginUserPassword = "$2a$12$CkugZHMrWhxG0h6hUqOAf.fX9QQFkLnfnLlI.xWCNZ1y/PivtfN2O"
                 }
             );

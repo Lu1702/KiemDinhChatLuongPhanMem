@@ -1,6 +1,8 @@
 ﻿
 using backend.ModelDTO.Auth.AuthRespond;
 using backend.ModelDTO.Auth.AuthRequest;
+using backend.ModelDTO.GenericRespond;
+
 namespace backend.Interface.Auth
 {
     // Các Interfaces Authentication , author
@@ -14,6 +16,8 @@ namespace backend.Interface.Auth
         // Tạm thời chưa trả về model
 
         loginRespondDTO Login(loginRequestDTO loginRequest);
+
+        GenericRespondWithObjectDTO<Dictionary<string , string>> VerifyEmailCode(string EmailAddress ,string code);
 
         Task SaveChanges();
     }

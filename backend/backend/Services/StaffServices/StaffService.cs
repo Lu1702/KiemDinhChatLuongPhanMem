@@ -34,6 +34,8 @@ public class StaffService(DataContext dbContext) : IStaffService
                     Status = GenericStatusEnum.Failure.ToString()
                 };
             }
+            
+            // Truy Van Thong Tin Staff Neu Staff
             var generateUserId = Guid.NewGuid().ToString();
             var generateStaffId = Guid.NewGuid().ToString();
 
@@ -46,6 +48,18 @@ public class StaffService(DataContext dbContext) : IStaffService
                 {
                     message = "User already exists!",
                     Status = GenericStatusEnum.Failure.ToString()
+                };
+            }
+
+            var checkExitsStaff = _context.Staff.Where
+                (x => x.Name.ToLower().Equals(createStaffDTO.StaffName.ToLower())
+                && x.cinemaID.Equals(createStaffDTO.CinemaId));
+            if (checkExitsStaff.Any())
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Nhan Vien Nay Da Ton Tai",
                 };
             }
 
@@ -76,9 +90,19 @@ public class StaffService(DataContext dbContext) : IStaffService
                 userID = generateUserId ,
                 Id = generateStaffId
             });
-            
+
+            var getRoles = _context.roleInformation.Where(x =>
+                x.roleName.Equals("Cashier"));
             foreach (var roleID in createStaffDTO.RoleID)
             {
+                if (!getRoles.Any(x => x.roleId == roleID))
+                {
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Lỗi : Khi Thêm Role chỉ được chứa Role Nhân Viên Thôi !"
+                    };
+                }
                 userRoles.Add(new userRoleInformation()
                 {
                     userId = generateUserId,
@@ -135,11 +159,25 @@ public class StaffService(DataContext dbContext) : IStaffService
                     {
                         _context.userRoleInformation.RemoveRange(_context.userRoleInformation.Where(x => x.userId.Equals(findStaff.userID)));
                         List<userRoleInformation> userRoles = new List<userRoleInformation>();
+                        var getRoles = _context.roleInformation.Where(x =>
+                            x.roleName.Equals("Director") &&
+                            x.roleName.Equals("FacilitiesManager") &&
+                            x.roleName.Equals("MovieManager") &&
+                            x.roleName.Equals("TheaterManager") &&
+                            x.roleName.Equals("Customer"));
                         foreach (var roleID in editStaffDTO.RoleID)
                         {
+                            if (getRoles.Any(x => x.roleId == roleID))
+                            {
+                                return new GenericRespondDTOs()
+                                {
+                                    Status = GenericStatusEnum.Failure.ToString(),
+                                    message = "Lỗi : Khi Thêm Role chỉ được chứa Role Nhân Viên Thôi !"
+                                };
+                            }
                             userRoles.Add(new userRoleInformation()
                             {
-                                userId = findStaff.userID ,
+                                userId = findStaff.userID,
                                 roleId = roleID
                             });
                         }

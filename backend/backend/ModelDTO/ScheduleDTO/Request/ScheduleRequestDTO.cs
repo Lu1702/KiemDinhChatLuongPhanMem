@@ -1,5 +1,7 @@
 ﻿    namespace backend.ModelDTO.ScheduleDTO.Request
     {
+        // Chọn rrạp Sau đó voi 
+        // Chon Rap Truoc Sau Do Chon Phim , Sau do chon ngay , Sau do chon gio
         public class ScheduleRequestDTO
         {
             public string movieID { get; set; } = string.Empty;
@@ -24,13 +26,8 @@
 
         public class ScheduleShowTimeDTO
         {
-            public string showTimeID { get; set; } = string.Empty;
-
-            public List<ScheduleRoomDTO> scheduleRoomDTOs { get; set; } = [];
+            public string showTimeID { get; set; } = string.Empty; 
+            public string RoomId { get; set; } = string.Empty;
         }
-
-        public class ScheduleRoomDTO
-        {
-            public string roomID { get; set; } = String.Empty;
-        }
+        
     }

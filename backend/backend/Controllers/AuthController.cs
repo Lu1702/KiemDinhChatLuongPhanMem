@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using backend.Enum;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using backend.Services.Auth;
 using backend.Interface.Account;
@@ -58,6 +59,17 @@ namespace backend.Controllers
                 return Ok(getStatus);
             }
             return BadRequest();
+        }
+
+        [HttpPost("VerifyEmailCode")]
+        public IActionResult VerifyEmailCode(string EmailAddress ,string code)
+        {
+            var getStatus = _IAuth.VerifyEmailCode(EmailAddress, code);
+            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            {
+                return BadRequest();
+            }
+            return Ok(getStatus);
         }
     }
 }

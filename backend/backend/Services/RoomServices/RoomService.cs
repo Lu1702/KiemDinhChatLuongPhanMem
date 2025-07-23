@@ -17,7 +17,7 @@
         {
             _context = context;
         }
-
+        
         public GenericRespondWithObjectDTO<RoomRequestGetListDTO> getRoomInfo(string movieID , DateTime scheduleDate ,  string HourId , string movieVisualID)
         {
             // Truy van toi bang MovieSchedule de lay data
@@ -72,6 +72,17 @@
         public async Task<GenericRespondDTOs> CreateRoom(RoomCreateRequestDTO roomCreateRequestDTO)
         {
             // Tien Hanh Tao Phong
+            if (roomCreateRequestDTO.RoomNumber == 0 ||
+                String.IsNullOrEmpty(roomCreateRequestDTO.CinemaID) ||
+                String.IsNullOrEmpty(roomCreateRequestDTO.VisualFormatID) ||
+                !roomCreateRequestDTO.SeatsNumber.Any())
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Nhap Thieu Thong Tin"
+                };
+            }
             await using var transaction = await _context.Database.BeginTransactionAsync();
             {
                 try
@@ -405,4 +416,56 @@
             };
         }
 
+        public GenericRespondWithObjectDTO<List<RoomRequestGetRoomListByVisualFormatIDDTO>> GetRoomListByVisualAndCinemaId(string CinemaId,
+            string VisualFormatId)
+        {
+            // Tim kiem Phong
+            if (String.IsNullOrEmpty(CinemaId))
+            {
+                return new GenericRespondWithObjectDTO<List<RoomRequestGetRoomListByVisualFormatIDDTO>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Vui lòng cung cấp ID rạp."
+                };
+            }
+
+            if (String.IsNullOrEmpty(VisualFormatId))
+            {
+                return new GenericRespondWithObjectDTO<List<RoomRequestGetRoomListByVisualFormatIDDTO>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Vui lòng cung cấp ID định dạng hình ảnh."
+                };
+            }
+            
+            var findRoomList =
+                _context.cinemaRoom.Where(x => x.cinemaId.Equals(CinemaId) && x.movieVisualFormatID.Equals(VisualFormatId)
+                    && !x.isDeleted)
+                    .Include(r => r.movieVisualFormat).GroupBy(x => x.movieVisualFormatID);
+            if (findRoomList.Any())
+            {
+                // Loc ra thong tin
+                return new GenericRespondWithObjectDTO<List<RoomRequestGetRoomListByVisualFormatIDDTO>>()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Lấy danh sách phòng thành công." ,
+                    data = findRoomList.Select(x => new RoomRequestGetRoomListByVisualFormatIDDTO()
+                    {
+                        movieVisualFormatId = x.Key,
+                        movieVisualFormatName = x.FirstOrDefault()!.movieVisualFormat.movieVisualFormatName,
+                        roomList = x.Select(y => new RoomRequestGetRoomListVisualFormatDTO()
+                        {
+                            RoomId = y.cinemaRoomId,
+                            RoomNumber = y.cinemaRoomNumber
+                        }).ToList()
+                    }).ToList()
+                };
+            }
+
+            return new GenericRespondWithObjectDTO<List<RoomRequestGetRoomListByVisualFormatIDDTO>>()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Lỗi Không thấy phòng chiếu"
+            };
+        }
     }

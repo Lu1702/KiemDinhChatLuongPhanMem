@@ -21,212 +21,163 @@ namespace backend.Services.Schedule
             _dataContext = dataContext;
         }
 
-        public async Task<GenericRespondDTOs> add(ScheduleRequestDTO scheduleRequestDTO)
+        public async Task<GenericRespondDTOs> add(string cinemaId , ScheduleRequestDTO scheduleRequestDTO)
         {
-            var findMovieVisualFormat =
-                _dataContext.movieVisualFormatDetails
+            // Thêm lịch chiếu
+            // Các điều kiện lần lượt và luồng chạy lần lượt  là
+            // Nhập tên phim 
+            // Sau do Ngay -> Định dạng -> Gi
+            
+            // Lấy Data nếu Đã có phim chiếu trong gi x ngày x thì sẽ bắt
+            var getMovieVisualInfo = _dataContext.movieVisualFormatDetails
                 .Where(x => x.movieId.Equals(scheduleRequestDTO.movieID))
-                .Include(x => x.movieInformation)
-                .Include(x => x.movieVisualFormat);
+                .Select(x => x.movieVisualFormatId).ToList();
 
-            var selectedMovieVisualFormat =
-                findMovieVisualFormat.Select
-                (x => x.movieVisualFormatId);
-
-            var checkIsMovieSupported = false;
-
-            foreach (var scheduleDate in scheduleRequestDTO.scheduleDateDTOs)
+            if (String.IsNullOrEmpty(cinemaId))
             {
-                foreach (var visualFormat in scheduleDate.ScheduleVisualFormatDTOs)
+                return new GenericRespondDTOs()
                 {
-                    if (selectedMovieVisualFormat.Contains(visualFormat.visualFormatID))
-                    {
-                        checkIsMovieSupported = true;
-                    }
-                }
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Chưa có CinemaID"
+                };
             }
 
-            if (checkIsMovieSupported)
+            if (String.IsNullOrEmpty(scheduleRequestDTO.movieID))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Ban Chưa nhập ID của phim"
+                };
+            }
+
+            if (!scheduleRequestDTO.scheduleDateDTOs.Any())
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Ban Chua Nhap Ngay"
+                };
+            }
+
+            using (var Transaction = await _dataContext.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    List<movieSchedule> movieSchedules = new List<movieSchedule>();
-                    foreach (var scheduleDate in scheduleRequestDTO.scheduleDateDTOs)
+                    var movieScheduleList = new List<movieSchedule>();
+                    foreach (var movieScheduleDTO in scheduleRequestDTO.scheduleDateDTOs)
                     {
-                        // Tạo ID mới
-                        // Duyệt phòng 
-                        foreach (var visualFormat in scheduleDate.ScheduleVisualFormatDTOs)
+                        if (!movieScheduleDTO.ScheduleVisualFormatDTOs.Any())
                         {
-                            foreach (var showTime in visualFormat.scheduleShowTimeDTOs)
+                            return new GenericRespondDTOs()
                             {
-                                foreach (var rooms in showTime.scheduleRoomDTOs)
-                                {
-                                    var scheduleID = Guid.NewGuid().ToString();
-                                    var newSchedule = new movieSchedule()
-                                    {
-                                        movieScheduleId = scheduleID,
-                                        movieId = scheduleRequestDTO.movieID,
-                                        cinemaRoomId = rooms.roomID,
-                                        DayInWeekendSchedule = "Null",
-                                        HourScheduleID = showTime.showTimeID,
-                                        ScheduleDate = scheduleDate.startDate,
-                                        movieVisualFormatID = visualFormat.visualFormatID,
-                                        IsDelete = false
+                                Status = GenericStatusEnum.Failure.ToString(),
+                                message = "Chua Nhap Dinh Dang Hinh Anh"
+                            };
+                        }
 
+                        foreach (var movieVisualFormatDTO in movieScheduleDTO.ScheduleVisualFormatDTOs)
+                        {
+                            if (!getMovieVisualInfo.Contains(movieVisualFormatDTO.visualFormatID))
+                            {
+                                return new GenericRespondDTOs()
+                                {
+                                    Status = GenericStatusEnum.Failure.ToString(),
+                                    message = "Lỗi Định dạng , Phim không Hỗ trợ định dạng"
+                                };
+                            }
+
+                            foreach (var movieShowTime in movieVisualFormatDTO.scheduleShowTimeDTOs)
+                            {
+                                if (_dataContext.movieSchedule.Any(x => x.movieId.Equals(scheduleRequestDTO.movieID)
+                                                                        && x.ScheduleDate.Equals(movieScheduleDTO
+                                                                            .startDate)
+                                                                        && x.HourScheduleID.Equals(movieShowTime
+                                                                            .showTimeID)
+                                                                        && !x.IsDelete))
+                                {
+                                    return new GenericRespondDTOs()
+                                    {
+                                        Status = GenericStatusEnum.Failure.ToString(),
+                                        message =
+                                            "Lịch chiếu đã tồn tại trong Database Note : Lịch chiếu Không được trùng " +
+                                            "Bạn không thể tạo lịch chiếu này vì đã có một lịch chiếu đang hoạt động khác cho bộ phim này vào cùng ngày và giờ."
                                     };
-                                    movieSchedules.Add(newSchedule);
                                 }
+
+                                if (_dataContext.movieSchedule.Any(x =>
+                                        x.HourScheduleID.Equals(movieShowTime.showTimeID)
+                                        && x.cinemaRoomId.Equals(movieShowTime.RoomId)
+                                        && x.ScheduleDate.Equals(movieScheduleDTO.startDate)
+                                        && !x.IsDelete))
+                                {
+                                    return new GenericRespondDTOs()
+                                    {
+                                        Status = GenericStatusEnum.Failure.ToString(),
+                                        message =
+                                            "Phòng chiếu này đã có một bộ phim khác được lên lịch vào đúng thời gian bạn chọn.\n\nVui lòng chọn một phòng chiếu khác hoặc một giờ chiếu khác cho lịch trình của bạn."
+                                    };
+                                }
+
+                                if (!_dataContext.cinemaRoom
+                                    .Any(x => x.cinemaId.Equals(cinemaId)
+                                              && x.movieVisualFormatID.Equals(movieVisualFormatDTO.visualFormatID)
+                                              && x.cinemaRoomId.Equals(movieShowTime.RoomId)
+                                              && !x.isDeleted))
+                                {
+                                    return new GenericRespondDTOs()
+                                    {
+                                        Status = GenericStatusEnum.Failure.ToString(),
+                                        message =
+                                            "Phòng chiếu được chọn không tồn tại, không thuộc về rạp này, hoặc không hỗ trợ định dạng phim đã chọn."
+                                    };
+                                }
+
+                                // Tien Hanh Luu Vao Trong Database
+                                var generateMovieScheduleId = Guid.NewGuid().ToString();
+                                movieScheduleList.Add(new movieSchedule()
+                                {
+                                    movieScheduleId = generateMovieScheduleId ,
+                                    cinemaRoomId = movieShowTime.RoomId ,
+                                    ScheduleDate = movieScheduleDTO.startDate ,
+                                    movieVisualFormatID = movieVisualFormatDTO.visualFormatID ,
+                                    movieId = scheduleRequestDTO.movieID ,
+                                    HourScheduleID = movieShowTime.showTimeID
+                                });
                             }
                         }
                     }
-                    await _dataContext.movieSchedule.AddRangeAsync(movieSchedules);
+                    await _dataContext.movieSchedule.AddRangeAsync(movieScheduleList);
                     await _dataContext.SaveChangesAsync();
+                    await Transaction.CommitAsync();
+
                     return new GenericRespondDTOs()
                     {
-                        message = "Thành công rồi , chúc mừng bạn đã vượt qua được nhiều vòng lặp for mới thêm được Data",
-                        Status = GenericStatusEnum.Success.ToString(),
+                        Status = GenericStatusEnum.Success.ToString() ,
+                        message = "Đã thêm lịch chiếu thành công"
                     };
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    await Transaction.RollbackAsync();
                     return new GenericRespondDTOs()
                     {
-                        message = "Lỗi liên quan tới Database vui lòng liên hệ dev để fix",
-                        Status = GenericStatusEnum.Failure.ToString()
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Đã có lỗi xãy ra khi lưu Data vui lòng kiểm tra lại" +
+                                  "1. Là lỗi Database" +
+                                  "2. Là Lỗi đã tồn tại lịch chiếu"
                     };
                 }
             }
-            return new GenericRespondDTOs()
-            {
-                message = "Lỗi Phim không hỗ trợ định dạng này !" ,
-                Status = GenericStatusEnum.Failure.ToString()
-            };
         }
          
         public async Task<bool> edit(string Movieid, ScheduleRequestDTO scheduleRequestDTO)
         {
-            var findMovieVisualFormat =
-               _dataContext.movieVisualFormatDetails
-               .Where(x => x.movieId.Equals(scheduleRequestDTO.movieID))
-               .Include(x => x.movieInformation)
-               .Include(x => x.movieVisualFormat);
-
-            var selectedMovieVisualFormat =
-                findMovieVisualFormat.Select
-                (x => x.movieVisualFormatId);
-
-            var checkIsMovieSupported = false;
-
-            foreach (var scheduleDate in scheduleRequestDTO.scheduleDateDTOs)
-            {
-                foreach (var visualFormat in scheduleDate.ScheduleVisualFormatDTOs)
-                {
-                    if (selectedMovieVisualFormat.Contains(visualFormat.visualFormatID))
-                    {
-                        checkIsMovieSupported = true;
-                    }
-                }
-            }
-
-            if (checkIsMovieSupported)
-            {
-                var usingTransition = _dataContext.Database.BeginTransaction();
-                try
-                {
-                    var findMovieSchedule = _dataContext.movieSchedule.Where(x => x.movieId.Equals(Movieid));
-                    // Xóa List
-                    _dataContext.movieSchedule.RemoveRange(findMovieSchedule);
-
-                    List<movieSchedule> movieSchedules = new List<movieSchedule>();
-                    foreach (var scheduleDate in scheduleRequestDTO.scheduleDateDTOs)
-                    {
-                        // Tạo ID mới
-                        // Duyệt phòng trong mảng ngày
-                        foreach (var visualFormat in scheduleDate.ScheduleVisualFormatDTOs)
-                        {
-                            foreach (var showTime in visualFormat.scheduleShowTimeDTOs)
-                            {
-                                foreach (var rooms in showTime.scheduleRoomDTOs)
-                                {
-                                    var scheduleID = Guid.NewGuid().ToString();
-                                    var newSchedule = new movieSchedule()
-                                    {
-                                        movieScheduleId = scheduleID,
-                                        movieId = scheduleRequestDTO.movieID,
-                                        cinemaRoomId = rooms.roomID,
-                                        DayInWeekendSchedule = "Null",
-                                        HourScheduleID = showTime.showTimeID,
-                                        ScheduleDate = scheduleDate.startDate,
-                                        movieVisualFormatID = visualFormat.visualFormatID,
-                                        IsDelete = false
-
-                                    };
-                                    movieSchedules.Add(newSchedule);
-                                }
-                            }
-                        }
-                    }
-                    await _dataContext.movieSchedule.AddRangeAsync(movieSchedules);
-                    await _dataContext.SaveChangesAsync();
-                    await usingTransition.CommitAsync();
-
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    await usingTransition.RollbackAsync();
-                    return false;
-                }
-
-            }
             return false;
         }
 
         public async Task<bool> delete(string id, string options)
         {
-          
-            // Options xóa lịch chiếu theo MovieID đồng nghĩa việc xóa hết lịch chiếu
-            if (options.ToLower().Equals("movie"))
-            {
-                // Tìm kiếm lịch chiếu bởi phim
-                var findMovieSchedule = _dataContext.movieSchedule.Where(x => x.movieId.Equals(id));
-
-                var SelectedAllMovieScheduleID = findMovieSchedule.Select(x => x.movieScheduleId).ToList();
-
-                bool findOrder = false;
-                // Tìm kiếm Order
-
-                foreach(var items in findMovieSchedule.Select(x => x.orderDetailTicket.Select(x => x.movieScheduleID)))
-                {
-                    foreach (var findMovieScheduleID in items)
-                    {
-                        findOrder = await 
-                            findMovieSchedule
-                            .AnyAsync(x => SelectedAllMovieScheduleID
-                            .Contains(findMovieScheduleID));
-                    }
-                }
-
-                if (findOrder)
-                {
-                    return false;
-                }
-
-                // Tiến hành câp nhật Data
-
-                // Set trạng thái == đã xóa
-
-                var setDeleteStatusList = findMovieSchedule.ToList();
-                foreach (var items in setDeleteStatusList)
-                {
-                    items.IsDelete = true;
-                }
-
-                _dataContext.movieSchedule.UpdateRange(setDeleteStatusList);
-                await _dataContext.SaveChangesAsync();
-                return true;
-            }
             return false;
         }
 
@@ -299,6 +250,36 @@ namespace backend.Services.Schedule
             {
                 Status = GenericStatusEnum.Failure.ToString(),
                 message = "Bạn Chưa Nhap Ten Phim"
+            };
+        }
+
+        public GenericRespondWithObjectDTO<GetVisualFormatListByMovieIdDTO> getVisualFormatListByMovieId(string movieId)
+        {
+            var getVisualFormatListByMovieId = _dataContext.movieVisualFormatDetails
+                .Where(x => x.movieId.Equals(movieId))
+                .Include(x => x.movieVisualFormat);
+            if (getVisualFormatListByMovieId.Any())
+            {
+                return new GenericRespondWithObjectDTO<GetVisualFormatListByMovieIdDTO>()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Thong Tin",
+                    data = new GetVisualFormatListByMovieIdDTO()
+                    {
+                        MovieId = movieId,
+                        VisualFormatLists = getVisualFormatListByMovieId.Select(x => new VisualFormatListDTO()
+                        {
+                            VisualFormatId = x.movieVisualFormatId,
+                            VisualFormatName = x.movieVisualFormat.movieVisualFormatName
+                        }).ToList()
+                    }
+                };
+            }
+
+            return new GenericRespondWithObjectDTO<GetVisualFormatListByMovieIdDTO>()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Data bị null"
             };
         }
 

@@ -18,4 +18,6 @@ public interface IRoomService
     GenericRespondWithObjectDTO<List<RoomRequestGetListDTO>> SearchRoomByCinemaId(string CinemaId);
 
     GenericRespondWithObjectDTO<RoomRequestGetListDTO> GetRoomDetail(string roomId);
+    
+    GenericRespondWithObjectDTO<List<RoomRequestGetRoomListByVisualFormatIDDTO>> GetRoomListByVisualAndCinemaId(string CinemaId , string VisualFormatId);
 }

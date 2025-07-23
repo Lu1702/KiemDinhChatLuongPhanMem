@@ -187,7 +187,6 @@ namespace backend.Controllers
                 string.IsNullOrEmpty(vnpTransactionNo))
             {
                 Console.WriteLine("Null rồi");
-                // Return a Bad Request if any essential parameter is missing.
                 return BadRequest("Missing one or more required VNPAY callback parameters. Please check the URL.");
             }
 
@@ -240,15 +239,9 @@ namespace backend.Controllers
                     responseMessage = "Mã trạng thái không xác định.";
                     break;
             }
-
-            // ---
-            // Construct the VnpayCallbackRespond object
-            // Ensure proper type conversion (e.g., long for vnp_Amount)
-            // ---
             long amountParsed;
             if (!long.TryParse(vnpAmount, out amountParsed))
             {
-                // Handle case where vnp_Amount is not a valid long
                 return BadRequest("Invalid amount received from VNPAY.");
             }
 
@@ -258,12 +251,12 @@ namespace backend.Controllers
                 vnp_BankCode: vnpBankCode,
                 vnp_BankTranNo: vnpBankTranNo,
                 vnp_CardType: vnpCardType,
-                vnp_OrderInfo: HttpUtility.UrlDecode(vnpOrderInfo), // Decode order info
+                vnp_OrderInfo: HttpUtility.UrlDecode(vnpOrderInfo),
                 vnp_PayDate: vnpPayDate,
                 vnp_ResponseCode: vnpResponseCode,
                 vnp_TmnCode: vnpTmnCode,
                 vnp_TransactionNo: vnpTransactionNo,
-                vnp_message: responseMessage // Use the human-readable message
+                vnp_message: responseMessage 
             );
             
             Console.WriteLine(callbackData.vnp_message);
