@@ -1044,7 +1044,7 @@ useEffect(() => {
                                                         <td className="px-4 py-2">{staff.cinemaId}</td>
                                                         <td className="px-4 py-2">{staff.staffRole}</td>
                                                         <td className="px-4 py-2">
-                                                            <button onClick={() => handleEdit(staff.staffId)} className="mr-2 bg-blue-500 text-white px-2 py-1 rounded">Sửa</button>
+                                                            <button onClick={() => handleEdit(staff.staffId)} className="mr-2 bg-blue-500 text-white px-2 py-1 rounded mb-2.5">Sửa</button>
                                                             <button onClick={() => handleDelete(staff.staffId)} className="bg-red-500 text-white px-2 py-1 rounded">Xóa</button>
                                                         </td>
                                                     </tr>
