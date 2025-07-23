@@ -10,7 +10,7 @@ namespace backend.Interface.Schedule
 
         Task<bool> edit(string id ,ScheduleRequestDTO scheduleRequestDTO);
 
-        Task<bool> delete(string id , string options);
+        Task<GenericRespondDTOs> delete(string id);
 
         GenericRespondWithObjectDTO<List<GetListScheduleDTO>> getAlSchedulesByMovieName(string movieName);
         

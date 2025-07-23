@@ -1,4 +1,5 @@
-﻿using backend.Interface.BookingInterface;
+﻿using backend.Enum;
+using backend.Interface.BookingInterface;
 using backend.ModelDTO.Customer.OrderRequest;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -23,11 +24,13 @@ namespace backend.Controllers
         public async Task<IActionResult> booking(OrderRequestDTO dtos)
         {
             var getBookingstatus = await _services.booking(dtos , HttpContext);
-            if (String.IsNullOrEmpty(getBookingstatus.Error))
-            {
-                return Ok(getBookingstatus);
+            if (getBookingstatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            { 
+                return BadRequest(getBookingstatus);
+
             }
-            return BadRequest(getBookingstatus);
+            return Ok(getBookingstatus);
+            
         }
     }
 }
