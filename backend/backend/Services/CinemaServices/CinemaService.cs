@@ -71,6 +71,18 @@ public class CinemaService : ICinemaService
 
     public async Task<GenericRespondDTOs> AddCinema(CreateCinemaDTO cinema)
     {
+        if (String.IsNullOrEmpty(cinema.CinemaName) || 
+            String.IsNullOrEmpty(cinema.CinemaLocation)
+            || String.IsNullOrEmpty(cinema.CinemaDescription) ||
+            String.IsNullOrEmpty(cinema.CinemaContactNumber)
+            )
+        {
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Nhap Thieu Thong Tin"
+            };
+        }
         var checkIfExits = _context.Cinema.FirstOrDefault(x => 
             x.cinemaName.Equals(cinema.CinemaName) && x.cinemaLocation.Equals(cinema.CinemaLocation));
         if (checkIfExits == null)

@@ -23,6 +23,7 @@ using backend.Interface.CinemaInterface;
 using backend.Services.BookingServices;
 using backend.Interface.CommentInterface;
 using backend.Interface.CloudinaryInterface;
+using backend.Interface.EmailInterface;
 using backend.Interface.FoodInterface;
 using backend.Interface.MovieGenreInterface;
 using backend.Interface.PriceInterfaces;
@@ -38,6 +39,7 @@ using backend.ModelDTO.BookingHistoryDTO.OrderRespond;
 using backend.Services.AccountServices;
 using backend.Services.BookingHistoryServices;
 using backend.Services.CinemaServices;
+using backend.Services.EmailServices;
 using backend.Services.FoodServices;
 using backend.Services.MovieGenreServices;
 using backend.Services.MovieVisualServices;
@@ -45,6 +47,7 @@ using backend.Services.PriceServices;
 using backend.Services.RoomServices;
 using backend.Services.StaffService;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Identity.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -171,7 +174,8 @@ builder.Services.AddScoped<IMovieService, movieServices>();
 // Add thêm DI của Cinema
 
 builder.Services.AddScoped<ICinemaService, CinemaService>();
-
+// DI cua Email
+builder.Services.AddScoped<IEmailService, EmailService>();
 // DI cua Staff
 builder.Services.AddScoped<IStaffService, StaffService>();
 // DI MovieSchedule
@@ -185,6 +189,10 @@ builder.Services.AddScoped<IBookingServices, BookingServices>();
 // DI của Hash Helper
 
 builder.Services.AddSingleton<HashHelper>();
+
+// DI cua Order
+
+builder.Services.AddScoped<IStaffOrderService , StaffOrderService>();
 
 // DI cua Account Service
 
