@@ -430,7 +430,7 @@ const Info: React.FC = () => {
 useEffect(() => {
         setIsCheckingRoles(true);
         const timer = setTimeout(() => {
-          if (roles1.includes('FacilitiesManager')|| roles1.includes('Director') || roles1.includes('MovieManager')||roles1.includes('MovieManager') || roles1.includes('Cashier') ) {
+          if (roles1.includes('FacilitiesManager')|| roles1.includes('Director') || roles1.includes('MovieManager')||roles1.includes('MovieManager') || roles1.includes('Cashier') || roles1.includes('TheaterManager')) {
             setIsAuthorized(true);
             setIsCheckingRoles(false);
           } else {

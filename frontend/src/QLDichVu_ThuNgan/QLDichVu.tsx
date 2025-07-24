@@ -52,13 +52,9 @@ const CinemaPage: React.FC = () => {
     seatsNumber: [],
   });
   const [seatInput, setSeatInput] = useState<string>('');
-useEffect(() => {
-    const role = localStorage.getItem('role');
-    if (!role || !role.includes('FacilitiesManager')) {
-      alert('Bạn không có quyền truy cập trang này');
-      navigate('/');
-    }
-  }, [navigate]);
+
+  // Check role authorization on mount
+  
 
   useEffect(() => {
     if (activeTab === 'cinema' || activeTab === 'room') {
@@ -240,20 +236,23 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div
+      className="flex h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/images/bg.png')" }}
+    >
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md">
+      <div className="w-64 shadow-md text-white" style={{ backgroundColor: '#231C60' }}>
         <div className="p-4">
-          <h2 className="text-xl font-bold mb-4">Quản lý</h2>
+          <h2 className="text-xl font-bold mb-4">Bạn muốn chỉnh sửa: </h2>
           <ul>
             <li
-              className={`p-2 cursor-pointer ${activeTab === 'cinema' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
+              className={`p-2 cursor-pointer ${activeTab === 'cinema' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200 hover:text-gray-800'}`}
               onClick={() => setActiveTab('cinema')}
             >
               Rạp
             </li>
             <li
-              className={`p-2 cursor-pointer ${activeTab === 'room' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
+              className={`p-2 cursor-pointer ${activeTab === 'room' ? 'bg-blue-500 text-white' : 'hover:bg-gray-200 hover:text-gray-800'}`}
               onClick={() => setActiveTab('room')}
             >
               Phòng chiếu
@@ -267,7 +266,7 @@ useEffect(() => {
         {activeTab === 'cinema' && (
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Danh sách rạp</h2>
+              <h2 className="text-2xl text-white font-bold">Danh sách rạp</h2>
               <div className="space-x-2">
                 <button
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -282,10 +281,10 @@ useEffect(() => {
                   Xóa Rạp
                 </button>
                 <button
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                   onClick={handleNavigateToStaff}
                 >
-                  BACK
+                  Quản Lý Nhân Viên
                 </button>
               </div>
             </div>
@@ -311,8 +310,18 @@ useEffect(() => {
         )}
         {activeTab === 'room' && (
           <div>
-            <h2 className="text-2xl font-bold mb-4">Thêm Phòng Chiếu</h2>
+            
+            <h2 className="text-2xl text-white font-bold mb-4">Thêm Phòng Chiếu</h2>
+            <div className="space-x-2">
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  onClick={handleNavigateToStaff}
+                >
+                  Quản Lý Nhân Viên
+                </button>
+              </div>
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
+              
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Số Phòng</label>
@@ -338,7 +347,7 @@ useEffect(() => {
                     <option value="">-- Chọn rạp --</option>
                     {cinemas.map((cinema) => (
                       <option key={cinema.cinemaId} value={cinema.cinemaId}>
-                        {cinema.cinemaName} (ID: {cinema.cinemaId})
+                        {cinema.cinemaName} 
                       </option>
                     ))}
                   </select>
@@ -355,7 +364,7 @@ useEffect(() => {
                     <option value="">-- Chọn định dạng --</option>
                     {visualFormats.map((format) => (
                       <option key={format.movieVisualId} value={format.movieVisualId}>
-                        {format.movieVisualFormatDetail} (ID: {format.movieVisualId})
+                        {format.movieVisualFormatDetail} 
                       </option>
                     ))}
                   </select>
@@ -384,6 +393,7 @@ useEffect(() => {
                       ))}
                     </ul>
                   )}
+                  
                 </div>
               </div>
               <div className="mt-6 flex justify-end">
@@ -482,7 +492,7 @@ useEffect(() => {
                     <option value="">-- Chọn rạp để xóa --</option>
                     {cinemas.map((cinema) => (
                       <option key={cinema.cinemaId} value={cinema.cinemaId}>
-                        {cinema.cinemaName} (ID: {cinema.cinemaId})
+                        {cinema.cinemaName} 
                       </option>
                     ))}
                   </select>
