@@ -1480,103 +1480,102 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-md w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">New Order</h2>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Customer Email</label>
-              <input
-                type="text"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder="Enter customer email"
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
+      {/* Order Form */}
+      <div className="bg-white p-6 rounded-md shadow-md">
+        <h2 className="text-xl font-bold mb-4">New Order</h2>
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Customer Email</label>
+          <input
+            type="text"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            placeholder="Enter customer email"
+            className="w-full p-2 border rounded-md"
+          />
+        </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Order Date</label>
-              <input
-                type="text"
-                value={new Date().toLocaleDateString()}
-                disabled
-                className="w-full p-2 border rounded-md bg-gray-100"
-              />
-            </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Order Date</label>
+          <input
+            type="text"
+            value={new Date().toLocaleDateString()}
+            disabled
+            className="w-full p-2 border rounded-md bg-gray-100"
+          />
+        </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Select Food Item</label>
-              <div className="flex gap-2">
-                <select
-                  className="w-full p-2 border rounded-md"
-                  value={selectedFoodId}
-                  onChange={(e) => setSelectedFoodId(e.target.value)}
-                >
-                  <option value="">Select a food item</option>
-                  {Array.isArray(foodItems) && foodItems.length > 0 ? (
-                    foodItems.map((item) => (
-                      <option key={item.foodId} value={item.foodId}>{item.foodName}</option>
-                    ))
-                  ) : (
-                    <option disabled>No food items available</option>
-                  )}
-                </select>
-                <select
-                  className="w-24 p-2 border rounded-md"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                >
-                  {[1, 2, 3, 4].map((num) => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
-                <button
-                  className="bg-green-500 text-white px-4 py-1 rounded-md hover:bg-green-600"
-                  onClick={handleAddItem}
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-
-            {/* Selected Items List */}
-            {orderItems.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm font-medium mb-2">Selected Items</h3>
-                <ul className="list-disc pl-5">
-                  {orderItems.map((item, index) => {
-                    const food = foodItems.find(f => f.foodId === item.productId);
-                    return (
-                      <li key={index}>
-                        {food?.foodName || 'Unknown Item'} - Quantity: {item.quantity}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-              <button
-                className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                onClick={handleSubmitOrder}
-                disabled={orderItems.length === 0}
-              >
-                Submit Order
-              </button>
-            </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Select Food Item</label>
+          <div className="flex gap-2">
+            <select
+              className="w-full p-2 border rounded-md"
+              value={selectedFoodId}
+              onChange={(e) => setSelectedFoodId(e.target.value)}
+            >
+              <option value="">Select a food item</option>
+              {Array.isArray(foodItems) && foodItems.length > 0 ? (
+                foodItems.map((item) => (
+                  <option key={item.foodId} value={item.foodId}>{item.foodName}</option>
+                ))
+              ) : (
+                <option disabled>No food items available</option>
+              )}
+            </select>
+            <select
+              className="w-24 p-2 border rounded-md"
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+            >
+              {[1, 2, 3, 4].map((num) => (
+                <option key={num} value={num}>{num}</option>
+              ))}
+            </select>
+            <button
+              className="bg-green-500 text-white px-4 py-1 rounded-md hover:bg-green-600"
+              onClick={handleAddItem}
+            >
+              Add
+            </button>
           </div>
         </div>
-      )}
+
+        {/* Selected Items List */}
+        {orderItems.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium mb-2">Selected Items</h3>
+            <ul className="list-disc pl-5">
+              {orderItems.map((item, index) => {
+                const food = foodItems.find(f => f.foodId === item.productId);
+                return (
+                  <li key={index}>
+                    {food?.foodName || 'Unknown Item'} - Quantity: {item.quantity}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <button
+            className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400"
+            onClick={() => {
+              setOrderItems([]);
+              setCustomerEmail('');
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            onClick={handleSubmitOrder}
+            disabled={orderItems.length === 0}
+          >
+            Submit Order
+          </button>
+        </div>
+      </div>
     </div>
                     )}
                     {activeTab === "csphongrap" && roles1.includes('FacilitiesManager') && (
