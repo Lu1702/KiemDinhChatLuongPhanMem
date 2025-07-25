@@ -3,8 +3,25 @@ import React, { useState, useEffect, useCallback } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+interface FoodItem {
+  foodId: string;
+  foodName: string;
+  foodPrice: number;
+}
 
+interface OrderRequestItem {
+  productId: string;
+  quantity: number;
+}
 
+// Define possible API response structures
+interface ApiResponseFood {
+  data?: FoodItem[];
+  status?: string;
+  message?: string;
+  [key: string]: any; // Allow for other properties
+}
 interface VisualFormat {
   movieVisualId: string;
   movieVisualFormatDetail: string;
@@ -130,6 +147,91 @@ const Info: React.FC = () => {
           });
         const [selectedCinemaId, setSelectedCinemaId] = useState<string>('');
         const [seatInput, setSeatInput] = useState<string>('');
+        const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [orderItems, setOrderItems] = useState<OrderRequestItem[]>([]);
+  const [selectedFoodId, setSelectedFoodId] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [errorFood, setErrorFood] = useState<string | null>(null);
+
+  // Fetch food items and open modal on mount
+  useEffect(() => {
+    axios.get('http://localhost:5229/api/Food/GetFoodInformation')
+      .then(response => {
+        // Log the full response for debugging
+        console.log('Full API Response:', response);
+        // Check for nested data
+        let items = response.data as ApiResponseFood;
+        if (Array.isArray(items)) {
+          setFoodItems(items);
+        } else if (items && typeof items === 'object') {
+          // Safely extract nested array
+          const foodData = items.data || [];
+          if (Array.isArray(foodData)) {
+            setFoodItems(foodData);
+          } else {
+            console.error('No valid array found in response:', response.data);
+            setErrorFood('Invalid food items data format');
+            setFoodItems([]);
+          }
+        } else {
+          console.error('Unexpected API response format:', response.data);
+          setErrorFood('Invalid food items data format');
+          setFoodItems([]);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching food items:', error);
+        setErrorFood('Failed to fetch food items');
+        setFoodItems([]);
+      });
+
+    // Open modal immediately
+    setIsModalOpen(true);
+  }, []);
+
+  const handleAddItem = () => {
+    if (selectedFoodId) {
+      setOrderItems([...orderItems, { productId: selectedFoodId, quantity }]);
+      setSelectedFoodId('');
+      setQuantity(1);
+    }
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!customerEmail) {
+      alert('Please enter a customer email');
+      return;
+    }
+
+    const orderData = {
+      customerEmail,
+      orderDate: new Date().toISOString(),
+      orderRequestItems: orderItems
+    };
+
+    try {
+      const userId = localStorage.getItem('IDND');
+      await axios.post(
+        `http://localhost:5229/api/StaffOrder/StaffOrder?UserId=${userId}`,
+        orderData,
+        {
+          headers: {
+            'accept': '*/*',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      setIsModalOpen(false);
+      setOrderItems([]);
+      setCustomerEmail('');
+      alert('Order submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting order:', error);
+      alert('Failed to submit order');
+    }
+  };
         const handleRoomInputChange = (
             e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
           ) => {
@@ -1370,232 +1472,112 @@ useEffect(() => {
                         </div>
                     )}
                     {activeTab === "xacdinhdichvu" && roles1.includes('Cashier') && (
-                        <div className="ml-72 p-6 relative z-10">
-                <div style={{ flex: 1, padding: '24px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <h3>Xin chào quản lý</h3>
-                        <div style={{ position: 'relative' }}>
-                            <span
-                                style={{ fontSize: '28px', cursor: 'pointer' }}
-                                onClick={() => setShowAccountMenu(!showAccountMenu)}
-                            >
-                                👤
-                            </span>
-                            {showAccountMenu && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        right: 0,
-                                        top: '36px',
-                                        background: '#231C60',
-                                        color: 'white',
-                                        borderRadius: '4px',
-                                        padding: '8px',
-                                        minWidth: '100px',
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    <button
-                                        onClick={() => {
-                                            setShowLogoutModal(true);
-                                            setShowAccountMenu(false);
-                                        }}
-                                        style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}
-                                    >
-                                        Đăng xuất
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                        <div className="p-4 max-w-4xl mx-auto">
+      {/* Error Message */}
+      {errorFood && (
+        <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-md">
+          {errorFood}
+        </div>
+      )}
 
-                <div className="bg-gray-800 p-4 rounded-lg mt-6">
-                    <h2 className="text-xl font-bold mb-4">Thông tin nhân viên</h2>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm">Mã nhân viên</label>
-                            <div className="uiverse-pixel-input">
-                                <input
-                                    type="text"
-                                    value={employeeId || ''}
-                                    readOnly
-                                    className="w-full p-2 rounded text-white"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm">Chọn ID order muốn confirm</label>
-                            <div className="uiverse-pixel-input-wrapper">
-                                <select
-                                    value={filterText}
-                                    onChange={(e) => setFilterText(e.target.value)}
-                                    className="uiverse-pixel-input w-full"
-                                >
-                                    <option value="">-- Chọn --</option>
-                                    {existingOrderIDs.map(id => (
-                                        <option key={id} value={id}>{id}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {isAddingService && (
-                        <form onSubmit={handleSubmitService} className="mt-4 space-y-4">
-                            <div className="flex gap-4 items-end">
-                                <div className="flex-1">
-                                    <label className="block text-sm">Tên dịch vụ</label>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <select
-                                            value={newServiceName}
-                                            onChange={(e) => setNewServiceName(e.target.value)}
-                                            className="uiverse-pixel-input w-full"
-                                            disabled={isFoodDrinkLoading || foodDrinkItems.length === 0} // Disable if loading or no items
-                                        >
-                                            {isFoodDrinkLoading ? (
-                                                <option value="">Đang tải...</option>
-                                            ) : foodDrinkItems.length === 0 ? (
-                                                <option value="">Không có dịch vụ</option>
-                                            ) : (
-                                                foodDrinkItems.map(item => (
-                                                    <option key={item.itemId} value={item.itemName}>{item.itemName}</option>
-                                                ))
-                                            )}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm">Số lượng</label>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <select
-                                            value={newServiceQuantity}
-                                            onChange={(e) => setNewServiceQuantity(parseInt(e.target.value))}
-                                            className="uiverse-pixel-input w-24"
-                                        >
-                                            {[1, 2, 3, 4, 5].map(num => (
-                                                <option key={num} value={num}>{num}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Ô chọn Order ID khi thêm dịch vụ */}
-                            <div className="mt-4">
-                                <label className="block text-sm">Order ID</label>
-                                <div className="uiverse-pixel-input-wrapper">
-                                    <select
-                                        value={selectedOrderID}
-                                        onChange={(e) => setSelectedOrderID(e.target.value)}
-                                        className="uiverse-pixel-input w-full"
-                                        required
-                                    >
-                                        <option value="" disabled>-- Chọn Order ID --</option>
-                                        {existingOrderIDs.map(id => (
-                                            <option key={id} value={id}>{id}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-center mt-4">
-                                <button
-                                    className="button2 w-20 text-black px-4 py-2 rounded"
-                                    onClick={handleSubmitService}
-                                    style={{ width: '80px' }}
-                                    disabled={isFoodDrinkLoading || foodDrinkItems.length === 0} // Disable if loading or no items
-                                >
-                                    Thêm
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </div>
-
-                <div className="bg-gray-800 p-4 rounded-lg mt-6">
-                    <h2 className="text-xl font-bold mb-4">Chi tiết vé</h2>
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-gray-700">
-                                <th className="p-2 border-b">ID</th>
-                                <th className="p-2 border-b">Tên dịch vụ</th>
-                                <th className="p-2 border-b">Số lượng</th>
-                                <th className="p-2 border-b">Order ID</th> {/* Added Order ID column */}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredServices.map((service) => (
-                                <tr key={service.id} className="border-b">
-                                    <td className="p-2">{service.id}</td>
-                                    <td className="p-2">{service.name}</td>
-                                    <td className="p-2">{service.quantity}</td>
-                                    <td className="p-2">{service.orderID}</td> {/* Display Order ID */}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="flex justify-center mt-6">
-                    <button
-                        onClick={() => {
-                            handleSave();
-                            // navigate("/payment"); // This navigate will happen after handleSave's timeout
-                        }}
-                        className="button2 bg-[#7e57c2] text-white px-4 py-2 rounded"
-                        style={{ width: '250px' }}
-                        disabled={isLoading} // Disable button when loading
-                    >
-                        {isLoading ? (
-                            <div className="dot-spinner">
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                            </div>
-                        ) : (
-                            'Yêu cầu thanh toán'
-                        )}
-                    </button>
-                </div>
-
-                {/* Modal Đăng xuất */}
-                {showLogoutModal && (
-                    <div style={modalOverlayStyle}>
-                        <div style={{ background: '#4c65a8', padding: '24px', borderRadius: '8px', textAlign: 'center', color: 'white', width: '300px' }}>
-                            <div style={{ marginBottom: '8px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                                    <img src="/images/warning.png" alt="!" style={{ width: '40px' }} />
-                                </div>
-                            </div>
-                            <p>Bạn chắc chắn muốn đăng xuất không?</p>
-                            <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px' }}>
-                                <button
-                                    onClick={() => {
-                                        alert('Đã đăng xuất');
-                                        setShowLogoutModal(false);
-                                        navigate('/');
-                                    }}
-                                    style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: 'lightgreen', color: 'black' }}
-                                >
-                                    Có
-                                </button>
-                                <button
-                                    onClick={() => setShowLogoutModal(false)}
-                                    style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: '#cc3380', color: 'white' }}
-                                >
-                                    Không
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-md w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">New Order</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Customer Email</label>
+              <input
+                type="text"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="Enter customer email"
+                className="w-full p-2 border rounded-md"
+              />
             </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Order Date</label>
+              <input
+                type="text"
+                value={new Date().toLocaleDateString()}
+                disabled
+                className="w-full p-2 border rounded-md bg-gray-100"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Select Food Item</label>
+              <div className="flex gap-2">
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={selectedFoodId}
+                  onChange={(e) => setSelectedFoodId(e.target.value)}
+                >
+                  <option value="">Select a food item</option>
+                  {Array.isArray(foodItems) && foodItems.length > 0 ? (
+                    foodItems.map((item) => (
+                      <option key={item.foodId} value={item.foodId}>{item.foodName}</option>
+                    ))
+                  ) : (
+                    <option disabled>No food items available</option>
+                  )}
+                </select>
+                <select
+                  className="w-24 p-2 border rounded-md"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                >
+                  {[1, 2, 3, 4].map((num) => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
+                <button
+                  className="bg-green-500 text-white px-4 py-1 rounded-md hover:bg-green-600"
+                  onClick={handleAddItem}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            {/* Selected Items List */}
+            {orderItems.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-medium mb-2">Selected Items</h3>
+                <ul className="list-disc pl-5">
+                  {orderItems.map((item, index) => {
+                    const food = foodItems.find(f => f.foodId === item.productId);
+                    return (
+                      <li key={index}>
+                        {food?.foodName || 'Unknown Item'} - Quantity: {item.quantity}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                onClick={handleSubmitOrder}
+                disabled={orderItems.length === 0}
+              >
+                Submit Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
                     )}
                     {activeTab === "csphongrap" && roles1.includes('FacilitiesManager') && (
                         <div>
