@@ -14,7 +14,7 @@ function Nav() {
 
     // Role-based navigation
     if (roles.includes('Cashier') || roles.includes('TheaterManager') || roles.includes('Director') || roles.includes('MovieManager') || roles.includes('FacilitiesManager')) {
-        navigate('/QuanLyRap/QLNV');
+        navigate('/HomeAdmin');
     } else if (roles.includes('Customer')) {
         navigate('/info');
     }
