@@ -66,7 +66,7 @@ interface FormState {
     ageId: string;
 }
 
-const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJNb3ZpZU1hbmFnZXIiLCJuYmYiOjE3NTM2ODM4NTIsImV4cCI6MTc1MzY4NzQ1MiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MjI5IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo1MjI5In0.vnKd-SotNuMOYVYEc0yB0k52YOGhtOUHeFDUOC1jwRo";
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJNb3ZpZU1hbmFnZXIiLCJuYmYiOjE3NTM2ODc4NzksImV4cCI6MTc1MzY5MTQ3OSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MjI5IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo1MjI5In0.6HF0tZK5zo56wYfq5Mf8ZLeDJ-QdzwopzDVrL70PIWM";
 
 const AddMovie: React.FC = () => {
     const [theloaiOptions, setTheloaiOptions] = useState<Genre[]>([]);
@@ -271,7 +271,7 @@ const AddMovie: React.FC = () => {
 
             console.log("API response:", res.data);
 
-            if (res.status === 200 || res.status === 201) {
+            if (res.status === 200 || res.status === 201 || res.status === 204) {
                 setThanhCong("Tạo phim thành công!");
                 if (!res.data.imageUrl) {
                     console.warn("API không trả về imageUrl, sử dụng URL tạm thời.");
