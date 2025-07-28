@@ -8,7 +8,7 @@ namespace backend.Interface.Schedule
     {
         Task<GenericRespondDTOs> add(string cinemaId ,ScheduleRequestDTO scheduleRequestDTO);
 
-        Task<bool> edit(string id ,ScheduleRequestDTO scheduleRequestDTO);
+        Task<GenericRespondDTOs> edit(string movieScheduleId, EditScheduleDTO editScheduleDto);
 
         Task<GenericRespondDTOs> delete(string id);
 

@@ -24,7 +24,7 @@ namespace backend.Services.MovieServices
 
         private readonly ICloudinaryServices cloudinaryServices;
 
-        public movieServices(DataContext dataContext , ICloudinaryServices cloudinaryServices)
+        public movieServices(DataContext dataContext, ICloudinaryServices cloudinaryServices)
         {
             _dataContext = dataContext;
             this.cloudinaryServices = cloudinaryServices;
@@ -35,6 +35,8 @@ namespace backend.Services.MovieServices
             if (movieRequestDTO != null)
             {
                 // Generate New GUID 
+                // 
+                await using var transaction = await _dataContext.Database.BeginTransactionAsync();
                 try
                 {
                     var movieID = Guid.NewGuid();
@@ -81,9 +83,11 @@ namespace backend.Services.MovieServices
                             movieVisualFormatId = movieVisualFormatID,
                         });
                     }
+
                     await _dataContext.movieVisualFormatDetails.AddRangeAsync(newMovieVisualArray);
 
                     await _dataContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Success.ToString(),
@@ -92,6 +96,7 @@ namespace backend.Services.MovieServices
                 }
                 catch (DbException db)
                 {
+                    await transaction.RollbackAsync();
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Failure.ToString(),
@@ -100,6 +105,7 @@ namespace backend.Services.MovieServices
                 }
                 catch (Exception e)
                 {
+                    await transaction.RollbackAsync();
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Failure.ToString(),
@@ -107,6 +113,7 @@ namespace backend.Services.MovieServices
                     };
                 }
             }
+
             return new GenericRespondDTOs()
             {
                 Status = GenericStatusEnum.Failure.ToString(),
@@ -117,57 +124,51 @@ namespace backend.Services.MovieServices
         // Không xóa phim chỉ set bằng isDelete = true thôi
         public async Task<GenericRespondDTOs> remove(string Id)
         {
-            // Tìm kiếm Object
-
-            var FindObjectMovieObject = await  _dataContext.movieInformation.FindAsync(Id);
-
-            // Thể loại  phim tìm kiếm
-
-            var FindGenreObject = _dataContext.movieGenreInformation.Where(x => x.movieId.Equals(Id));
-
-            // Tìm kiếm Comment 
-
-            var FindCommentObject = _dataContext.movieCommentDetail.Where(x => x.movieId.Equals(Id));
-
-            // Tìm kiếm lịch chiếu
-
-            if (FindObjectMovieObject != null)
+            // Tieens hanh CheckId
+            /* if (String.IsNullOrEmpty(Id))
             {
-                var FindMovieScheduleObject = _dataContext.movieSchedule.Where(x => x.movieId.Equals(FindObjectMovieObject.movieId) && !x.IsDelete).ToList();
-                var FindOrder = _dataContext.TicketOrderDetail.Any(x => x.movieScheduleID.Equals(FindMovieScheduleObject.Select(x => x.movieScheduleId)));
-                if (!FindOrder)
+                return new GenericRespondDTOs()
                 {
-                    FindObjectMovieObject.isDelete = true;
-
-                    _dataContext.movieInformation.Update(FindObjectMovieObject);
-
-                    foreach (var movieSchedule in FindMovieScheduleObject)
-                    {
-                        movieSchedule.IsDelete = true;
-                    }
-
-                    _dataContext.movieSchedule.UpdateRange(FindMovieScheduleObject);
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Success.ToString(),
-                        message = "Xóa thành công"
-                    };
-                }
-                else
-                {
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Failure.ToString(),
-                        message = "Lỗi đã có người vé phim này nên Không thể xóa"
-                    };
-                }
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Chưa Có ID"
+                };
             }
-            return new GenericRespondDTOs()
+
+            // Thêm case cho xóa phim , Nếu phim Không có trong lịch chiếu có thể xóa
+            var findMovieInfo = _dataContext.movieInformation.FirstOrDefault(x => x.movieId == Id);
+            if (findMovieInfo == null)
             {
-                Status = GenericStatusEnum.Failure.ToString(),
-                message = "Lỗi Không tìm thấy phim để xóa"
-            };
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Không tìm thấy bộ phim"
+                };
+            }
+            var findMovieScheduleInfo =  
+                _dataContext.movieSchedule
+                    .Where(x => x.movieId == findMovieInfo.movieId);
+
+            using var Transaction = await _dataContext.Database.BeginTransactionAsync();
+            try
+            {
+                if (!findMovieScheduleInfo.Any())
+                {
+                    // Tiến hành xóa phim
+                }
+                // Tien Hanh kiê tra xem 
+            }
+            catch (Exception e)
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Xoa Phim Không thành công"
+                };
+            }
+            */
+            return null!;
         }
+        
 
         public GenericRespondWithObjectDTO<movieGetDetailResponseDTO> getMovieDetail(string movieID)
         {
