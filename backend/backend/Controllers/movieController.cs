@@ -25,7 +25,7 @@ namespace backend.Controllers
         {
             var createdStatus = await IMovieService.add(movieRequestDTO);
             
-            if (createdStatus.Status.ToLower().StartsWith("f"))
+            if (createdStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
                 return BadRequest(new { ThongTinLoi = createdStatus});
             }
@@ -36,7 +36,7 @@ namespace backend.Controllers
         public async Task<IActionResult> editMovie(string movieID , [FromForm] MovieEditRequestDTO dtos)
         {
             var status = await IMovieService.edit(movieID, dtos);
-            if (status.Status.ToLower().StartsWith("f"))
+            if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
                 return BadRequest(new { ThongTinLoi = status });
             }
@@ -58,19 +58,12 @@ namespace backend.Controllers
         public async Task<IActionResult> deleteMovie(string Id)
         {
             var deleteStatus = await IMovieService.remove(Id);
-            try
+      
+            if (deleteStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
-                if (deleteStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
-                {
-                    return BadRequest(new { message = deleteStatus });
-                }
-                await IMovieService.SaveChanges();
-                return Ok(new { message = deleteStatus });
+                return BadRequest(deleteStatus);
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = deleteStatus });
-            }
+            return Ok(deleteStatus);
         }
 
         [HttpGet("getAllMoviesPagniation/{page}")]
