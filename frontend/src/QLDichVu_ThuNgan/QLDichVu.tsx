@@ -232,7 +232,7 @@ const CinemaPage: React.FC = () => {
   };
 
   const handleNavigateToStaff = () => {
-    navigate('/QuanLyRap/QLNV');
+    navigate('/HomeAdmin');
   };
 
   return (
@@ -284,7 +284,7 @@ const CinemaPage: React.FC = () => {
                   className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                   onClick={handleNavigateToStaff}
                 >
-                  Quản Lý Nhân Viên
+                  Back
                 </button>
               </div>
             </div>
@@ -317,7 +317,7 @@ const CinemaPage: React.FC = () => {
                   className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                   onClick={handleNavigateToStaff}
                 >
-                  Quản Lý Nhân Viên
+                  Back
                 </button>
               </div>
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
