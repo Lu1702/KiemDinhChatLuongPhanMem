@@ -1597,13 +1597,13 @@ useEffect(() => {
                         <div className="space-x-2">
                             <button
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                            onClick={() => navigate('/ThuNgan/DichVuThem')}
+                            onClick={() => navigate('/QTVHThong/chinhsuaphongrap')}
                             >
                             Chỉnh sửa rạp
                             </button>
                             <button
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                            onClick={() => navigate('/ThuNgan/DichVuThem')}
+                            onClick={() => navigate('/QTVHThong/chinhsuaphongrap')}
                             >
                             Chỉnh sửa phòng chiếu
                             </button>
