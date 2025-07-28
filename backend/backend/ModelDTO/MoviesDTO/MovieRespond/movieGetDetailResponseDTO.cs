@@ -12,17 +12,19 @@ namespace backend.ModelDTO.MoviesDTO.MovieRespond
         public string movieName { get; set; } = "";
         public string movieImage { get; set; } = string.Empty;
         public string movieDescription { get; set; } = "";
-        public string minimumAge { get; set; } = string.Empty;
+        
+        public Dictionary<string , string> MovieMinimumAge { get; set; } =  new Dictionary<string , string>();
         public string movieDirector { get; set; } = "";
         public string movieActor { get; set; } = "";
         public string movieTrailerUrl { get; set; } = "";
         public int movieDuration { get; set; }
 
         public DateTime ReleaseDate { get; set; }
-        public string languageName { get; set; } = "";
+        
+        public Dictionary<string , string> MovieLanguage {get; set;} = new Dictionary<string , string>();
+        public Dictionary<string , string> movieVisualFormat { get; set; } = new Dictionary<string , string>();
+        public Dictionary<string , string> movieGenre { get; set; } = new Dictionary<string , string>();
 
-        public string movieVisualFormat { get; set; } = string.Empty;
-
-        public string movieGenre { get; set; }= string.Empty;
     }
+    
 }

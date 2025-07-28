@@ -121,51 +121,11 @@ namespace backend.Services.MovieServices
             };
         }
 
-        // Không xóa phim chỉ set bằng isDelete = true thôi
+        // Không xóa phim chỉ set bằng isDelete = true thôi tùy lúc
         public async Task<GenericRespondDTOs> remove(string Id)
         {
-            // Tieens hanh CheckId
-            /* if (String.IsNullOrEmpty(Id))
-            {
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Lỗi Chưa Có ID"
-                };
-            }
-
-            // Thêm case cho xóa phim , Nếu phim Không có trong lịch chiếu có thể xóa
-            var findMovieInfo = _dataContext.movieInformation.FirstOrDefault(x => x.movieId == Id);
-            if (findMovieInfo == null)
-            {
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Không tìm thấy bộ phim"
-                };
-            }
-            var findMovieScheduleInfo =  
-                _dataContext.movieSchedule
-                    .Where(x => x.movieId == findMovieInfo.movieId);
-
-            using var Transaction = await _dataContext.Database.BeginTransactionAsync();
-            try
-            {
-                if (!findMovieScheduleInfo.Any())
-                {
-                    // Tiến hành xóa phim
-                }
-                // Tien Hanh kiê tra xem 
-            }
-            catch (Exception e)
-            {
-                return new GenericRespondDTOs()
-                {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Xoa Phim Không thành công"
-                };
-            }
-            */
+            // Logic như sau nêếu phim chưa có lic chiếu th xóa cứng
+            // Nếu phim có lịch chiếu rồi mà nó đã chiếu và 
             return null!;
         }
         
@@ -182,21 +142,30 @@ namespace backend.Services.MovieServices
                 // Tiến hành lọc thông tin
                 var findMovieVisualFormat = _dataContext.movieVisualFormatDetails
                     .Where(x => x.movieId == movieID)
-                    .Include(x => x.movieVisualFormat);
+                    .Include(x => x.movieVisualFormat)
+                    .ToDictionary(x => x.movieVisualFormatId, x => x.movieVisualFormat.movieVisualFormatName);
 
                 var findMovieGenre = _dataContext.movieGenreInformation.
                     Where(x => x.movieId == movieID)
-                    .Include(x => x.movieGenre);
-
+                    .Include(x => x.movieGenre)
+                    .ToDictionary(x => x.movieGenreId, x => x.movieGenre.movieGenreName);
+                Dictionary<string , string> MovieLanguage = new Dictionary<string, string>();
+                Dictionary<string , string> MovieMiniumAge = new Dictionary<string, string>();
+                
+                MovieLanguage.Add(findMovieInfo.languageId , findMovieInfo.Language.languageDetail);
+                MovieMiniumAge.Add(findMovieInfo.minimumAgeID , findMovieInfo.minimumAge.minimumAgeDescription);
                 return new GenericRespondWithObjectDTO<movieGetDetailResponseDTO>()
                 {
+                    
                     Status = GenericStatusEnum.Success.ToString(),
                     message = "Tìm chi tiết phim thành công",
                     data = new movieGetDetailResponseDTO()
                     {
                         movieId = movieID,
-                        movieVisualFormat = string.Join("," , findMovieVisualFormat.Select(x => x.movieVisualFormat.movieVisualFormatName)) ,
-                        movieGenre = string.Join("," , findMovieGenre.Select(x => x.movieGenre.movieGenreName)) ,
+                        movieVisualFormat = findMovieVisualFormat ,
+                        MovieLanguage = MovieLanguage ,
+                        MovieMinimumAge = MovieMiniumAge,
+                        movieGenre = findMovieGenre,
                         movieDirector = findMovieInfo.movieDirector,
                         movieImage = findMovieInfo.movieImage,
                         movieTrailerUrl = findMovieInfo.movieTrailerUrl,
@@ -205,8 +174,6 @@ namespace backend.Services.MovieServices
                         movieActor = findMovieInfo.movieActor,
                         movieDescription = findMovieInfo.movieDescription,
                         movieDuration = findMovieInfo.movieDuration,
-                        languageName = findMovieInfo.Language.languageDetail,
-                        minimumAge = findMovieInfo.minimumAge.minimumAgeInfo,
                     }
                 };
             }
@@ -254,10 +221,7 @@ namespace backend.Services.MovieServices
                     int movieDuration = 0;
                     DateTime relaseDate = new DateTime();
                     string languageID = string.Empty;
-
-                    List<string> visualFormatList = new List<string>();
-                    List<string> movieGenreList = new List<string>();
-
+                    
                     // Using ternary operator for strings
                     var Transition = await _dataContext.Database.BeginTransactionAsync();
                     try
@@ -278,21 +242,48 @@ namespace backend.Services.MovieServices
                         relaseDate = dtos.releaseDate ?? findLanguageAndMiniumAgeAndMovieInfo.ReleaseDate;
 
                         // Nếu ko phải null thì tiến hành xóa hết trong DB
-
-                        if (dtos.movieGenreList.IsNullOrEmpty())
+                        
+                        // Tạo môột List
+                        List<string> movieGenre = new List<string>();
+                        List<string> movieVisualFormat = new List<string>();
+                        if (!dtos.movieGenreList.IsNullOrEmpty())
                         {
                             _dataContext.movieGenreInformation
                                 .RemoveRange(findGenreFilm);
-                            movieGenreList = dtos.movieGenreList;
+                            movieGenre = dtos.movieGenreList;
+                            List<movieGenreInformation> movieGenreList = new List<movieGenreInformation>();
+                            foreach (var Element in movieGenre)
+                            {
+                                // Duyeejt cac Element
+                                movieGenreList.Add(new movieGenreInformation()
+                                {
+                                    movieId = findLanguageAndMiniumAgeAndMovieInfo.movieId,
+                                    movieGenreId = Element
+                                });
+                            }
+                            await _dataContext.movieGenreInformation.AddRangeAsync(movieGenreList);
+                            // Tieeps tuc them vao DB
                         }
 
                         // Xóa hết
 
-                        if (dtos.visualFormatList.IsNullOrEmpty())
+                        if (!dtos.visualFormatList.IsNullOrEmpty())
                         {
                             _dataContext.movieVisualFormatDetails
                                 .RemoveRange(findMovieVisualFormatID);
-                            visualFormatList = dtos.visualFormatList;
+                            movieVisualFormat = dtos.visualFormatList;
+
+                            List<movieVisualFormatDetail> movieVisualFormatList = new List<movieVisualFormatDetail>();
+
+                            foreach (var element in movieVisualFormat)
+                            {
+                                movieVisualFormatList.Add(new movieVisualFormatDetail()
+                                {
+                                    movieId = findLanguageAndMiniumAgeAndMovieInfo.movieId,
+                                    movieVisualFormatId = element
+                                });
+                            }
+                            await _dataContext.movieVisualFormatDetails.AddRangeAsync(movieVisualFormatList);
                         }
 
                         findLanguageAndMiniumAgeAndMovieInfo.movieActor = movieActor;
@@ -304,37 +295,10 @@ namespace backend.Services.MovieServices
                         findLanguageAndMiniumAgeAndMovieInfo.ReleaseDate = relaseDate;
                         findLanguageAndMiniumAgeAndMovieInfo.movieDescription = movieDescription;
                         findLanguageAndMiniumAgeAndMovieInfo.movieImage = movieImage;
-
-
-                        // Tạo một List chứa để CRUD vào DB
-
-                        List<movieVisualFormatDetail> movieVisualFormatDetails = new List<movieVisualFormatDetail>();
-
-                        List<movieGenreInformation> movieGenreInformation = new List<movieGenreInformation>();
-
-                        foreach (var movieVisualID in visualFormatList)
-                        {
-                            movieVisualFormatDetails.Add
-                                (new movieVisualFormatDetail()
-                                {
-                                    movieId = findLanguageAndMiniumAgeAndMovieInfo.movieId,
-                                    movieVisualFormatId = movieVisualID,
-                                });
-                        }
-
-                        foreach (var movieGenreID in movieGenreList)
-                        {
-                            movieGenreInformation.Add
-                                (new movieGenreInformation()
-                                {
-                                    movieId = findLanguageAndMiniumAgeAndMovieInfo.movieId,
-                                    movieGenreId = movieGenreID,
-                                });
-                        }
-
+                        findLanguageAndMiniumAgeAndMovieInfo.movieTrailerUrl = trailerURL;
+                        
+                        
                         _dataContext.movieInformation.Update(findLanguageAndMiniumAgeAndMovieInfo);
-                        await _dataContext.movieGenreInformation.AddRangeAsync(movieGenreInformation);
-                        await _dataContext.movieVisualFormatDetails.AddRangeAsync(movieVisualFormatDetails);
                         await _dataContext.SaveChangesAsync();
                         await Transition.CommitAsync();
                         return new GenericRespondDTOs()

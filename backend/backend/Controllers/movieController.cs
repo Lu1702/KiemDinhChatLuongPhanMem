@@ -32,8 +32,8 @@ namespace backend.Controllers
             return Created();
         }
         [Authorize(Policy = "MovieManager")]
-        [HttpPatch("editMovie/{movieID}")]
-        public async Task<IActionResult> editMovie(string movieID , [FromForm] MovieEditRequestDTO dtos)
+        [HttpPatch("editMovie")]
+        public async Task<IActionResult> editMovie([FromQuery] string movieID , [FromForm] MovieEditRequestDTO dtos)
         {
             var status = await IMovieService.edit(movieID, dtos);
             if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
