@@ -47,11 +47,11 @@ namespace backend.Controllers
         public async Task<IActionResult> removeSchedule(string id)
         {
             var status = await scheduleServices.delete(id);
-            if (status.Status.Equals(GenericStatusEnum.Failure.ToString())) 
+            if (status.Status.Equals(GenericStatusEnum.Success.ToString())) 
             {
-                return BadRequest(status);
+                return Ok(status);
             }
-            return Ok(status);
+            return BadRequest(status);
         }
 
         [HttpGet("getScheduleByName")]

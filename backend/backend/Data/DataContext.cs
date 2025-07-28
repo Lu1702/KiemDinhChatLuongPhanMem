@@ -52,7 +52,6 @@ namespace backend.Data
         public DbSet<minimumAge> minimumAges { get; set; }
         
         public DbSet<EmailList> EmailList { get; set; }
-        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

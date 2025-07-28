@@ -171,7 +171,7 @@ namespace backend.Services.Schedule
                 }
             }
         }
-        
+
         // Lưu ý : Nghiệp vụ ở đây có chút khác biệt so với các nghiệp vụ sửa khác 
 
         public async Task<GenericRespondDTOs> edit(string movieScheduleId, EditScheduleDTO editScheduleDto)
