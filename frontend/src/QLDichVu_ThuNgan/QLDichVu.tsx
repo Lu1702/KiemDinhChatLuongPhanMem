@@ -492,7 +492,7 @@ const CinemaPage: React.FC = () => {
                     <option value="">-- Chọn rạp để xóa --</option>
                     {cinemas.map((cinema) => (
                       <option key={cinema.cinemaId} value={cinema.cinemaId}>
-                        {cinema.cinemaName} 
+                        {cinema.cinemaName}
                       </option>
                     ))}
                   </select>

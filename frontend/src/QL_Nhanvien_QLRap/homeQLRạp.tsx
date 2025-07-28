@@ -219,7 +219,8 @@ const Info: React.FC = () => {
         {
           headers: {
             'accept': '*/*',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           }
         }
       );
@@ -432,16 +433,18 @@ const Info: React.FC = () => {
     setMessage(null);
 
     const formData = new FormData();
-    formData.append('movieName', movieName);
-    formData.append('movieDescription', movieDescription);
-    formData.append('movieDirector', movieDirector);
-    formData.append('movieActor', movieActor);
-    formData.append('movieTrailerUrl', movieTrailerUrl);
     formData.append('movieDuration', movieDuration.toString());
+    formData.append('movieActor', movieActor);
+    formData.append('movieImage', '488383774_10161252255948295_3777127523036369629_n.jpg'); // <-- phải là File object
+    formData.append('movieTrailerUrl', movieTrailerUrl);
+    formData.append('movieDescription', movieDescription);
     formData.append('minimumAgeID', minimumAgeID);
+    formData.append('movieGenreList', "Horror");
     formData.append('languageId', languageId);
-    formData.append('releaseDate', new Date(releaseDate).toISOString()); // Ensure ISO format
-
+    formData.append('releaseDate', new Date(releaseDate).toISOString());
+    formData.append('visualFormatList', "3D");
+    formData.append('movieName', movieName);
+    formData.append('movieDirector', movieDirector);
     // Append each item from the lists
     visualFormatList.forEach(item => {
       if (item.trim() !== '') { // Only append non-empty strings
@@ -467,8 +470,9 @@ const Info: React.FC = () => {
         console.log(localStorage.getItem('role'));
       const response = await fetch('http://localhost:5229/api/movie/createMovie', {
        method: "POST",
-                headers: { "accept": "*/*", "Content-Type": "multipart/form-data", 'Authorization': `Bearer 4d1e0f2a-b7c8-d9e0-f1a2-3b4c5d6e7f8g` },
+                headers: { "accept": "*/*", 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
         body: formData, // FormData automatically sets 'Content-Type': 'multipart/form-data'
+      
         // No need to set 'Content-Type' header manually for FormData
       });
 
@@ -523,7 +527,9 @@ const Info: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const handleDeleteStaffOrder = (index: number) => {
+    setOrderItems(orderItems.filter((_, i) => i !== index));
+    };
     const roleName = localStorage.getItem('role') || '';
     const roles1: string[] = roleName ? roleName.split(',') : [];
     const [isCheckingRoles, setIsCheckingRoles] = useState(false);
@@ -888,7 +894,7 @@ useEffect(() => {
             setLoading(false);
         }
     };
-
+    console.log('hahahahaha localStorage: ', localStorage.getItem('IDND'))
     // Handle Delete Staff
     const handleDelete = async (staffIdToDelete: string): Promise<void> => {
         if (!window.confirm(`Bạn có chắc chắn muốn xóa nhân viên với ID: ${staffIdToDelete} không?`)) return;
@@ -1548,8 +1554,14 @@ useEffect(() => {
               {orderItems.map((item, index) => {
                 const food = foodItems.find(f => f.foodId === item.productId);
                 return (
-                  <li key={index}>
+                  <li key={index} className="flex items-center gap-2">
                     {food?.foodName || 'Unknown Item'} - Quantity: {item.quantity}
+                    <button
+                      className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 ml-2"
+                      onClick={() => handleDeleteStaffOrder(index)}
+                    >
+                      Delete
+                    </button>
                   </li>
                 );
               })}
@@ -1696,7 +1708,7 @@ useEffect(() => {
                                 onChange={(e) => setSelectedCinemaId(e.target.value)}
                                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                             >
-                                <option value="">-- Chọn rạp để xóa --</option>
+                                <option value="">--Chọn rạp để xóa--</option>
                                 {cinemas.map((cinema) => (
                                 <option key={cinema.cinemaId} value={cinema.cinemaId}>
                                     {cinema.cinemaName} (ID: {cinema.cinemaId})
