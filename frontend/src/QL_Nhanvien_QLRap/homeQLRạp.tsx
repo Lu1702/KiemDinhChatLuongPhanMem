@@ -307,50 +307,50 @@ const Info: React.FC = () => {
             // Navigate to /payment after the process is complete and spinner is hidden
             navigate('/QuanLyRap/QLNV');
         }, 2000); // 2 second delay for demonstration
-      };
-      const [isFoodDrinkLoading, setIsFoodDrinkLoading] = useState(true);
-  
-  
-      // State cho ô chọn dịch vụ và số lượng khi thêm
-      const [newServiceName, setNewServiceName] = useState(''); // Default to empty string initially
-      const [newServiceQuantity, setNewServiceQuantity] = useState(1);
-      const [selectedOrderID, setSelectedOrderID] = useState('');
-  
-      // Lấy danh sách các OrderID duy nhất từ các dịch vụ đã có
-      const existingOrderIDs = Array.from(new Set(services.map(service => service.orderID)));
-      const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-      
+    };
+    const [isFoodDrinkLoading, setIsFoodDrinkLoading] = useState(true);
+
+
+    // State cho ô chọn dịch vụ và số lượng khi thêm
+    const [newServiceName, setNewServiceName] = useState(''); // Default to empty string initially
+    const [newServiceQuantity, setNewServiceQuantity] = useState(1);
+    const [selectedOrderID, setSelectedOrderID] = useState('');
+
+    // Lấy danh sách các OrderID duy nhất từ các dịch vụ đã có
+    const existingOrderIDs = Array.from(new Set(services.map(service => service.orderID)));
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
     const filteredServices = services.filter(service =>
         filterText === '' || service.orderID.toLowerCase().includes(filterText.toLowerCase())
     );
-  // Handler for file input change
-     const handleMovieImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handler for file input change
+    const handleMovieImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-          setMovieImageFile(e.target.files[0]);
-          setMovieImageFileName(e.target.files[0].name);
+            setMovieImageFile(e.target.files[0]);
+            setMovieImageFileName(e.target.files[0].name);
         } else {
-          setMovieImageFile(null);
-          setMovieImageFileName('');
+            setMovieImageFile(null);
+            setMovieImageFileName('');
         }
     };
     const modalOverlayStyle: React.CSSProperties = {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-        };
-      const [oldPassword, setOldPassword] = useState('');
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+    };
+    const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
     // Đã đổi tên biến trạng thái và hàm cập nhật
-    const [message1, setMessage1] = useState(''); 
+    const [message1, setMessage1] = useState('');
 
     const handleChangePassword = async () => {
         setMessage1(''); // Xóa thông báo cũ
@@ -547,8 +547,8 @@ useEffect(() => {
           }
         }, 1000); // 1-second delay to show spinner
         return () => clearTimeout(timer);
-      }, []); // Empty dependency array for mount-only execution
-    
+    }, []); // Empty dependency array for mount-only execution
+
     useEffect(() => {
         const fetchCinemas = async () => {
             try {
@@ -747,36 +747,48 @@ useEffect(() => {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
-
-            const data = await response.json();
-
-            // Kiểm tra trạng thái và dữ liệu trả về từ API
-            if (data.status === "Success" && data.data) {
-                // Ép kiểu (type assertion) dữ liệu nhận được thành mảng Role
-                const fetchedRoles: Role[] = data.data;
-                setRoles(fetchedRoles); // Cập nhật state chứa danh sách vai trò
-
-                if (fetchedRoles.length > 0) {
-                    // Ưu tiên tìm vai trò "Cashier" dựa trên 'roleName'
-                    const cashierRole = fetchedRoles.find((role: Role) => role.roleName === "Cashier");
-
-                    if (cashierRole) {
-                        // Nếu tìm thấy "Cashier", đặt roleid của Cashier làm mặc định
-                        setAddStaffFormData(prev => ({ ...prev, role: cashierRole.roleid }));
-                    } else {
-                        // Nếu không tìm thấy "Cashier", đặt roleid của vai trò đầu tiên làm mặc định
-                        setAddStaffFormData(prev => ({ ...prev, role: fetchedRoles[0].roleid }));
+            try {
+                const response = await fetch("http://localhost:5229/api/Staff/GetRoleList", {
+                    method: 'GET',
+                    headers: {
+                        'accept': '*/*',
+                        'Authorization': `Bearer ${authToken}`
                     }
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
                 }
-            } else {
-                console.error("Lỗi khi tải danh sách vai trò:", data.message);
+
+                const data = await response.json();
+
+                // Kiểm tra trạng thái và dữ liệu trả về từ API
+                if (data.status === "Success" && data.data) {
+                    // Ép kiểu (type assertion) dữ liệu nhận được thành mảng Role
+                    const fetchedRoles: Role[] = data.data;
+                    setRoles(fetchedRoles); // Cập nhật state chứa danh sách vai trò
+
+                    if (fetchedRoles.length > 0) {
+                        // Ưu tiên tìm vai trò "Cashier" dựa trên 'roleName'
+                        const cashierRole = fetchedRoles.find((role: Role) => role.roleName === "Cashier");
+
+                        if (cashierRole) {
+                            // Nếu tìm thấy "Cashier", đặt roleid của Cashier làm mặc định
+                            setAddStaffFormData(prev => ({ ...prev, role: cashierRole.roleid }));
+                        } else {
+                            // Nếu không tìm thấy "Cashier", đặt roleid của vai trò đầu tiên làm mặc định
+                            setAddStaffFormData(prev => ({ ...prev, role: fetchedRoles[0].roleid }));
+                        }
+                    }
+                } else {
+                    console.error("Lỗi khi tải danh sách vai trò:", data.message);
+                }
+            } catch (error: any) {
+                console.error("Lỗi khi tải danh sách vai trò:", error.message);
             }
-        } catch (error: any) {
-            console.error("Lỗi khi tải danh sách vai trò:", error.message);
-        }
-    };
-    fetchRoles();
-}, []);
+        };
+        fetchRoles();
+    }, []);
 
     // Fetch staff list
     const fetchStaffList = useCallback(async () => {
@@ -788,7 +800,7 @@ useEffect(() => {
             if (!authToken) {
                 console.error('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
                 navigate('/login');
-                return;     
+                return;
             }
             const response = await fetch("http://localhost:5229/api/Staff/GetStaffList", {
                 method: 'GET',
@@ -831,10 +843,10 @@ useEffect(() => {
     };
 
     // Handle Add Staff submission
-   const handleAddStaffSubmit = async () => {
+    const handleAddStaffSubmit = async () => {
         if (!addStaffFormData.loginUserEmail || !addStaffFormData.loginUserPassword || !addStaffFormData.loginUserPasswordConfirm ||
             !addStaffFormData.staffName || !addStaffFormData.dateOfBirth || !addStaffFormData.phoneNumer ||
-            !addStaffFormData.cinemaId ) {
+            !addStaffFormData.cinemaId) {
             alert("Vui lòng điền đầy đủ tất cả thông tin (Email, Mật khẩu, Xác nhận mật khẩu, Tên nhân viên, Ngày sinh, SĐT, Rạp, Vai trò).");
             return;
         }
@@ -853,7 +865,7 @@ useEffect(() => {
                 return;
             }
             // Gán mặc định "Cashier" nếu role là rỗng
-            
+
             const response = await fetch("http://localhost:5229/api/Staff/AddStaff", {
                 method: "POST",
                 headers: { "accept": "*/*", "Content-Type": "application/json", 'Authorization': `Bearer ${authToken}` },
@@ -870,7 +882,7 @@ useEffect(() => {
                     ]
                 }),
             });
-            
+
             if (!response.ok) throw new Error((await response.json()).message || `Lỗi HTTP: ${response.status}`);
             const result = await response.json();
             if (result.status === "Success") {
@@ -899,7 +911,7 @@ useEffect(() => {
     const handleDelete = async (staffIdToDelete: string): Promise<void> => {
         if (!window.confirm(`Bạn có chắc chắn muốn xóa nhân viên với ID: ${staffIdToDelete} không?`)) return;
         setLoading(true);
-        
+
         try {
             const authToken = localStorage.getItem('authToken');
             const response = await fetch(`http://localhost:5229/api/Staff/DeleteStaff?id=${staffIdToDelete}`, {
@@ -984,19 +996,19 @@ useEffect(() => {
             <div className="max-w-6xl mx-auto py-10 px-4 md:flex gap-8">
                 <div className="sticky top-32 h-fit self-start bg-white/20 backdrop-blur-md p-4 rounded-xl w-full md:w-1/4 space-y-4 shadow-lg">
                     <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "password" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("password")}>Đổi mật khẩu</button>
-                    { roles1.includes('TheaterManager') && (
+                    {roles1.includes('TheaterManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Rạp</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "nhanvien" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("nhanvien")}>Danh sách nhân viên</button>
                         </div>
                     )}
-                    { roles1.includes('MovieManager') && (
+                    {roles1.includes('MovieManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Nội Dung</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "quanlynoidung" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("quanlynoidung")}>Nội dung</button>
                         </div>
                     )}
-                    {roles1.includes('Cashier')  && (
+                    {roles1.includes('Cashier') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Thu Ngân</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "xacdinhdichvu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("xacdinhdichvu")}>Xác nhận dịch vụ</button>
@@ -1008,7 +1020,7 @@ useEffect(() => {
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("doanhthu")}>Doanh thu</button>
                         </div>
                     )}
-                    {roles1.includes('FacilitiesManager')  && (
+                    {roles1.includes('FacilitiesManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản trị viên hệ thống</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
@@ -1017,54 +1029,54 @@ useEffect(() => {
                 </div>
                 <div className="flex-1 space-y-8 mt-8 md:mt-0">
                     <h1 className="text-white text-3xl font-bold text-center uppercase">Cinema xin chào! {userEmail}</h1>
-                    
+
                     {activeTab === "password" && (
-                         <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={oldPassword}
-                            onChange={(e) => setOldPassword(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-2 font-semibold">Mật khẩu mới</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                    </div>
-                </div>
-                {/* Đã sử dụng biến mới message1 để hiển thị */}
-                {message1 && (
-                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
-                        {message1}
-                    </p>
-                )}
-                <div className="mt-6 text-center">
-                    <button
-                        className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
-                        onClick={handleChangePassword}
-                    >
-                        <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>Cập nhật mật khẩu
-                    </button>
-                </div>
-            </div>
+                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
+                            <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
+                                        value={oldPassword}
+                                        onChange={(e) => setOldPassword(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Mật khẩu mới</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            {/* Đã sử dụng biến mới message1 để hiển thị */}
+                            {message1 && (
+                                <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
+                                    {message1}
+                                </p>
+                            )}
+                            <div className="mt-6 text-center">
+                                <button
+                                    className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
+                                    onClick={handleChangePassword}
+                                >
+                                    <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>Cập nhật mật khẩu
+                                </button>
+                            </div>
+                        </div>
                     )}
                     {activeTab === "nhanvien" && roles1.includes('TheaterManager') && (
                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl ">
@@ -1201,275 +1213,277 @@ useEffect(() => {
                             )}
                         </div>
                     )}
+
+                    {/* Trang Add_movie */}
                     {activeTab === "quanlynoidung" && (
-                                        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
-                      {/* The CSS styles are now in a separate style.css file and should be linked in your HTML or imported in your main JS/TS file */}
-                      {/* Updated form container with bg-white/20 and backdrop-blur-md */}
-                      <form onSubmit={handleSubmit} className="bg-white/20 backdrop-blur-md p-6 sm:p-8 lg:p-10 rounded-xl shadow-xl w-full max-w-2xl">
-                        <h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">Movie Details Form</h1>
+                        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+                            {/* The CSS styles are now in a separate style.css file and should be linked in your HTML or imported in your main JS/TS file */}
+                            {/* Updated form container with bg-white/20 and backdrop-blur-md */}
+                            <form onSubmit={handleSubmit} className="bg-white/20 backdrop-blur-md p-6 sm:p-8 lg:p-10 rounded-xl shadow-xl w-full max-w-2xl">
+                                <h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">Movie Details Form</h1>
 
-                        {/* Message display area */}
-                        {message && (
-                          <div className={`p-3 mb-4 rounded-md text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {message.text}
-                          </div>
-                        )}
-
-                        {/* movieName */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieName" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieName <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieName"
-                              className="uiverse-pixel-input"
-                              value={movieName}
-                              onChange={(e) => setMovieName(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieImage */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieImage" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieImage <span className="text-red-500">*</span>
-                          </label>
-                          <div className="flex items-center space-x-2 w-full sm:w-2/3">
-                            <label htmlFor="movieImageInput" className="button2 cursor-pointer">
-                              Choose File
-                            </label>
-                            <input
-                              type="file"
-                              id="movieImageInput"
-                              className="hidden" // Hide the default file input
-                              onChange={handleMovieImageChange}
-                              required
-                            />
-                            <span className="text-gray-700 text-sm truncate flex-1">{movieImageFileName || 'No file chosen'}</span>
-                          </div>
-                        </div>
-
-                        {/* movieDescription */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieDescription" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieDescription <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieDescription"
-                              className="uiverse-pixel-input"
-                              value={movieDescription}
-                              onChange={(e) => setMovieDescription(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieDirector */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieDirector" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieDirector <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieDirector"
-                              className="uiverse-pixel-input"
-                              value={movieDirector}
-                              onChange={(e) => setMovieDirector(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieActor */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieActor" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieActor <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieActor"
-                              className="uiverse-pixel-input"
-                              value={movieActor}
-                              onChange={(e) => setMovieActor(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieTrailerUrl */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieTrailerUrl" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieTrailerUrl <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieTrailerUrl"
-                              className="uiverse-pixel-input"
-                              value={movieTrailerUrl}
-                              onChange={(e) => setMovieTrailerUrl(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieDuration */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieDuration" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieDuration <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="number"
-                              id="movieDuration"
-                              className="uiverse-pixel-input"
-                              value={movieDuration}
-                              onChange={(e) => setMovieDuration(Number(e.target.value))}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* minimumAgeID */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="minimumAgeID" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            minimumAgeID <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="minimumAgeID"
-                              className="uiverse-pixel-input"
-                              value={minimumAgeID}
-                              onChange={(e) => setMinimumAgeID(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* languageId */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="languageId" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            languageId <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="languageId"
-                              className="uiverse-pixel-input"
-                              value={languageId}
-                              onChange={(e) => setLanguageId(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* releaseDate */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="releaseDate" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            releaseDate <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="datetime-local"
-                              id="releaseDate"
-                              className="uiverse-pixel-input"
-                              value={releaseDate}
-                              onChange={(e) => setReleaseDate(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* visualFormatList */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
-                          <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            visualFormatList <span className="text-red-500">*</span>
-                          </label>
-                          <div className="flex flex-col gap-2 w-full sm:w-2/3">
-                            {visualFormatList.map((item, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <div className="uiverse-pixel-input-wrapper flex-grow">
-                                  <input
-                                    type="text"
-                                    className="uiverse-pixel-input"
-                                    value={item}
-                                    onChange={(e) => handleListItemChange('visual', index, e.target.value)}
-                                    required
-                                  />
-                                </div>
-                                {visualFormatList.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="remove-button"
-                                    onClick={() => handleRemoveListItem('visual', index)}
-                                  >
-                                    -
-                                  </button>
+                                {/* Message display area */}
+                                {message && (
+                                    <div className={`p-3 mb-4 rounded-md text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        {message.text}
+                                    </div>
                                 )}
-                              </div>
-                            ))}
-                            <button
-                              type="button"
-                              className="button2 mt-2 self-start"
-                              onClick={() => handleAddListItem('visual')}
-                            >
-                              Add string item
-                            </button>
-                          </div>
-                        </div>
 
-                        {/* movieGenreList */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
-                          <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieGenreList <span className="text-red-500">*</span>
-                          </label>
-                          <div className="flex flex-col gap-2 w-full sm:w-2/3">
-                            {movieGenreList.map((item, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <div className="uiverse-pixel-input-wrapper flex-grow">
-                                  <input
-                                    type="text"
-                                    className="uiverse-pixel-input"
-                                    value={item}
-                                    onChange={(e) => handleListItemChange('genre', index, e.target.value)}
-                                    required
-                                  />
+                                {/* movieName */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieName" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieName <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieName"
+                                            className="uiverse-pixel-input"
+                                            value={movieName}
+                                            onChange={(e) => setMovieName(e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                {movieGenreList.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="remove-button"
-                                    onClick={() => handleRemoveListItem('genre', index)}
-                                  >
-                                    -
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                            <button
-                              type="button"
-                              className="button2 mt-2 self-start"
-                              onClick={() => handleAddListItem('genre')}
-                            >
-                              Add string item
-                            </button>
-                          </div>
-                        </div>
 
-                        {/* Add button at the bottom */}
-                        <button type="submit" className="button2 w-full mt-6" disabled={loading}>
-                          {loading ? 'Adding...' : 'Thêm'}
-                        </button>
-                      </form>
-                    </div>
+                                {/* movieImage */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieImage" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieImage <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex items-center space-x-2 w-full sm:w-2/3">
+                                        <label htmlFor="movieImageInput" className="button2 cursor-pointer">
+                                            Choose File
+                                        </label>
+                                        <input
+                                            type="file"
+                                            id="movieImageInput"
+                                            className="hidden" // Hide the default file input
+                                            onChange={handleMovieImageChange}
+                                            required
+                                        />
+                                        <span className="text-gray-700 text-sm truncate flex-1">{movieImageFileName || 'No file chosen'}</span>
+                                    </div>
+                                </div>
+
+                                {/* movieDescription */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieDescription" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieDescription <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieDescription"
+                                            className="uiverse-pixel-input"
+                                            value={movieDescription}
+                                            onChange={(e) => setMovieDescription(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* movieDirector */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieDirector" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieDirector <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieDirector"
+                                            className="uiverse-pixel-input"
+                                            value={movieDirector}
+                                            onChange={(e) => setMovieDirector(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* movieActor */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieActor" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieActor <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieActor"
+                                            className="uiverse-pixel-input"
+                                            value={movieActor}
+                                            onChange={(e) => setMovieActor(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* movieTrailerUrl */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieTrailerUrl" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieTrailerUrl <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieTrailerUrl"
+                                            className="uiverse-pixel-input"
+                                            value={movieTrailerUrl}
+                                            onChange={(e) => setMovieTrailerUrl(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* movieDuration */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieDuration" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieDuration <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="number"
+                                            id="movieDuration"
+                                            className="uiverse-pixel-input"
+                                            value={movieDuration}
+                                            onChange={(e) => setMovieDuration(Number(e.target.value))}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* minimumAgeID */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="minimumAgeID" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        minimumAgeID <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="minimumAgeID"
+                                            className="uiverse-pixel-input"
+                                            value={minimumAgeID}
+                                            onChange={(e) => setMinimumAgeID(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* languageId */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="languageId" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        languageId <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="languageId"
+                                            className="uiverse-pixel-input"
+                                            value={languageId}
+                                            onChange={(e) => setLanguageId(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* releaseDate */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="releaseDate" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        releaseDate <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="datetime-local"
+                                            id="releaseDate"
+                                            className="uiverse-pixel-input"
+                                            value={releaseDate}
+                                            onChange={(e) => setReleaseDate(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* visualFormatList */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
+                                    <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        visualFormatList <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex flex-col gap-2 w-full sm:w-2/3">
+                                        {visualFormatList.map((item, index) => (
+                                            <div key={index} className="flex items-center gap-2">
+                                                <div className="uiverse-pixel-input-wrapper flex-grow">
+                                                    <input
+                                                        type="text"
+                                                        className="uiverse-pixel-input"
+                                                        value={item}
+                                                        onChange={(e) => handleListItemChange('visual', index, e.target.value)}
+                                                        required
+                                                    />
+                                                </div>
+                                                {visualFormatList.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        className="remove-button"
+                                                        onClick={() => handleRemoveListItem('visual', index)}
+                                                    >
+                                                        -
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            className="button2 mt-2 self-start"
+                                            onClick={() => handleAddListItem('visual')}
+                                        >
+                                            Add string item
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* movieGenreList */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
+                                    <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieGenreList <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex flex-col gap-2 w-full sm:w-2/3">
+                                        {movieGenreList.map((item, index) => (
+                                            <div key={index} className="flex items-center gap-2">
+                                                <div className="uiverse-pixel-input-wrapper flex-grow">
+                                                    <input
+                                                        type="text"
+                                                        className="uiverse-pixel-input"
+                                                        value={item}
+                                                        onChange={(e) => handleListItemChange('genre', index, e.target.value)}
+                                                        required
+                                                    />
+                                                </div>
+                                                {movieGenreList.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        className="remove-button"
+                                                        onClick={() => handleRemoveListItem('genre', index)}
+                                                    >
+                                                        -
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            className="button2 mt-2 self-start"
+                                            onClick={() => handleAddListItem('genre')}
+                                        >
+                                            Add string item
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Add button at the bottom */}
+                                <button type="submit" className="button2 w-full mt-6" disabled={loading}>
+                                    {loading ? 'Adding...' : 'Thêm'}
+                                </button>
+                            </form>
+                        </div>
                     )}
                     {activeTab === "doanhthu" && roles1.includes('Director') && (
                         <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
@@ -1716,6 +1730,38 @@ useEffect(() => {
                                 ))}
                             </select>
                             </div>
+
+                            {/* Modal Đăng xuất */}
+                            {showLogoutModal && (
+                                <div style={modalOverlayStyle}>
+                                    <div style={{ background: '#4c65a8', padding: '24px', borderRadius: '8px', textAlign: 'center', color: 'white', width: '300px' }}>
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                                                <img src="/images/warning.png" alt="!" style={{ width: '40px' }} />
+                                            </div>
+                                        </div>
+                                        <p>Bạn chắc chắn muốn đăng xuất không?</p>
+                                        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px' }}>
+                                            <button
+                                                onClick={() => {
+                                                    alert('Đã đăng xuất');
+                                                    setShowLogoutModal(false);
+                                                    navigate('/');
+                                                }}
+                                                style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: 'lightgreen', color: 'black' }}
+                                            >
+                                                Có
+                                            </button>
+                                            <button
+                                                onClick={() => setShowLogoutModal(false)}
+                                                style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: '#cc3380', color: 'white' }}
+                                            >
+                                                Không
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="mt-6 flex justify-end space-x-2">
                             <button
