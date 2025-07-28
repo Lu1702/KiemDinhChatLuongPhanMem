@@ -1,5 +1,6 @@
 ﻿using backend.Enum;
 using backend.Interface.Schedule;
+using backend.ModelDTO.ScheduleDTO;
 using backend.ModelDTO.ScheduleDTO.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -31,14 +32,14 @@ namespace backend.Controllers
 
         [HttpPatch("editSchedule/{id}")]
         [Authorize(Policy = "TheaterManager")]
-        public async Task<IActionResult> editSchedule(string id, ScheduleRequestDTO scheduleRequestDTO)
+        public async Task<IActionResult> editSchedule(string id, EditScheduleDTO edit)
         {
-            var status = await scheduleServices.edit(id, scheduleRequestDTO);
-            if (status)
+            var status = await scheduleServices.edit(id, edit);
+            if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
-                return Ok(new { message = "Đã thay đổi thành công" });
+                return BadRequest(new { message = "thay đổi thất bại do có lỗi =(" });
             }
-            return BadRequest(new { message = "thay đổi thất bại do có lỗi =(" });
+            return Ok(new { message = "Đã thay đổi thành công" });
         }
 
         [HttpDelete("removeSchedule/{id}")]
