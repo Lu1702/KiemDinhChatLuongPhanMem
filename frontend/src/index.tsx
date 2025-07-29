@@ -42,10 +42,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/cinezone" element={<Cinezone />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/info" element={<Info />} />
-        <Route path="/QuanLyRap/QLNV" element={<QLNV />} />
+        <Route path="/HomeAdmin" element={<QLNV />} />
         <Route path="/Giamdoc/doanhthu" element={<DT />} />
         <Route path="/Quantrivienhethong/QLRapPhongChieu" element={<RapPhongChieu />} />
-        <Route path="/ThuNgan/DichVuThem" element={<DV />} />
+        <Route path="/QTVHThong/chinhsuaphongrap" element={<DV />} />
         <Route path="/comment" element={<Comment />} />
         <Route path="/futurefilm" element={<FutureFilm />} />
         <Route path="/booking" element={<Booking />} />

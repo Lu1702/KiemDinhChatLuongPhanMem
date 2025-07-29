@@ -21,13 +21,13 @@ interface Language {
 }
 
 interface VisualFormat {
-    movieVisualId: string;
+    visualFormatId: string;
     movieVisualFormatDetail: string;
 }
 
 interface Movie {
     name: string;
-    image: string | null;
+    image: File | null;
     description: string;
     director: string;
     cast: string;
@@ -40,40 +40,13 @@ interface Movie {
     dinhdang: string[];
 }
 
-interface ErrorResponse {
-    thongTinLoi?: {
-        status: string;
-        message: string;
-    };
-    errors?: string[];
-}
-
-interface CreateMovieResponse {
-    imageUrl?: string;
-    movieId?: string;
-    message?: string;
-}
-
-interface FormState {
-    name: string;
-    description: string;
-    duration: string;
-    actor: string;
-    director: string;
-    trailer: string;
-    releaseDate: string;
-    languageId: string;
-    ageId: string;
-}
-
-const TOKEN = localStorage.getItem('authToken');
 const AddMovie: React.FC = () => {
     const [theloaiOptions, setTheloaiOptions] = useState<Genre[]>([]);
     const [dinhDangOptions, setDinhDangOptions] = useState<VisualFormat[]>([]);
     const [ageOptions, setAgeOptions] = useState<AgeOption[]>([]);
     const [languageOptions, setLanguageOptions] = useState<Language[]>([]);
     const [movies, setMovies] = useState<Movie[]>([]);
-    const [form, setForm] = useState<FormState>({
+    const [form, setForm] = useState({
         name: "",
         description: "",
         duration: "",
@@ -93,62 +66,60 @@ const AddMovie: React.FC = () => {
     const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
+    // Lấy danh sách thể loại
     useEffect(() => {
-        return () => {
-            movies.forEach((movie) => {
-                if (movie.image && movie.image.startsWith("blob:")) {
-                    URL.revokeObjectURL(movie.image);
-                }
+        fetch("http://localhost:5229/api/MovieGenre/GetMovieGenreList")
+            .then((res) => {
+                if (!res.ok) throw new Error("Không thể tải danh sách thể loại");
+                return res.json();
+            })
+            .then((data: Genre[]) => setTheloaiOptions(data))
+            .catch((err) => {
+                console.error("Lỗi khi gọi API thể loại:", err);
+                setLoi("Không thể tải danh sách thể loại");
             });
-        };
-    }, [movies]);
+    }, []);
 
-    const fetchData = async (url: string, setData: (data: any) => void, errorMessage: string) => {
-        try {
-            const res = await fetch(url, {
-                headers: {
-                    Authorization: `Bearer ${TOKEN}`,
-                },
-            });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(
-                    `${errorMessage}: ${errorData.message || `HTTP ${res.status}`}`
-                );
-            }
-            const data = await res.json();
-            if (!Array.isArray(data)) {
-                throw new Error(`${errorMessage}: Dữ liệu không đúng định dạng`);
-            }
-            setData(data);
-            console.log(`${errorMessage.split(":")[0]}:`, data);
-        } catch (err: any) {
-            console.error("Lỗi chi tiết:", err);
-            setLoi(`${errorMessage}: ${err.message}`);
-        }
-    };
-
+    // Lấy danh sách định dạng
     useEffect(() => {
-        fetchData(
-            "http://localhost:5229/api/MovieGenre/GetMovieGenreList",
-            setTheloaiOptions,
-            "Không thể tải danh sách thể loại"
-        );
-        fetchData(
-            "http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList",
-            setDinhDangOptions,
-            "Không thể tải danh sách định dạng"
-        );
-        fetchData(
-            "http://localhost:5229/api/MinimumAge/GetMinimumAge",
-            setAgeOptions,
-            "Không thể tải danh sách độ tuổi"
-        );
-        fetchData(
-            "http://localhost:5229/api/Language/GetLanguage",
-            setLanguageOptions,
-            "Không thể tải danh sách ngôn ngữ"
-        );
+        fetch("http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList")
+            .then((res) => {
+                if (!res.ok) throw new Error("Không thể tải danh sách định dạng");
+                return res.json();
+            })
+            .then((data: VisualFormat[]) => setDinhDangOptions(data))
+            .catch((err) => {
+                console.error("Lỗi khi gọi API định dạng:", err);
+                setLoi("Không thể tải danh sách định dạng");
+            });
+    }, []);
+
+    // Lấy danh sách độ tuổi
+    useEffect(() => {
+        fetch("http://localhost:5229/api/MinimumAge/GetMinimumAge")
+            .then((res) => {
+                if (!res.ok) throw new Error("Không thể tải danh sách độ tuổi");
+                return res.json();
+            })
+            .then((data: AgeOption[]) => setAgeOptions(data))
+            .catch((err) => {
+                console.error("Lỗi khi gọi API độ tuổi:", err);
+                setLoi("Không thể tải danh sách độ tuổi");
+            });
+    }, []);
+
+    // Lấy danh sách ngôn ngữ
+    useEffect(() => {
+        fetch("http://localhost:5229/api/Language/GetLanguage")
+            .then((res) => {
+                if (!res.ok) throw new Error("Không thể tải danh sách ngôn ngữ");
+                return res.json();
+            })
+            .then((data: Language[]) => setLanguageOptions(data))
+            .catch((err) => {
+                console.error("Lỗi khi gọi API ngôn ngữ:", err);
+                setLoi("Không thể tải danh sách ngôn ngữ");
+            });
     }, []);
 
     const handleInputChange = (
@@ -186,49 +157,8 @@ const AddMovie: React.FC = () => {
         setLoi("");
         setThanhCong("");
 
-        // Validation
-        if (!form.name) return setLoi("Vui lòng nhập tên phim");
-        if (!form.description) return setLoi("Vui lòng nhập mô tả phim");
-        if (!form.duration || isNaN(parseInt(form.duration)) || parseInt(form.duration) <= 0)
-            return setLoi("Vui lòng nhập thời lượng hợp lệ (số phút lớn hơn 0)");
-        if (!form.actor) return setLoi("Vui lòng nhập diễn viên");
-        if (!form.director) return setLoi("Vui lòng nhập đạo diễn");
-        if (!form.trailer) return setLoi("Vui lòng nhập URL trailer");
-        const urlPattern = /^(https?:\/\/[^\s$.?#].[^\s]*)$/;
-        if (!urlPattern.test(form.trailer)) return setLoi("URL trailer không hợp lệ");
-        if (!form.releaseDate) return setLoi("Vui lòng chọn ngày ra mắt");
-        const parsedDate = new Date(form.releaseDate);
-        if (isNaN(parsedDate.getTime())) return setLoi("Ngày ra mắt không hợp lệ");
-        if (!form.languageId) return setLoi("Vui lòng chọn ngôn ngữ");
-        if (!form.ageId) return setLoi("Vui lòng chọn độ tuổi");
-        if (selectedGenres.length === 0) return setLoi("Vui lòng chọn ít nhất một thể loại");
-        if (selectedDinhdang.length === 0) return setLoi("Vui lòng chọn ít nhất một định dạng");
-        if (!selectedFile) return setLoi("Vui lòng chọn poster phim");
-        if (!["image/jpeg", "image/png"].includes(selectedFile.type))
-            return setLoi("Poster phim phải là file JPEG hoặc PNG");
-        if (selectedFile.size > 5 * 1024 * 1024)
-            return setLoi("Poster phim không được vượt quá 5MB");
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJNb3ZpZU1hbmFnZXIiLCJuYmYiOjE3NTMzNzQ1NjQsImV4cCI6MTc1MzM3ODE2NCwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MjI5IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo1MjI5In0.jEhKmGi3NeEctpLZIEHG8sCS740zSNxP4RcO5uuPcxA";
 
-        // Kiểm tra dữ liệu options
-        if (theloaiOptions.length === 0) return setLoi("Danh sách thể loại chưa được tải");
-        if (dinhDangOptions.length === 0) return setLoi("Danh sách định dạng chưa được tải");
-        if (languageOptions.length === 0) return setLoi("Danh sách ngôn ngữ chưa được tải");
-        if (ageOptions.length === 0) return setLoi("Danh sách độ tuổi chưa được tải");
-
-        const language = languageOptions.find((lang) => lang.languageId === form.languageId);
-        if (!language) return setLoi("Ngôn ngữ không hợp lệ");
-
-        const genres = selectedGenres.map((id) => {
-            const genre = theloaiOptions.find((g) => g.genreId === id);
-            return genre ? genre.genreName : "Unknown Genre";
-        });
-
-        const dinhdang = selectedDinhdang.map((id) => {
-            const format = dinhDangOptions.find((d) => d.movieVisualId === id);
-            return format ? format.movieVisualFormatDetail : "Unknown Format";
-        });
-
-        // Tạo FormData
         const formData = new FormData();
         formData.append("movieName", form.name);
         formData.append("movieDescription", form.description);
@@ -236,58 +166,38 @@ const AddMovie: React.FC = () => {
         formData.append("movieActor", form.actor);
         formData.append("movieDirector", form.director);
         formData.append("movieTrailerUrl", form.trailer);
-        formData.append("releaseDate", parsedDate.toISOString());
+        formData.append("releaseDate", form.releaseDate);
         formData.append("languageId", form.languageId);
         formData.append("minimumAgeID", form.ageId);
-        selectedGenres.forEach((genreId) => formData.append("movieGenreList[]", genreId));
-        selectedDinhdang.forEach((formatId) => formData.append("visualFormatList[]", formatId));
-        formData.append("movieImage", selectedFile);
-
-        console.log("FormData entries:");
-        Array.from(formData.entries()).forEach(([key, value]) => {
-            console.log(`${key}: ${value instanceof File ? value.name : value}`);
-        });
-        console.log("TOKEN:", TOKEN);
-        console.log("Genres selected:", selectedGenres);
-        console.log("Formats selected:", selectedDinhdang);
-        console.log("Language selected:", form.languageId);
-
-        // Kiểm tra TOKEN
-        if (!TOKEN) return setLoi("Không tìm thấy token xác thực");
+        selectedGenres.forEach((genreId) => formData.append("movieGenreList", genreId));
+        selectedDinhdang.forEach((formatId) => formData.append("visualFormatList", formatId));
+        if (selectedFile) {
+            formData.append("movieImage", selectedFile);
+        }
 
         try {
-            const res = await axios.post<CreateMovieResponse>(
-                "http://localhost:5229/api/movie/createMovie",
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${TOKEN}`,
-                        "Content-Type": "multipart/form-data",
-                    },
-                    timeout: 30000,
-                }
-            );
+            const res = await axios.post("http://localhost:5229/api/movie/createMovie", formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            });
 
-            console.log("API response:", res.data);
-
-            if (res.status === 200 || res.status === 201 || res.status === 204) {
+            if (res.status === 200 || res.status === 201) {
                 setThanhCong("Tạo phim thành công!");
-                if (!res.data.imageUrl) {
-                    console.warn("API không trả về imageUrl, sử dụng URL tạm thời.");
-                }
                 const newMovie: Movie = {
                     name: form.name,
-                    image: res.data.imageUrl || (selectedFile ? URL.createObjectURL(selectedFile) : null),
+                    image: selectedFile,
                     description: form.description,
                     director: form.director,
                     cast: form.actor,
                     trailer: form.trailer,
                     duration: parseInt(form.duration) || 0,
                     ageLimit: form.ageId,
-                    language: language.languageDetail || "Unknown Language",
+                    language: languageOptions.find((lang) => lang.languageId === form.languageId)?.languageDetail || form.languageId,
                     releaseDate: form.releaseDate,
-                    genres,
-                    dinhdang,
+                    genres: selectedGenres.map((id) => theloaiOptions.find((g) => g.genreId === id)?.genreName || id),
+                    dinhdang: selectedDinhdang.map((id) => dinhDangOptions.find((d) => d.visualFormatId === id)?.movieVisualFormatDetail || id),
                 };
 
                 if (editIndex !== null) {
@@ -299,6 +209,7 @@ const AddMovie: React.FC = () => {
                     setMovies((prev) => [...prev, newMovie]);
                 }
 
+                // Reset form
                 setForm({
                     name: "",
                     description: "",
@@ -313,38 +224,17 @@ const AddMovie: React.FC = () => {
                 setSelectedFile(null);
                 setSelectedGenres([]);
                 setSelectedDinhdang([]);
-                console.log("Form after reset:", form);
-                console.log("Movies after update:", movies);
             } else {
-                throw new Error(`Lỗi từ server: ${res.status}`);
+                setLoi(`Lỗi khi tạo phim: ${res.status}`);
             }
-        } catch (err: any) {
-            console.error("Lỗi chi tiết:", err);
-            let errorMessage = "Lỗi không xác định";
-            if (err.response) {
-                errorMessage =
-                    err.response.data?.thongTinLoi?.message ||
-                    err.response.data?.errors?.join(", ") ||
-                    `Lỗi từ server: ${err.response.status}`;
-            } else if (err.request) {
-                errorMessage = "Không nhận được phản hồi từ server. Vui lòng kiểm tra kết nối mạng.";
-            } else {
-                errorMessage = err.message || "Lỗi không xác định";
-            }
-            setLoi("Lỗi: " + errorMessage);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Lỗi không xác định";
+            setLoi("Lỗi mạng: " + errorMessage);
         }
     };
 
     const handleEdit = (index: number) => {
         const movie = movies[index];
-        const languageId = languageOptions.find((lang) => lang.languageDetail === movie.language)?.languageId || "";
-        const genres = movie.genres
-            .map((name) => theloaiOptions.find((g) => g.genreName === name)?.genreId)
-            .filter((id): id is string => id !== undefined);
-        const dinhdang = movie.dinhdang
-            .map((detail) => dinhDangOptions.find((d) => d.movieVisualFormatDetail === detail)?.movieVisualId)
-            .filter((id): id is string => id !== undefined);
-
         setForm({
             name: movie.name,
             description: movie.description,
@@ -353,17 +243,13 @@ const AddMovie: React.FC = () => {
             director: movie.director,
             trailer: movie.trailer,
             releaseDate: movie.releaseDate,
-            languageId,
+            languageId: movie.language,
             ageId: movie.ageLimit,
         });
-        setSelectedGenres(genres);
-        setSelectedDinhdang(dinhdang);
-        setSelectedFile(null);
+        setSelectedGenres(movie.genres.map((name) => theloaiOptions.find((g) => g.genreName === name)?.genreId || name));
+        setSelectedDinhdang(movie.dinhdang.map((detail) => dinhDangOptions.find((d) => d.movieVisualFormatDetail === detail)?.visualFormatId || detail));
+        setSelectedFile(movie.image);
         setEditIndex(index);
-        console.log("Editing movie:", movie);
-        console.log("Form after edit:", { ...form, languageId });
-        console.log("Genres after edit:", genres);
-        console.log("Formats after edit:", dinhdang);
     };
 
     const handleDelete = (index: number) => {
@@ -431,7 +317,7 @@ const AddMovie: React.FC = () => {
                                     value={form.duration}
                                     onChange={handleInputChange}
                                     type="number"
-                                    placeholder="Thời lượng (phút)"
+                                    placeholder="Thời lượng"
                                     className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300"
                                 />
                                 <select
@@ -462,21 +348,15 @@ const AddMovie: React.FC = () => {
                                     <option className="text-black bg-slate-600" value="">
                                         Chọn độ tuổi
                                     </option>
-                                    {ageOptions.length > 0 ? (
-                                        ageOptions.map((age) => (
-                                            <option
-                                                key={age.minimumAgeID}
-                                                value={age.minimumAgeID}
-                                                className="text-black bg-slate-600"
-                                            >
-                                                {age.minimumAgeInfo} - {age.minimumAgeDescription}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option className="text-black bg-slate-600" value="" disabled>
-                                            Không có độ tuổi
+                                    {ageOptions.map((age) => (
+                                        <option
+                                            key={age.minimumAgeID}
+                                            value={age.minimumAgeID}
+                                            className="text-black bg-slate-600"
+                                        >
+                                            {age.minimumAgeInfo} - {age.minimumAgeDescription}
                                         </option>
-                                    )}
+                                    ))}
                                 </select>
                                 <div className="flex flex-row rounded border py-2 px-2">
                                     <p className="border-e-2 pr-3 text-slate-300">Chọn poster phim</p>
@@ -518,29 +398,25 @@ const AddMovie: React.FC = () => {
                             <div className="space-y-4">
                                 <label className="block text-white mb-2">Thể loại</label>
                                 <div className="flex flex-wrap gap-2 mt-2">
-                                    {selectedGenres.length > 0 ? (
-                                        selectedGenres.map((id) => {
-                                            const genre = theloaiOptions.find((g) => g.genreId === id);
-                                            return (
-                                                <span
-                                                    key={id}
-                                                    className="bg-slate-500 px-3 py-1 rounded text-white flex items-center"
+                                    {selectedGenres.map((id) => {
+                                        const genre = theloaiOptions.find((g) => g.genreId === id);
+                                        return (
+                                            <span
+                                                key={id}
+                                                className="bg-slate-500 px-3 py-1 rounded text-white flex items-center"
+                                            >
+                                                {genre?.genreName}
+                                                <button
+                                                    className="text-yellow-300 ml-2"
+                                                    onClick={() =>
+                                                        setSelectedGenres((prev) => prev.filter((gid) => gid !== id))
+                                                    }
                                                 >
-                                                    {genre?.genreName || "Unknown Genre"}
-                                                    <button
-                                                        className="text-yellow-300 ml-2"
-                                                        onClick={() =>
-                                                            setSelectedGenres((prev) => prev.filter((gid) => gid !== id))
-                                                        }
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </span>
-                                            );
-                                        })
-                                    ) : (
-                                        <span className="text-slate-300">Chưa chọn thể loại</span>
-                                    )}
+                                                    ✕
+                                                </button>
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                                 <select
                                     onChange={handleGenreChange}
@@ -549,47 +425,37 @@ const AddMovie: React.FC = () => {
                                     <option className="text-black bg-slate-600" value="">
                                         -- Chọn thể loại --
                                     </option>
-                                    {theloaiOptions.length > 0 ? (
-                                        theloaiOptions
-                                            .filter((g) => !selectedGenres.includes(g.genreId))
-                                            .map((g) => (
-                                                <option
-                                                    className="text-black bg-slate-600"
-                                                    key={g.genreId}
-                                                    value={g.genreId}
-                                                >
-                                                    {g.genreName}
-                                                </option>
-                                            ))
-                                    ) : (
-                                        <option className="text-black bg-slate-600" value="" disabled>
-                                            Không có thể loại
-                                        </option>
-                                    )}
+                                    {theloaiOptions
+                                        .filter((g) => !selectedGenres.includes(g.genreId))
+                                        .map((g) => (
+                                            <option
+                                                className="text-black bg-slate-600"
+                                                key={g.genreId}
+                                                value={g.genreId}
+                                            >
+                                                {g.genreName}
+                                            </option>
+                                        ))}
                                 </select>
                                 <label className="font-semibold block mt-4 text-white">Định dạng</label>
                                 <div className="flex flex-wrap gap-2">
-                                    {selectedDinhdang.length > 0 ? (
-                                        selectedDinhdang.map((id) => {
-                                            const format = dinhDangOptions.find((d) => d.movieVisualId === id);
-                                            return (
-                                                <span
-                                                    key={id}
-                                                    className="bg-slate-500 px-3 py-1 rounded text-white flex items-center"
+                                    {selectedDinhdang.map((id) => {
+                                        const format = dinhDangOptions.find((d) => d.visualFormatId === id);
+                                        return (
+                                            <span
+                                                key={id}
+                                                className="bg-slate-500 px-3 py-1 rounded text-white flex items-center"
+                                            >
+                                                {format?.movieVisualFormatDetail}
+                                                <button
+                                                    className="text-yellow-300 ml-2"
+                                                    onClick={() => removeDinhdang(id)}
                                                 >
-                                                    {format?.movieVisualFormatDetail || "Unknown Format"}
-                                                    <button
-                                                        className="text-yellow-300 ml-2"
-                                                        onClick={() => removeDinhdang(id)}
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </span>
-                                            );
-                                        })
-                                    ) : (
-                                        <span className="text-slate-300">Chưa chọn định dạng</span>
-                                    )}
+                                                    ✕
+                                                </button>
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                                 <select
                                     onChange={handleDinhDangChange}
@@ -598,23 +464,17 @@ const AddMovie: React.FC = () => {
                                     <option className="text-black bg-slate-600" value="">
                                         -- Chọn định dạng --
                                     </option>
-                                    {dinhDangOptions.length > 0 ? (
-                                        dinhDangOptions
-                                            .filter((d) => !selectedDinhdang.includes(d.movieVisualId))
-                                            .map((d) => (
-                                                <option
-                                                    className="text-black bg-slate-600"
-                                                    key={d.movieVisualId}
-                                                    value={d.movieVisualId}
-                                                >
-                                                    {d.movieVisualFormatDetail}
-                                                </option>
-                                            ))
-                                    ) : (
-                                        <option className="text-black bg-slate-600" value="" disabled>
-                                            Không có định dạng
-                                        </option>
-                                    )}
+                                    {dinhDangOptions
+                                        .filter((d) => !selectedDinhdang.includes(d.visualFormatId))
+                                        .map((d) => (
+                                            <option
+                                                className="text-black bg-slate-600"
+                                                key={d.visualFormatId}
+                                                value={d.visualFormatId}
+                                            >
+                                                {d.movieVisualFormatDetail}
+                                            </option>
+                                        ))}
                                 </select>
                             </div>
 
@@ -655,7 +515,6 @@ const AddMovie: React.FC = () => {
                         <thead className="bg-slate-800 text-white">
                             <tr>
                                 <th className="px-4 py-2">#</th>
-                                <th className="px-4 py-2">Poster</th>
                                 <th className="px-4 py-2">Tên</th>
                                 <th className="px-4 py-2 w-72">Thể loại</th>
                                 <th className="px-4 py-2">Định dạng</th>
@@ -669,55 +528,28 @@ const AddMovie: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {movies.length > 0 ? (
-                                movies.map((m, i) => (
-                                    <tr key={m.name + i} className="text-center border-b">
-                                        <td className="text-white">{i + 1}</td>
-                                        <td className="text-white">
-                                            {m.image ? (
-                                                <img
-                                                    src={m.image}
-                                                    alt={m.name}
-                                                    className="w-20 h-20 object-cover mx-auto"
-                                                />
-                                            ) : (
-                                                <img
-                                                    src="https://via.placeholder.com/80"
-                                                    alt="No image"
-                                                    className="w-20 h-20 object-cover mx-auto"
-                                                />
-                                            )}
-                                        </td>
-                                        <td className="text-white">{m.name || "Không có tên"}</td>
-                                        <td className="text-white">
-                                            {m.genres.length > 0 ? m.genres.join(", ") : "Không có thể loại"}
-                                        </td>
-                                        <td className="text-white">
-                                            {m.dinhdang.length > 0 ? m.dinhdang.join(", ") : "Không có định dạng"}
-                                        </td>
-                                        <td className="text-white">{m.releaseDate || "Không có ngày"}</td>
-                                        <td className="text-white">{m.duration || 0}</td>
-                                        <td className="text-white">{m.language || "Không có ngôn ngữ"}</td>
-                                        <td className="text-white">{m.director || "Không có đạo diễn"}</td>
-                                        <td className="text-white">{m.cast || "Không có diễn viên"}</td>
-                                        <td className="text-white">{m.description || "Không có mô tả"}</td>
-                                        <td className="text-white">
-                                            <button onClick={() => handleEdit(i)} className="text-blue-500 mr-2">
-                                                Sửa
-                                            </button>
-                                            <button onClick={() => handleDelete(i)} className="text-red-500">
-                                                Xóa
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={12} className="text-white text-center py-4">
-                                        Chưa có phim nào
+                            {movies.map((m, i) => (
+                                <tr key={i} className="text-center border-b">
+                                    <td className="text-white">{i + 1}</td>
+                                    <td className="text-white">{m.name}</td>
+                                    <td className="text-white">{m.genres.join(", ")}</td>
+                                    <td className="text-white">{m.dinhdang.join(", ")}</td>
+                                    <td className="text-white">{m.releaseDate}</td>
+                                    <td className="text-white">{m.duration}</td>
+                                    <td className="text-white">{m.language}</td>
+                                    <td className="text-white">{m.director}</td>
+                                    <td className="text-white">{m.cast}</td>
+                                    <td className="text-white">{m.description}</td>
+                                    <td className="text-white">
+                                        <button onClick={() => handleEdit(i)} className="text-blue-500 mr-2">
+                                            Sửa
+                                        </button>
+                                        <button onClick={() => handleDelete(i)} className="text-red-500">
+                                            Xóa
+                                        </button>
                                     </td>
                                 </tr>
-                            )}
+                            ))}
                         </tbody>
                     </table>
                 </div>

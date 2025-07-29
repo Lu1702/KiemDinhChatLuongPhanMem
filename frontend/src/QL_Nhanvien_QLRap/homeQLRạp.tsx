@@ -3,6 +3,42 @@ import React, { useState, useEffect, useCallback } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+interface FoodItem {
+    foodId: string;
+    foodName: string;
+    foodPrice: number;
+}
+
+interface OrderRequestItem {
+    productId: string;
+    quantity: number;
+}
+
+// Define possible API response structures
+interface ApiResponseFood {
+    data?: FoodItem[];
+    status?: string;
+    message?: string;
+    [key: string]: any; // Allow for other properties
+}
+interface VisualFormat {
+    movieVisualId: string;
+    movieVisualFormatDetail: string;
+}
+
+interface CinemaRoom {
+    roomNumber: number;
+    cinemaID: string;
+    visualFormatID: string;
+    seatsNumber: string[];
+}
+
+interface ApiResponse<T> {
+    status: string;
+    message: string;
+    data: T;
+}
 // Define interfaces
 interface Service {
     id: number;
@@ -21,6 +57,9 @@ interface FoodDrinkItem {
 interface Cinema {
     cinemaId: string;
     cinemaName: string;
+    cinemaLocation: string;
+    cinemaDescription?: string;
+    cinemaContactNumber?: string;
 }
 
 interface Role {
@@ -63,54 +102,203 @@ interface EditingStaff {
 const formatDate = (dateStr: string) => dateStr ? new Date(dateStr).toISOString() : "";
 
 const Info: React.FC = () => {
-  
-      const [filterText, setFilterText] = useState('');
-      const [services, setServices] = useState<Service[]>([
-          { id: 1, name: 'Bắp caramel', quantity: 1, orderID: 'ORD001' },
-          { id: 2, name: 'Pepsi', quantity: 2, orderID: 'ORD001' },
-          { id: 3, name: 'Coca', quantity: 1, orderID: 'ORD002' },
-          { id: 4, name: 'Không thêm dịch vụ', quantity: 1, orderID: 'ORD003' },
-      ]);
-      const [isAddingService, setIsAddingService] = useState(false);
-      const [showLogoutModal, setShowLogoutModal] = useState(false);
-      const [showAccountMenu, setShowAccountMenu] = useState(false);
-      const [isLoading, setIsLoading] = useState(false);
-      const userEmail = localStorage.getItem("userEmail");
-      const navigate = useNavigate();
-      const [movieName, setMovieName] = useState<string>('');
-      const [movieImageFile, setMovieImageFile] = useState<File | null>(null);
-      const [movieImageFileName, setMovieImageFileName] = useState<string>('');
-      const [movieDescription, setMovieDescription] = useState<string>('');
-      const [movieDirector, setMovieDirector] = useState<string>('');
-      const [movieActor, setMovieActor] = useState<string>('');
-      const [movieTrailerUrl, setMovieTrailerUrl] = useState<string>('');
-      const [movieDuration, setMovieDuration] = useState<number>(0);
-      const [minimumAgeID, setMinimumAgeID] = useState<string>('');
-      const [languageId, setLanguageId] = useState<string>('');
-      const [releaseDate, setReleaseDate] = useState<string>(new Date().toISOString().substring(0, 16)); // YYYY-MM-DDTHH:MM
-      const [visualFormatList, setVisualFormatList] = useState<string[]>(['']);
-      const [movieGenreList, setMovieGenreList] = useState<string[]>(['']);
-      const [foodDrinkItems, setFoodDrinkItems] = useState<FoodDrinkItem[]>([]);
-      
-      const handleSubmitService = (e: React.FormEvent) => {
-              e.preventDefault();
-              if (newServiceName.trim() && selectedOrderID.trim()) {
-                  const newService: Service = {
-                      id: services.length + 1,
-                      name: newServiceName,
-                      quantity: newServiceQuantity,
-                      orderID: selectedOrderID
-                  };
-                  setServices([...services, newService]);
-                  setNewServiceQuantity(1);
-                  setSelectedOrderID('');
-                  setIsAddingService(false);
-              } else {
-                  alert('Vui lòng chọn Tên dịch vụ và Order ID.'); // Updated alert message
-              }
-          };
-      // NEW STATE: To indicate if food/drink items are being loaded
-      const handleSave = () => {
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+    const [filterText, setFilterText] = useState('');
+    const [services, setServices] = useState<Service[]>([
+        { id: 1, name: 'Bắp caramel', quantity: 1, orderID: 'ORD001' },
+        { id: 2, name: 'Pepsi', quantity: 2, orderID: 'ORD001' },
+        { id: 3, name: 'Coca', quantity: 1, orderID: 'ORD002' },
+        { id: 4, name: 'Không thêm dịch vụ', quantity: 1, orderID: 'ORD003' },
+    ]);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [isAddingService, setIsAddingService] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [showAccountMenu, setShowAccountMenu] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const userEmail = localStorage.getItem("userEmail");
+    const navigate = useNavigate();
+    const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+    const [movieName, setMovieName] = useState<string>('');
+    const [movieImageFile, setMovieImageFile] = useState<File | null>(null);
+    const [movieImageFileName, setMovieImageFileName] = useState<string>('');
+    const [movieDescription, setMovieDescription] = useState<string>('');
+    const [movieDirector, setMovieDirector] = useState<string>('');
+    const [movieActor, setMovieActor] = useState<string>('');
+    const [movieTrailerUrl, setMovieTrailerUrl] = useState<string>('');
+    const [movieDuration, setMovieDuration] = useState<number>(0);
+    const [visualFormats, setVisualFormats] = useState<VisualFormat[]>([]);
+    const [minimumAgeID, setMinimumAgeID] = useState<string>('');
+    const [languageId, setLanguageId] = useState<string>('');
+    const [releaseDate, setReleaseDate] = useState<string>(new Date().toISOString().substring(0, 16)); // YYYY-MM-DDTHH:MM
+    const [visualFormatList, setVisualFormatList] = useState<string[]>(['']);
+    const [movieGenreList, setMovieGenreList] = useState<string[]>(['']);
+    const [foodDrinkItems, setFoodDrinkItems] = useState<FoodDrinkItem[]>([]);
+    const [newRoom, setNewRoom] = useState<CinemaRoom>({
+        roomNumber: 0,
+        cinemaID: '',
+        visualFormatID: '',
+        seatsNumber: [],
+    });
+    const [newCinema, setNewCinema] = useState({
+        cinemaName: '',
+        cinemaLocation: '',
+        cinemaDescription: '',
+        cinemaContactNumber: '',
+    });
+    const [selectedCinemaId, setSelectedCinemaId] = useState<string>('');
+    const [seatInput, setSeatInput] = useState<string>('');
+    const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [customerEmail, setCustomerEmail] = useState('');
+    const [orderItems, setOrderItems] = useState<OrderRequestItem[]>([]);
+    const [selectedFoodId, setSelectedFoodId] = useState('');
+    const [quantity, setQuantity] = useState(1);
+    const [errorFood, setErrorFood] = useState<string | null>(null);
+
+    // Fetch food items and open modal on mount
+    useEffect(() => {
+        axios.get('http://localhost:5229/api/Food/GetFoodInformation')
+            .then(response => {
+                // Log the full response for debugging
+                console.log('Full API Response:', response);
+                // Check for nested data
+                let items = response.data as ApiResponseFood;
+                if (Array.isArray(items)) {
+                    setFoodItems(items);
+                } else if (items && typeof items === 'object') {
+                    // Safely extract nested array
+                    const foodData = items.data || [];
+                    if (Array.isArray(foodData)) {
+                        setFoodItems(foodData);
+                    } else {
+                        console.error('No valid array found in response:', response.data);
+                        setErrorFood('Invalid food items data format');
+                        setFoodItems([]);
+                    }
+                } else {
+                    console.error('Unexpected API response format:', response.data);
+                    setErrorFood('Invalid food items data format');
+                    setFoodItems([]);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching food items:', error);
+                setErrorFood('Failed to fetch food items');
+                setFoodItems([]);
+            });
+
+        // Open modal immediately
+        setIsModalOpen(true);
+    }, []);
+
+    const handleAddItem = () => {
+        if (selectedFoodId) {
+            setOrderItems([...orderItems, { productId: selectedFoodId, quantity }]);
+            setSelectedFoodId('');
+            setQuantity(1);
+        }
+    };
+
+    const handleSubmitOrder = async () => {
+        if (!customerEmail) {
+            alert('Please enter a customer email');
+            return;
+        }
+
+        const orderData = {
+            customerEmail,
+            orderDate: new Date().toISOString(),
+            orderRequestItems: orderItems
+        };
+
+        try {
+            const userId = localStorage.getItem('IDND');
+            await axios.post(
+                `http://localhost:5229/api/StaffOrder/StaffOrder?UserId=${userId}`,
+                orderData,
+                {
+                    headers: {
+                        'accept': '*/*',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    }
+                }
+            );
+            setIsModalOpen(false);
+            setOrderItems([]);
+            setCustomerEmail('');
+            alert('Order submitted successfully!');
+        } catch (error) {
+            console.error('Error submitting order:', error);
+            alert('Failed to submit order');
+        }
+    };
+    const handleRoomInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    ) => {
+        const { name, value } = e.target;
+        setNewRoom((prev) => ({
+            ...prev,
+            [name]: name === 'roomNumber' ? Number(value) : value,
+        }));
+    };
+
+    const handleAddSeat = () => {
+        if (seatInput.trim()) {
+            setNewRoom((prev) => ({
+                ...prev,
+                seatsNumber: [...prev.seatsNumber, seatInput.trim()],
+            }));
+            setSeatInput('');
+        }
+    };
+    const handleDeleteCinema = async () => {
+        if (!selectedCinemaId) {
+            setError('Vui lòng chọn một rạp để xóa');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5229/api/Cinema/deleteCinema/${selectedCinemaId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete cinema');
+            }
+
+            setIsDeleteModalOpen(false);
+            setSelectedCinemaId('');
+            fetchCinemas();
+            setSuccessMessage('Đã xóa rạp thành công');
+            setTimeout(() => setSuccessMessage(null), 3000);
+        } catch (err) {
+            setError('Failed to delete cinema');
+        }
+    };
+    const handleSubmitService = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newServiceName.trim() && selectedOrderID.trim()) {
+            const newService: Service = {
+                id: services.length + 1,
+                name: newServiceName,
+                quantity: newServiceQuantity,
+                orderID: selectedOrderID
+            };
+            setServices([...services, newService]);
+            setNewServiceQuantity(1);
+            setSelectedOrderID('');
+            setIsAddingService(false);
+        } else {
+            alert('Vui lòng chọn Tên dịch vụ và Order ID.'); // Updated alert message
+        }
+    };
+    // NEW STATE: To indicate if food/drink items are being loaded
+    const handleSave = () => {
         setIsLoading(true); // Show spinner when saving
         // Simulate an API call or a long process
         setTimeout(() => {
@@ -119,50 +307,50 @@ const Info: React.FC = () => {
             // Navigate to /payment after the process is complete and spinner is hidden
             navigate('/QuanLyRap/QLNV');
         }, 2000); // 2 second delay for demonstration
-      };
-      const [isFoodDrinkLoading, setIsFoodDrinkLoading] = useState(true);
-  
-  
-      // State cho ô chọn dịch vụ và số lượng khi thêm
-      const [newServiceName, setNewServiceName] = useState(''); // Default to empty string initially
-      const [newServiceQuantity, setNewServiceQuantity] = useState(1);
-      const [selectedOrderID, setSelectedOrderID] = useState('');
-  
-      // Lấy danh sách các OrderID duy nhất từ các dịch vụ đã có
-      const existingOrderIDs = Array.from(new Set(services.map(service => service.orderID)));
-      const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-      
+    };
+    const [isFoodDrinkLoading, setIsFoodDrinkLoading] = useState(true);
+
+
+    // State cho ô chọn dịch vụ và số lượng khi thêm
+    const [newServiceName, setNewServiceName] = useState(''); // Default to empty string initially
+    const [newServiceQuantity, setNewServiceQuantity] = useState(1);
+    const [selectedOrderID, setSelectedOrderID] = useState('');
+
+    // Lấy danh sách các OrderID duy nhất từ các dịch vụ đã có
+    const existingOrderIDs = Array.from(new Set(services.map(service => service.orderID)));
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
     const filteredServices = services.filter(service =>
         filterText === '' || service.orderID.toLowerCase().includes(filterText.toLowerCase())
     );
-  // Handler for file input change
-     const handleMovieImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handler for file input change
+    const handleMovieImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-          setMovieImageFile(e.target.files[0]);
-          setMovieImageFileName(e.target.files[0].name);
+            setMovieImageFile(e.target.files[0]);
+            setMovieImageFileName(e.target.files[0].name);
         } else {
-          setMovieImageFile(null);
-          setMovieImageFileName('');
+            setMovieImageFile(null);
+            setMovieImageFileName('');
         }
     };
     const modalOverlayStyle: React.CSSProperties = {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-        };
-      const [oldPassword, setOldPassword] = useState('');
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+    };
+    const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
     // Đã đổi tên biến trạng thái và hàm cập nhật
-    const [message1, setMessage1] = useState(''); 
+    const [message1, setMessage1] = useState('');
 
     const handleChangePassword = async () => {
         setMessage1(''); // Xóa thông báo cũ
@@ -207,117 +395,120 @@ const Info: React.FC = () => {
             console.error('Network or unexpected error:', error);
         }
     };
-  // Handlers for dynamic list items (visualFormatList, movieGenreList)
-  const handleAddListItem = (listType: 'visual' | 'genre') => {
-    if (listType === 'visual') {
-      setVisualFormatList([...visualFormatList, '']);
-    } else {
-      setMovieGenreList([...movieGenreList, '']);
-    }
-  };
+    // Handlers for dynamic list items (visualFormatList, movieGenreList)
+    const handleAddListItem = (listType: 'visual' | 'genre') => {
+        if (listType === 'visual') {
+            setVisualFormatList([...visualFormatList, '']);
+        } else {
+            setMovieGenreList([...movieGenreList, '']);
+        }
+    };
 
-  const handleRemoveListItem = (listType: 'visual' | 'genre', index: number) => {
-    if (listType === 'visual') {
-      const newList = visualFormatList.filter((_, i) => i !== index);
-      setVisualFormatList(newList.length > 0 ? newList : ['']); // Ensure at least one empty input
-    } else {
-      const newList = movieGenreList.filter((_, i) => i !== index);
-      setMovieGenreList(newList.length > 0 ? newList : ['']); // Ensure at least one empty input
-    }
-  };
+    const handleRemoveListItem = (listType: 'visual' | 'genre', index: number) => {
+        if (listType === 'visual') {
+            const newList = visualFormatList.filter((_, i) => i !== index);
+            setVisualFormatList(newList.length > 0 ? newList : ['']); // Ensure at least one empty input
+        } else {
+            const newList = movieGenreList.filter((_, i) => i !== index);
+            setMovieGenreList(newList.length > 0 ? newList : ['']); // Ensure at least one empty input
+        }
+    };
 
-  const handleListItemChange = (listType: 'visual' | 'genre', index: number, value: string) => {
-    if (listType === 'visual') {
-      const newList = [...visualFormatList];
-      newList[index] = value;
-      setVisualFormatList(newList);
-    } else {
-      const newList = [...movieGenreList];
-      newList[index] = value;
-      setMovieGenreList(newList);
-    }
-  };
+    const handleListItemChange = (listType: 'visual' | 'genre', index: number, value: string) => {
+        if (listType === 'visual') {
+            const newList = [...visualFormatList];
+            newList[index] = value;
+            setVisualFormatList(newList);
+        } else {
+            const newList = [...movieGenreList];
+            newList[index] = value;
+            setMovieGenreList(newList);
+        }
+    };
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    setLoading(true);
-    setMessage(null);
+    // Handle form submission
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault(); // Prevent default form submission behavior
+        setLoading(true);
+        setMessage(null);
 
-    const formData = new FormData();
-    formData.append('movieName', movieName);
-    formData.append('movieDescription', movieDescription);
-    formData.append('movieDirector', movieDirector);
-    formData.append('movieActor', movieActor);
-    formData.append('movieTrailerUrl', movieTrailerUrl);
-    formData.append('movieDuration', movieDuration.toString());
-    formData.append('minimumAgeID', minimumAgeID);
-    formData.append('languageId', languageId);
-    formData.append('releaseDate', new Date(releaseDate).toISOString()); // Ensure ISO format
+        const formData = new FormData();
+        formData.append('movieDuration', movieDuration.toString());
+        formData.append('movieActor', movieActor);
+        formData.append('movieImage', '488383774_10161252255948295_3777127523036369629_n.jpg'); // <-- phải là File object
+        formData.append('movieTrailerUrl', movieTrailerUrl);
+        formData.append('movieDescription', movieDescription);
+        formData.append('minimumAgeID', minimumAgeID);
+        formData.append('movieGenreList', "Horror");
+        formData.append('languageId', languageId);
+        formData.append('releaseDate', new Date(releaseDate).toISOString());
+        formData.append('visualFormatList', "3D");
+        formData.append('movieName', movieName);
+        formData.append('movieDirector', movieDirector);
+        // Append each item from the lists
+        visualFormatList.forEach(item => {
+            if (item.trim() !== '') { // Only append non-empty strings
+                formData.append('visualFormatList', item);
+            }
+        });
+        movieGenreList.forEach(item => {
+            if (item.trim() !== '') { // Only append non-empty strings
+                formData.append('movieGenreList', item);
+            }
+        });
 
-    // Append each item from the lists
-    visualFormatList.forEach(item => {
-      if (item.trim() !== '') { // Only append non-empty strings
-        formData.append('visualFormatList', item);
-      }
-    });
-    movieGenreList.forEach(item => {
-      if (item.trim() !== '') { // Only append non-empty strings
-        formData.append('movieGenreList', item);
-      }
-    });
+        if (movieImageFile) {
+            formData.append('movieImage', movieImageFile, movieImageFileName);
+        } else {
+            // Handle case where image is required but not provided
+            setMessage({ type: 'error', text: 'Movie image is required.' });
+            setLoading(false);
+            return;
+        }
 
-    if (movieImageFile) {
-      formData.append('movieImage', movieImageFile, movieImageFileName);
-    } else {
-      // Handle case where image is required but not provided
-      setMessage({ type: 'error', text: 'Movie image is required.' });
-      setLoading(false);
-      return;
-    }
+        try {
+            console.log(localStorage.getItem('role'));
+            const response = await fetch('http://localhost:5229/api/movie/createMovie', {
+                method: "POST",
+                headers: { "accept": "*/*", 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                body: formData, // FormData automatically sets 'Content-Type': 'multipart/form-data'
 
-    try {
-        console.log(localStorage.getItem('role'));
-      const response = await fetch('http://localhost:5229/api/movie/createMovie', {
-       method: "POST",
-                headers: { "accept": "*/*", "Content-Type": "multipart/form-data", 'Authorization': `Bearer 4d1e0f2a-b7c8-d9e0-f1a2-3b4c5d6e7f8g` },
-        body: formData, // FormData automatically sets 'Content-Type': 'multipart/form-data'
-        // No need to set 'Content-Type' header manually for FormData
-      });
+                // No need to set 'Content-Type' header manually for FormData
+            });
 
-      if (response.ok) {
-        const result = await response.json();
-        setMessage({ type: 'success', text: 'Movie created successfully!' });
-        console.log('Success:', result);
-        // Optionally reset form fields here
-        setMovieName('');
-        setMovieImageFile(null);
-        setMovieImageFileName('');
-        setMovieDescription('');
-        setMovieDirector('');
-        setMovieActor('');
-        setMovieTrailerUrl('');
-        setMovieDuration(0);
-        setMinimumAgeID('');
-        setLanguageId('');
-        setReleaseDate(new Date().toISOString().substring(0, 16));
-        setVisualFormatList(['']);
-        setMovieGenreList(['']);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: `Failed to create movie: ${errorData.message || response.statusText}` });
-        console.error('Error:', errorData);
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: `An error occurred: ${error instanceof Error ? error.message : String(error)}` });
-      console.error('Fetch error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+            if (response.ok) {
+                const result = await response.json();
+                setMessage({ type: 'success', text: 'Movie created successfully!' });
+                console.log('Success:', result);
+                // Optionally reset form fields here
+                setMovieName('');
+                setMovieImageFile(null);
+                setMovieImageFileName('');
+                setMovieDescription('');
+                setMovieDirector('');
+                setMovieActor('');
+                setMovieTrailerUrl('');
+                setMovieDuration(0);
+                setMinimumAgeID('');
+                setLanguageId('');
+                setReleaseDate(new Date().toISOString().substring(0, 16));
+                setVisualFormatList(['']);
+                setMovieGenreList(['']);
+            } else {
+                const errorData = await response.json();
+                setMessage({ type: 'error', text: `Failed to create movie: ${errorData.message || response.statusText}` });
+                console.error('Error:', errorData);
+            }
+        } catch (error) {
+            setMessage({ type: 'error', text: `An error occurred: ${error instanceof Error ? error.message : String(error)}` });
+            console.error('Fetch error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const [userRole, setUserRole] = useState<string | null>(localStorage.getItem("role") || null);
-    const [activeTab, setActiveTab] = useState< "password" | "nhanvien"|"quanlynoidung"| "doanhthu"|"xacdinhdichvu" |"csphongrap">("password");
+    const [activeTab, setActiveTab] = useState<"password" | "nhanvien" | "quanlynoidung" | "doanhthu" | "xacdinhdichvu" | "csphongrap" | "room">("password");
     const [addStaffFormData, setAddStaffFormData] = useState<AddStaffFormData>({
         staffId: "",
         cinemaId: "",
@@ -336,7 +527,9 @@ const Info: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const handleDeleteStaffOrder = (index: number) => {
+        setOrderItems(orderItems.filter((_, i) => i !== index));
+    };
     const roleName = localStorage.getItem('role') || '';
     const roles1: string[] = roleName ? roleName.split(',') : [];
     const [isCheckingRoles, setIsCheckingRoles] = useState(false);
@@ -345,18 +538,17 @@ const Info: React.FC = () => {
     useEffect(() => {
         setIsCheckingRoles(true);
         const timer = setTimeout(() => {
-          if (roles1.includes('FacilitiesManager')|| roles1.includes('Director') || roles1.includes('MovieManager')||roles1.includes('MovieManager') || roles1.includes('Cashier') ) {
-            alert('Chào mừng trở lại!');
-            setIsAuthorized(true);
-            setIsCheckingRoles(false);
-          } else {
-            alert('Không được phép vào trang này');
-            navigate('/login');
-          }
+            if (roles1.includes('FacilitiesManager') || roles1.includes('Director') || roles1.includes('MovieManager') || roles1.includes('MovieManager') || roles1.includes('Cashier') || roles1.includes('TheaterManager')) {
+                setIsAuthorized(true);
+                setIsCheckingRoles(false);
+            } else {
+                alert('Không được phép vào trang này');
+                navigate('/login');
+            }
         }, 1000); // 1-second delay to show spinner
         return () => clearTimeout(timer);
-      }, []); // Empty dependency array for mount-only execution
-    
+    }, []); // Empty dependency array for mount-only execution
+
     useEffect(() => {
         const fetchCinemas = async () => {
             try {
@@ -373,58 +565,221 @@ const Info: React.FC = () => {
         };
         fetchCinemas();
     }, []);
-
-    // Fetch roles
     useEffect(() => {
-    const fetchRoles = async () => {
-        const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-            console.error('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
-            navigate('/');
-            return;
-        }
+        const fetchCinemas = async () => {
+            try {
+                const response = await fetch('http://localhost:5229/api/Cinema/getCinemaList', {
+                    headers: {
+                        'accept': '*/*',
+                    },
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                if (data.status === 'Success' && data.data) {
+                    setCinemas(data.data);
+                    if (data.data.length > 0) setAddStaffFormData(prev => ({ ...prev, cinemaId: data.data[0].cinemaId }));
+                }
+            } catch (error) {
+                alert('Không thể tải danh sách rạp. Vui lòng thử lại sau.');
+            }
+        };
+
+        const fetchVisualFormats = async () => {
+            try {
+                const response = await fetch('http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList', {
+                    headers: {
+                        'accept': '*/*',
+                    },
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                if (data.status === 'Success' && data.data) {
+                    setVisualFormats(data.data);
+                }
+            } catch (error) {
+                alert('Không thể tải danh sách định dạng hình ảnh. Vui lòng thử lại sau.');
+            }
+        };
+
+        fetchCinemas();
+        fetchVisualFormats();
+    }, []);
+    const handleSaveCinema = async () => {
         try {
-            const response = await fetch("http://localhost:5229/api/Staff/GetRoleList", {
-                method: 'GET',
+            const response = await fetch('http://localhost:5229/api/Cinema/addCinema', {
+                method: 'POST',
                 headers: {
-                    'accept': '*/*',
-                    'Authorization': `Bearer ${authToken}`
-                }
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                },
+                body: JSON.stringify(newCinema),
             });
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                throw new Error('Failed to add cinema');
             }
 
-            const data = await response.json();
-
-            // Kiểm tra trạng thái và dữ liệu trả về từ API
-            if (data.status === "Success" && data.data) {
-                // Ép kiểu (type assertion) dữ liệu nhận được thành mảng Role
-                const fetchedRoles: Role[] = data.data;
-                setRoles(fetchedRoles); // Cập nhật state chứa danh sách vai trò
-
-                if (fetchedRoles.length > 0) {
-                    // Ưu tiên tìm vai trò "Cashier" dựa trên 'roleName'
-                    const cashierRole = fetchedRoles.find((role: Role) => role.roleName === "Cashier");
-
-                    if (cashierRole) {
-                        // Nếu tìm thấy "Cashier", đặt roleid của Cashier làm mặc định
-                        setAddStaffFormData(prev => ({ ...prev, role: cashierRole.roleid }));
-                    } else {
-                        // Nếu không tìm thấy "Cashier", đặt roleid của vai trò đầu tiên làm mặc định
-                        setAddStaffFormData(prev => ({ ...prev, role: fetchedRoles[0].roleid }));
-                    }
-                }
-            } else {
-                console.error("Lỗi khi tải danh sách vai trò:", data.message);
-            }
-        } catch (error: any) {
-            console.error("Lỗi khi tải danh sách vai trò:", error.message);
+            setIsAddModalOpen(false);
+            setNewCinema({
+                cinemaName: '',
+                cinemaLocation: '',
+                cinemaDescription: '',
+                cinemaContactNumber: '',
+            });
+            fetchCinemas();
+            setSuccessMessage('Đã tạo rạp thành công');
+            setTimeout(() => setSuccessMessage(null), 3000);
+        } catch (err) {
+            setError('Failed to add cinema');
         }
     };
-    fetchRoles();
-}, []);
+    const handleCinemaInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setNewCinema((prev) => ({ ...prev, [name]: value }));
+    };
+
+
+
+    const handleSaveRoom = async () => {
+        if (!newRoom.cinemaID || !newRoom.visualFormatID || newRoom.roomNumber < 0) {
+            setError('Vui lòng điền đầy đủ thông tin phòng chiếu');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5229/api/CinemaRoom/CreateRoom', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                },
+                body: JSON.stringify(newRoom),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create room');
+            }
+
+            setNewRoom({
+                roomNumber: 0,
+                cinemaID: '',
+                visualFormatID: '',
+                seatsNumber: [],
+            });
+            setSeatInput('');
+            setSuccessMessage('Đã tạo phòng chiếu thành công');
+            setTimeout(() => setSuccessMessage(null), 3000);
+        } catch (err) {
+            setError('Failed to create room');
+        }
+    };
+
+    useEffect(() => {
+        fetchCinemas();
+        fetchVisualFormats();
+    }, []);
+    const fetchCinemas = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get<ApiResponse<Cinema[]>>('http://localhost:5229/api/Cinema/getCinemaList', {
+                headers: {
+                    'accept': '*/*'
+                },
+            });
+            console.log('Cinema API Response:', response.data);
+            const cinemaData = response.data.data;
+            if (Array.isArray(cinemaData)) {
+                setCinemas(cinemaData);
+            } else {
+                setError('Cinema API response data is not an array');
+                setCinemas([]);
+            }
+        } catch (err) {
+            setError('Failed to fetch cinema list');
+            setCinemas([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchVisualFormats = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get<VisualFormat[]>('http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList', {
+                headers: {
+                    'accept': '*/*',
+                },
+            }
+            );
+            console.log('Visual Format API Response:', response.data);
+            if (Array.isArray(response.data)) {
+                setVisualFormats(response.data);
+            } else {
+                setError('Visual Format API response data is not an array');
+                setVisualFormats([]);
+            }
+        } catch (err) {
+            setError('Failed to fetch visual format list');
+            setVisualFormats([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+    // Fetch roles
+    useEffect(() => {
+        const fetchRoles = async () => {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                console.error('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
+                navigate('/');
+                return;
+            }
+
+            try {
+                // Only one fetch call is needed
+                const response = await fetch("http://localhost:5229/api/Staff/GetRoleList", {
+                    method: 'GET',
+                    headers: {
+                        'accept': '*/*',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Check status and data returned from API
+                if (data.status === "Success" && data.data) {
+                    // Type assertion for the received data to Role array
+                    const fetchedRoles: Role[] = data.data;
+                    setRoles(fetchedRoles); // Update state with the list of roles
+
+                    if (fetchedRoles.length > 0) {
+                        // Prioritize finding the "Cashier" role based on 'roleName'
+                        const cashierRole = fetchedRoles.find((role: Role) => role.roleName === "Cashier");
+
+                        if (cashierRole) {
+                            // If "Cashier" is found, set its roleid as default
+                            setAddStaffFormData(prev => ({ ...prev, role: cashierRole.roleid }));
+                        } else {
+                            // If "Cashier" is not found, set the roleid of the first role as default
+                            setAddStaffFormData(prev => ({ ...prev, role: fetchedRoles[0].roleid }));
+                        }
+                    }
+                } else {
+                    console.error("Lỗi khi tải danh sách vai trò:", data.message);
+                }
+            } catch (error: any) {
+                // This catch block handles errors from the fetch operation itself
+                console.error("Lỗi khi tải danh sách vai trò:", error.message);
+            }
+        };
+        fetchRoles();
+    }, []); // Dependency array: Empty array means this effect runs once after the initial render
 
     // Fetch staff list
     const fetchStaffList = useCallback(async () => {
@@ -436,7 +791,7 @@ const Info: React.FC = () => {
             if (!authToken) {
                 console.error('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
                 navigate('/login');
-                return;     
+                return;
             }
             const response = await fetch("http://localhost:5229/api/Staff/GetStaffList", {
                 method: 'GET',
@@ -479,10 +834,10 @@ const Info: React.FC = () => {
     };
 
     // Handle Add Staff submission
-   const handleAddStaffSubmit = async () => {
+    const handleAddStaffSubmit = async () => {
         if (!addStaffFormData.loginUserEmail || !addStaffFormData.loginUserPassword || !addStaffFormData.loginUserPasswordConfirm ||
             !addStaffFormData.staffName || !addStaffFormData.dateOfBirth || !addStaffFormData.phoneNumer ||
-            !addStaffFormData.cinemaId ) {
+            !addStaffFormData.cinemaId) {
             alert("Vui lòng điền đầy đủ tất cả thông tin (Email, Mật khẩu, Xác nhận mật khẩu, Tên nhân viên, Ngày sinh, SĐT, Rạp, Vai trò).");
             return;
         }
@@ -501,7 +856,7 @@ const Info: React.FC = () => {
                 return;
             }
             // Gán mặc định "Cashier" nếu role là rỗng
-            
+
             const response = await fetch("http://localhost:5229/api/Staff/AddStaff", {
                 method: "POST",
                 headers: { "accept": "*/*", "Content-Type": "application/json", 'Authorization': `Bearer ${authToken}` },
@@ -518,7 +873,7 @@ const Info: React.FC = () => {
                     ]
                 }),
             });
-            
+
             if (!response.ok) throw new Error((await response.json()).message || `Lỗi HTTP: ${response.status}`);
             const result = await response.json();
             if (result.status === "Success") {
@@ -542,12 +897,12 @@ const Info: React.FC = () => {
             setLoading(false);
         }
     };
-
+    console.log('hahahahaha localStorage: ', localStorage.getItem('IDND'))
     // Handle Delete Staff
     const handleDelete = async (staffIdToDelete: string): Promise<void> => {
         if (!window.confirm(`Bạn có chắc chắn muốn xóa nhân viên với ID: ${staffIdToDelete} không?`)) return;
         setLoading(true);
-        
+
         try {
             const authToken = localStorage.getItem('authToken');
             const response = await fetch(`http://localhost:5229/api/Staff/DeleteStaff?id=${staffIdToDelete}`, {
@@ -632,19 +987,19 @@ const Info: React.FC = () => {
             <div className="max-w-6xl mx-auto py-10 px-4 md:flex gap-8">
                 <div className="sticky top-32 h-fit self-start bg-white/20 backdrop-blur-md p-4 rounded-xl w-full md:w-1/4 space-y-4 shadow-lg">
                     <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "password" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("password")}>Đổi mật khẩu</button>
-                    { roles1.includes('TheaterManager') && (
+                    {roles1.includes('TheaterManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Rạp</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "nhanvien" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("nhanvien")}>Danh sách nhân viên</button>
                         </div>
                     )}
-                    { roles1.includes('MovieManager') && (
+                    {roles1.includes('MovieManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Nội Dung</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "quanlynoidung" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("quanlynoidung")}>Nội dung</button>
                         </div>
                     )}
-                    {roles1.includes('Cashier')  && (
+                    {roles1.includes('Cashier') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Thu Ngân</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "xacdinhdichvu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("xacdinhdichvu")}>Xác nhận dịch vụ</button>
@@ -656,66 +1011,66 @@ const Info: React.FC = () => {
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("doanhthu")}>Doanh thu</button>
                         </div>
                     )}
-                    {roles1.includes('FacilitiesManager')  && (
+                    {roles1.includes('FacilitiesManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản trị viên hệ thống</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => navigate('/Quantrivienhethong/QLRapPhongChieu')}>Chỉnh sửa rạp/phòng chiếu</button>
+                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
                         </div>
                     )}
                 </div>
                 <div className="flex-1 space-y-8 mt-8 md:mt-0">
                     <h1 className="text-white text-3xl font-bold text-center uppercase">Cinema xin chào! {userEmail}</h1>
-                    
+
                     {activeTab === "password" && (
-                         <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={oldPassword}
-                            onChange={(e) => setOldPassword(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-2 font-semibold">Mật khẩu mới</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                    </div>
-                </div>
-                {/* Đã sử dụng biến mới message1 để hiển thị */}
-                {message1 && (
-                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
-                        {message1}
-                    </p>
-                )}
-                <div className="mt-6 text-center">
-                    <button
-                        className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
-                        onClick={handleChangePassword}
-                    >
-                        <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>Cập nhật mật khẩu
-                    </button>
-                </div>
-            </div>
+                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
+                            <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
+                                        value={oldPassword}
+                                        onChange={(e) => setOldPassword(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Mật khẩu mới</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            {/* Đã sử dụng biến mới message1 để hiển thị */}
+                            {message1 && (
+                                <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
+                                    {message1}
+                                </p>
+                            )}
+                            <div className="mt-6 text-center">
+                                <button
+                                    className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
+                                    onClick={handleChangePassword}
+                                >
+                                    <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>Cập nhật mật khẩu
+                                </button>
+                            </div>
+                        </div>
                     )}
                     {activeTab === "nhanvien" && roles1.includes('TheaterManager') && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
+                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl ">
                             <h2 className="text-2xl font-bold mb-6">Thêm Nhân Viên</h2>
                             <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "16px", maxWidth: "1000px", marginTop: "25px", justifyContent: "space-between", alignItems: "flex-start" }}>
                                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "16px", minWidth: "280px" }}>
@@ -800,7 +1155,7 @@ const Info: React.FC = () => {
                                                         <td className="px-4 py-2">{staff.cinemaId}</td>
                                                         <td className="px-4 py-2">{staff.staffRole}</td>
                                                         <td className="px-4 py-2">
-                                                            <button onClick={() => handleEdit(staff.staffId)} className="mr-2 bg-blue-500 text-white px-2 py-1 rounded">Sửa</button>
+                                                            <button onClick={() => handleEdit(staff.staffId)} className="mr-2 bg-blue-500 text-white px-2 py-1 rounded mb-2.5">Sửa</button>
                                                             <button onClick={() => handleDelete(staff.staffId)} className="bg-red-500 text-white px-2 py-1 rounded">Xóa</button>
                                                         </td>
                                                     </tr>
@@ -849,275 +1204,277 @@ const Info: React.FC = () => {
                             )}
                         </div>
                     )}
+
+                    {/* Trang Add_movie */}
                     {activeTab === "quanlynoidung" && (
-                                        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
-                      {/* The CSS styles are now in a separate style.css file and should be linked in your HTML or imported in your main JS/TS file */}
-                      {/* Updated form container with bg-white/20 and backdrop-blur-md */}
-                      <form onSubmit={handleSubmit} className="bg-white/20 backdrop-blur-md p-6 sm:p-8 lg:p-10 rounded-xl shadow-xl w-full max-w-2xl">
-                        <h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">Movie Details Form</h1>
+                        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+                            {/* The CSS styles are now in a separate style.css file and should be linked in your HTML or imported in your main JS/TS file */}
+                            {/* Updated form container with bg-white/20 and backdrop-blur-md */}
+                            <form onSubmit={handleSubmit} className="bg-white/20 backdrop-blur-md p-6 sm:p-8 lg:p-10 rounded-xl shadow-xl w-full max-w-2xl">
+                                <h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">Movie Details Form</h1>
 
-                        {/* Message display area */}
-                        {message && (
-                          <div className={`p-3 mb-4 rounded-md text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {message.text}
-                          </div>
-                        )}
-
-                        {/* movieName */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieName" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieName <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieName"
-                              className="uiverse-pixel-input"
-                              value={movieName}
-                              onChange={(e) => setMovieName(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieImage */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieImage" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieImage <span className="text-red-500">*</span>
-                          </label>
-                          <div className="flex items-center space-x-2 w-full sm:w-2/3">
-                            <label htmlFor="movieImageInput" className="button2 cursor-pointer">
-                              Choose File
-                            </label>
-                            <input
-                              type="file"
-                              id="movieImageInput"
-                              className="hidden" // Hide the default file input
-                              onChange={handleMovieImageChange}
-                              required
-                            />
-                            <span className="text-gray-700 text-sm truncate flex-1">{movieImageFileName || 'No file chosen'}</span>
-                          </div>
-                        </div>
-
-                        {/* movieDescription */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieDescription" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieDescription <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieDescription"
-                              className="uiverse-pixel-input"
-                              value={movieDescription}
-                              onChange={(e) => setMovieDescription(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieDirector */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieDirector" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieDirector <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieDirector"
-                              className="uiverse-pixel-input"
-                              value={movieDirector}
-                              onChange={(e) => setMovieDirector(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieActor */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieActor" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieActor <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieActor"
-                              className="uiverse-pixel-input"
-                              value={movieActor}
-                              onChange={(e) => setMovieActor(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieTrailerUrl */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieTrailerUrl" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieTrailerUrl <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="movieTrailerUrl"
-                              className="uiverse-pixel-input"
-                              value={movieTrailerUrl}
-                              onChange={(e) => setMovieTrailerUrl(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* movieDuration */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="movieDuration" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieDuration <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="number"
-                              id="movieDuration"
-                              className="uiverse-pixel-input"
-                              value={movieDuration}
-                              onChange={(e) => setMovieDuration(Number(e.target.value))}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* minimumAgeID */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="minimumAgeID" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            minimumAgeID <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="minimumAgeID"
-                              className="uiverse-pixel-input"
-                              value={minimumAgeID}
-                              onChange={(e) => setMinimumAgeID(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* languageId */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="languageId" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            languageId <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="text"
-                              id="languageId"
-                              className="uiverse-pixel-input"
-                              value={languageId}
-                              onChange={(e) => setLanguageId(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* releaseDate */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                          <label htmlFor="releaseDate" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            releaseDate <span className="text-red-500">*</span>
-                          </label>
-                          <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                            <input
-                              type="datetime-local"
-                              id="releaseDate"
-                              className="uiverse-pixel-input"
-                              value={releaseDate}
-                              onChange={(e) => setReleaseDate(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* visualFormatList */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
-                          <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            visualFormatList <span className="text-red-500">*</span>
-                          </label>
-                          <div className="flex flex-col gap-2 w-full sm:w-2/3">
-                            {visualFormatList.map((item, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <div className="uiverse-pixel-input-wrapper flex-grow">
-                                  <input
-                                    type="text"
-                                    className="uiverse-pixel-input"
-                                    value={item}
-                                    onChange={(e) => handleListItemChange('visual', index, e.target.value)}
-                                    required
-                                  />
-                                </div>
-                                {visualFormatList.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="remove-button"
-                                    onClick={() => handleRemoveListItem('visual', index)}
-                                  >
-                                    -
-                                  </button>
+                                {/* Message display area */}
+                                {message && (
+                                    <div className={`p-3 mb-4 rounded-md text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        {message.text}
+                                    </div>
                                 )}
-                              </div>
-                            ))}
-                            <button
-                              type="button"
-                              className="button2 mt-2 self-start"
-                              onClick={() => handleAddListItem('visual')}
-                            >
-                              Add string item
-                            </button>
-                          </div>
-                        </div>
 
-                        {/* movieGenreList */}
-                        <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
-                          <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                            movieGenreList <span className="text-red-500">*</span>
-                          </label>
-                          <div className="flex flex-col gap-2 w-full sm:w-2/3">
-                            {movieGenreList.map((item, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <div className="uiverse-pixel-input-wrapper flex-grow">
-                                  <input
-                                    type="text"
-                                    className="uiverse-pixel-input"
-                                    value={item}
-                                    onChange={(e) => handleListItemChange('genre', index, e.target.value)}
-                                    required
-                                  />
+                                {/* movieName */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieName" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieName <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieName"
+                                            className="uiverse-pixel-input"
+                                            value={movieName}
+                                            onChange={(e) => setMovieName(e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                {movieGenreList.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="remove-button"
-                                    onClick={() => handleRemoveListItem('genre', index)}
-                                  >
-                                    -
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                            <button
-                              type="button"
-                              className="button2 mt-2 self-start"
-                              onClick={() => handleAddListItem('genre')}
-                            >
-                              Add string item
-                            </button>
-                          </div>
-                        </div>
 
-                        {/* Add button at the bottom */}
-                        <button type="submit" className="button2 w-full mt-6" disabled={loading}>
-                          {loading ? 'Adding...' : 'Thêm'}
-                        </button>
-                      </form>
-                    </div>
+                                {/* movieImage */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieImage" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieImage <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex items-center space-x-2 w-full sm:w-2/3">
+                                        <label htmlFor="movieImageInput" className="button2 cursor-pointer">
+                                            Choose File
+                                        </label>
+                                        <input
+                                            type="file"
+                                            id="movieImageInput"
+                                            className="hidden" // Hide the default file input
+                                            onChange={handleMovieImageChange}
+                                            required
+                                        />
+                                        <span className="text-gray-700 text-sm truncate flex-1">{movieImageFileName || 'No file chosen'}</span>
+                                    </div>
+                                </div>
+
+                                {/* movieDescription */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieDescription" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieDescription <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieDescription"
+                                            className="uiverse-pixel-input"
+                                            value={movieDescription}
+                                            onChange={(e) => setMovieDescription(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* movieDirector */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieDirector" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieDirector <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieDirector"
+                                            className="uiverse-pixel-input"
+                                            value={movieDirector}
+                                            onChange={(e) => setMovieDirector(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* movieActor */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieActor" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieActor <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieActor"
+                                            className="uiverse-pixel-input"
+                                            value={movieActor}
+                                            onChange={(e) => setMovieActor(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* movieTrailerUrl */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieTrailerUrl" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieTrailerUrl <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="movieTrailerUrl"
+                                            className="uiverse-pixel-input"
+                                            value={movieTrailerUrl}
+                                            onChange={(e) => setMovieTrailerUrl(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* movieDuration */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="movieDuration" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieDuration <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="number"
+                                            id="movieDuration"
+                                            className="uiverse-pixel-input"
+                                            value={movieDuration}
+                                            onChange={(e) => setMovieDuration(Number(e.target.value))}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* minimumAgeID */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="minimumAgeID" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        minimumAgeID <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="minimumAgeID"
+                                            className="uiverse-pixel-input"
+                                            value={minimumAgeID}
+                                            onChange={(e) => setMinimumAgeID(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* languageId */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="languageId" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        languageId <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="text"
+                                            id="languageId"
+                                            className="uiverse-pixel-input"
+                                            value={languageId}
+                                            onChange={(e) => setLanguageId(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* releaseDate */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
+                                    <label htmlFor="releaseDate" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        releaseDate <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
+                                        <input
+                                            type="datetime-local"
+                                            id="releaseDate"
+                                            className="uiverse-pixel-input"
+                                            value={releaseDate}
+                                            onChange={(e) => setReleaseDate(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* visualFormatList */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
+                                    <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        visualFormatList <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex flex-col gap-2 w-full sm:w-2/3">
+                                        {visualFormatList.map((item, index) => (
+                                            <div key={index} className="flex items-center gap-2">
+                                                <div className="uiverse-pixel-input-wrapper flex-grow">
+                                                    <input
+                                                        type="text"
+                                                        className="uiverse-pixel-input"
+                                                        value={item}
+                                                        onChange={(e) => handleListItemChange('visual', index, e.target.value)}
+                                                        required
+                                                    />
+                                                </div>
+                                                {visualFormatList.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        className="remove-button"
+                                                        onClick={() => handleRemoveListItem('visual', index)}
+                                                    >
+                                                        -
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            className="button2 mt-2 self-start"
+                                            onClick={() => handleAddListItem('visual')}
+                                        >
+                                            Add string item
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* movieGenreList */}
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
+                                    <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
+                                        movieGenreList <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex flex-col gap-2 w-full sm:w-2/3">
+                                        {movieGenreList.map((item, index) => (
+                                            <div key={index} className="flex items-center gap-2">
+                                                <div className="uiverse-pixel-input-wrapper flex-grow">
+                                                    <input
+                                                        type="text"
+                                                        className="uiverse-pixel-input"
+                                                        value={item}
+                                                        onChange={(e) => handleListItemChange('genre', index, e.target.value)}
+                                                        required
+                                                    />
+                                                </div>
+                                                {movieGenreList.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        className="remove-button"
+                                                        onClick={() => handleRemoveListItem('genre', index)}
+                                                    >
+                                                        -
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            className="button2 mt-2 self-start"
+                                            onClick={() => handleAddListItem('genre')}
+                                        >
+                                            Add string item
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Add button at the bottom */}
+                                <button type="submit" className="button2 w-full mt-6" disabled={loading}>
+                                    {loading ? 'Adding...' : 'Thêm'}
+                                </button>
+                            </form>
+                        </div>
                     )}
                     {activeTab === "doanhthu" && roles1.includes('Director') && (
                         <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
@@ -1126,229 +1483,297 @@ const Info: React.FC = () => {
                         </div>
                     )}
                     {activeTab === "xacdinhdichvu" && roles1.includes('Cashier') && (
-                        <div className="ml-72 p-6 relative z-10">
-                <div style={{ flex: 1, padding: '24px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <h3>Xin chào quản lý</h3>
-                        <div style={{ position: 'relative' }}>
-                            {showAccountMenu && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        right: 0,
-                                        top: '36px',
-                                        background: '#231C60',
-                                        color: 'white',
-                                        borderRadius: '4px',
-                                        padding: '8px',
-                                        minWidth: '100px',
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    <button
-                                        onClick={() => {
-                                            setShowLogoutModal(true);
-                                            setShowAccountMenu(false);
-                                        }}
-                                        style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}
-                                    >
-                                        Đăng xuất
-                                    </button>
+                        <div className="p-4 max-w-4xl mx-auto">
+                            {/* Error Message */}
+                            {errorFood && (
+                                <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-md">
+                                    {errorFood}
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </div>
 
-                <div className="bg-gray-800 p-4 rounded-lg mt-6">
-                    <h2 className="text-xl font-bold mb-4">Thông tin nhân viên</h2>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm">Mã nhân viên</label>
-                            <div className="uiverse-pixel-input">
-                                <input
-                                    type="text"
-                                    value={employeeId || ''}
-                                    readOnly
-                                    className="w-full p-2 rounded text-white"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm">Chọn ID order muốn confirm</label>
-                            <div className="uiverse-pixel-input-wrapper">
-                                <select
-                                    value={filterText}
-                                    onChange={(e) => setFilterText(e.target.value)}
-                                    className="uiverse-pixel-input w-full"
-                                >
-                                    <option value="">-- Chọn --</option>
-                                    {existingOrderIDs.map(id => (
-                                        <option key={id} value={id}>{id}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                            {/* Order Form */}
+                            <div className="bg-white p-6 rounded-md shadow-md">
+                                <h2 className="text-xl font-bold mb-4">New Order</h2>
 
-                    {isAddingService && (
-                        <form onSubmit={handleSubmitService} className="mt-4 space-y-4">
-                            <div className="flex gap-4 items-end">
-                                <div className="flex-1">
-                                    <label className="block text-sm">Tên dịch vụ</label>
-                                    <div className="uiverse-pixel-input-wrapper">
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium mb-1">Customer Email</label>
+                                    <input
+                                        type="text"
+                                        value={customerEmail}
+                                        onChange={(e) => setCustomerEmail(e.target.value)}
+                                        placeholder="Enter customer email"
+                                        className="w-full p-2 border rounded-md"
+                                    />
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium mb-1">Order Date</label>
+                                    <input
+                                        type="text"
+                                        value={new Date().toLocaleDateString()}
+                                        disabled
+                                        className="w-full p-2 border rounded-md bg-gray-100"
+                                    />
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium mb-1">Select Food Item</label>
+                                    <div className="flex gap-2">
                                         <select
-                                            value={newServiceName}
-                                            onChange={(e) => setNewServiceName(e.target.value)}
-                                            className="uiverse-pixel-input w-full"
-                                            disabled={isFoodDrinkLoading || foodDrinkItems.length === 0} // Disable if loading or no items
+                                            className="w-full p-2 border rounded-md"
+                                            value={selectedFoodId}
+                                            onChange={(e) => setSelectedFoodId(e.target.value)}
                                         >
-                                            {isFoodDrinkLoading ? (
-                                                <option value="">Đang tải...</option>
-                                            ) : foodDrinkItems.length === 0 ? (
-                                                <option value="">Không có dịch vụ</option>
-                                            ) : (
-                                                foodDrinkItems.map(item => (
-                                                    <option key={item.itemId} value={item.itemName}>{item.itemName}</option>
+                                            <option value="">Select a food item</option>
+                                            {Array.isArray(foodItems) && foodItems.length > 0 ? (
+                                                foodItems.map((item) => (
+                                                    <option key={item.foodId} value={item.foodId}>{item.foodName}</option>
                                                 ))
+                                            ) : (
+                                                <option disabled>No food items available</option>
                                             )}
                                         </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm">Số lượng</label>
-                                    <div className="uiverse-pixel-input-wrapper">
                                         <select
-                                            value={newServiceQuantity}
-                                            onChange={(e) => setNewServiceQuantity(parseInt(e.target.value))}
-                                            className="uiverse-pixel-input w-24"
+                                            className="w-24 p-2 border rounded-md"
+                                            value={quantity}
+                                            onChange={(e) => setQuantity(Number(e.target.value))}
                                         >
-                                            {[1, 2, 3, 4, 5].map(num => (
+                                            {[1, 2, 3, 4].map((num) => (
                                                 <option key={num} value={num}>{num}</option>
                                             ))}
                                         </select>
+                                        <button
+                                            className="bg-green-500 text-white px-4 py-1 rounded-md hover:bg-green-600"
+                                            onClick={handleAddItem}
+                                        >
+                                            Add
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Ô chọn Order ID khi thêm dịch vụ */}
-                            <div className="mt-4">
-                                <label className="block text-sm">Order ID</label>
-                                <div className="uiverse-pixel-input-wrapper">
-                                    <select
-                                        value={selectedOrderID}
-                                        onChange={(e) => setSelectedOrderID(e.target.value)}
-                                        className="uiverse-pixel-input w-full"
-                                        required
+                                {/* Selected Items List */}
+                                {orderItems.length > 0 && (
+                                    <div className="mb-4">
+                                        <h3 className="text-sm font-medium mb-2">Selected Items</h3>
+                                        <ul className="list-disc pl-5">
+                                            {orderItems.map((item, index) => {
+                                                const food = foodItems.find(f => f.foodId === item.productId);
+                                                return (
+                                                    <li key={index} className="flex items-center gap-2">
+                                                        {food?.foodName || 'Unknown Item'} - Quantity: {item.quantity}
+                                                        <button
+                                                            className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 ml-2"
+                                                            onClick={() => handleDeleteStaffOrder(index)}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-2">
+                                    <button
+                                        className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400"
+                                        onClick={() => {
+                                            setOrderItems([]);
+                                            setCustomerEmail('');
+                                        }}
                                     >
-                                        <option value="" disabled>-- Chọn Order ID --</option>
-                                        {existingOrderIDs.map(id => (
-                                            <option key={id} value={id}>{id}</option>
-                                        ))}
-                                    </select>
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                                        onClick={handleSubmitOrder}
+                                        disabled={orderItems.length === 0}
+                                    >
+                                        Submit Order
+                                    </button>
                                 </div>
-                            </div>
-
-                            <div className="flex justify-center mt-4">
-                                <button
-                                    className="button2 w-20 text-black px-4 py-2 rounded"
-                                    onClick={handleSubmitService}
-                                    style={{ width: '80px' }}
-                                    disabled={isFoodDrinkLoading || foodDrinkItems.length === 0} // Disable if loading or no items
-                                >
-                                    Thêm
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </div>
-
-                <div className="bg-gray-800 p-4 rounded-lg mt-6">
-                    <h2 className="text-xl font-bold mb-4">Chi tiết vé</h2>
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-gray-700">
-                                <th className="p-2 border-b">ID</th>
-                                <th className="p-2 border-b">Tên dịch vụ</th>
-                                <th className="p-2 border-b">Số lượng</th>
-                                <th className="p-2 border-b">Order ID</th> {/* Added Order ID column */}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredServices.map((service) => (
-                                <tr key={service.id} className="border-b">
-                                    <td className="p-2">{service.id}</td>
-                                    <td className="p-2">{service.name}</td>
-                                    <td className="p-2">{service.quantity}</td>
-                                    <td className="p-2">{service.orderID}</td> {/* Display Order ID */}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="flex justify-center mt-6">
-                    <button
-                        onClick={() => {
-                            handleSave();
-                            // navigate("/payment"); // This navigate will happen after handleSave's timeout
-                        }}
-                        className="button2 bg-[#7e57c2] text-white px-4 py-2 rounded"
-                        style={{ width: '250px' }}
-                        disabled={isLoading} // Disable button when loading
-                    >
-                        {isLoading ? (
-                            <div className="dot-spinner">
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                                <div className="dot-spinner__dot"></div>
-                            </div>
-                        ) : (
-                            'Yêu cầu thanh toán'
-                        )}
-                    </button>
-                </div>
-
-                {/* Modal Đăng xuất */}
-                {showLogoutModal && (
-                    <div style={modalOverlayStyle}>
-                        <div style={{ background: '#4c65a8', padding: '24px', borderRadius: '8px', textAlign: 'center', color: 'white', width: '300px' }}>
-                            <div style={{ marginBottom: '8px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                                    <img src="/images/warning.png" alt="!" style={{ width: '40px' }} />
-                                </div>
-                            </div>
-                            <p>Bạn chắc chắn muốn đăng xuất không?</p>
-                            <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px' }}>
-                                <button
-                                    onClick={() => {
-                                        alert('Đã đăng xuất');
-                                        setShowLogoutModal(false);
-                                        navigate('/');
-                                    }}
-                                    style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: 'lightgreen', color: 'black' }}
-                                >
-                                    Có
-                                </button>
-                                <button
-                                    onClick={() => setShowLogoutModal(false)}
-                                    style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: '#cc3380', color: 'white' }}
-                                >
-                                    Không
-                                </button>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
                     )}
                     {activeTab === "csphongrap" && roles1.includes('FacilitiesManager') && (
-                        <div></div>
+                        <div>
+                            <div className="flex justify-between text-white items-center mb-4">
+                                <h2 className="text-2xl font-bold">Danh sách rạp</h2>
+                                <div className="space-x-2">
+                                    <button
+                                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                        onClick={() => navigate('/QTVHThong/chinhsuaphongrap')}
+                                    >
+                                        Chỉnh sửa rạp
+                                    </button>
+                                    <button
+                                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                        onClick={() => navigate('/QTVHThong/chinhsuaphongrap')}
+                                    >
+                                        Chỉnh sửa phòng chiếu
+                                    </button>
+                                </div>
+                            </div>
+                            {loading && <p>Đang tải...</p>}
+                            {successMessage && <p className="text-green-500">{successMessage}</p>}
+                            {!loading && !error && cinemas.length === 0 && <p>Không có rạp nào để hiển thị.</p>}
+                            {cinemas.length > 0 && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {cinemas.map((cinema) => (
+                                        <div key={cinema.cinemaId} className="bg-white p-4 rounded shadow">
+                                            <h3 className="text-lg font-semibold">{cinema.cinemaName}</h3>
+                                            <p className="text-gray-600">{cinema.cinemaLocation}</p>
+                                            {cinema.cinemaDescription && <p className="text-gray-500">{cinema.cinemaDescription}</p>}
+                                            {cinema.cinemaContactNumber && (
+                                                <p className="text-gray-500">Số điện thoại: {cinema.cinemaContactNumber}</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Add Cinema Modal */}
+                    {isAddModalOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                                <h3 className="text-xl font-bold mb-4">Thêm Rạp Mới</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Tên Rạp</label>
+                                        <input
+                                            type="text"
+                                            name="cinemaName"
+                                            value={newCinema.cinemaName}
+                                            onChange={handleCinemaInputChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Địa điểm</label>
+                                        <input
+                                            type="text"
+                                            name="cinemaLocation"
+                                            value={newCinema.cinemaLocation}
+                                            onChange={handleCinemaInputChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Mô tả</label>
+                                        <textarea
+                                            name="cinemaDescription"
+                                            value={newCinema.cinemaDescription}
+                                            onChange={handleCinemaInputChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                                        <input
+                                            type="text"
+                                            name="cinemaContactNumber"
+                                            value={newCinema.cinemaContactNumber}
+                                            onChange={handleCinemaInputChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-6 flex justify-end space-x-2">
+                                    <button
+                                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                                        onClick={() => setIsAddModalOpen(false)}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                        onClick={handleSaveCinema}
+                                    >
+                                        Lưu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delete Cinema Modal */}
+                    {isDeleteModalOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                                <h3 className="text-xl font-bold mb-4">Xóa Rạp</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Chọn Rạp</label>
+                                        <select
+                                            value={selectedCinemaId}
+                                            onChange={(e) => setSelectedCinemaId(e.target.value)}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                        >
+                                            <option value="">--Chọn rạp để xóa--</option>
+                                            {cinemas.map((cinema) => (
+                                                <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                                                    {cinema.cinemaName} (ID: {cinema.cinemaId})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Modal Đăng xuất */}
+                                    {showLogoutModal && (
+                                        <div style={modalOverlayStyle}>
+                                            <div style={{ background: '#4c65a8', padding: '24px', borderRadius: '8px', textAlign: 'center', color: 'white', width: '300px' }}>
+                                                <div style={{ marginBottom: '8px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                                                        <img src="/images/warning.png" alt="!" style={{ width: '40px' }} />
+                                                    </div>
+                                                </div>
+                                                <p>Bạn chắc chắn muốn đăng xuất không?</p>
+                                                <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px' }}>
+                                                    <button
+                                                        onClick={() => {
+                                                            alert('Đã đăng xuất');
+                                                            setShowLogoutModal(false);
+                                                            navigate('/');
+                                                        }}
+                                                        style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: 'lightgreen', color: 'black' }}
+                                                    >
+                                                        Có
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setShowLogoutModal(false)}
+                                                        style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: '#cc3380', color: 'white' }}
+                                                    >
+                                                        Không
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-6 flex justify-end space-x-2">
+                                    <button
+                                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                                        onClick={() => {
+                                            setIsDeleteModalOpen(false);
+                                            setSelectedCinemaId('');
+                                        }}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                        onClick={handleDeleteCinema}
+                                        disabled={!selectedCinemaId}
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
@@ -1365,6 +1790,7 @@ const Info: React.FC = () => {
             <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointer">↑</button>
             <div className="sticky mx-auto mt-28"><Bottom /></div>
         </div>
+
     );
 };
 
