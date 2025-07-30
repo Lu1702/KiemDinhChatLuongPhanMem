@@ -395,6 +395,7 @@ const Info: React.FC = () => {
             console.error('Network or unexpected error:', error);
         }
     };
+
     // Handlers for dynamic list items (visualFormatList, movieGenreList)
     const handleAddListItem = (listType: 'visual' | 'genre') => {
         if (listType === 'visual') {
@@ -432,6 +433,7 @@ const Info: React.FC = () => {
         setLoading(true);
         setMessage(null);
 
+
         const formData = new FormData();
         formData.append('movieDuration', movieDuration.toString());
         formData.append('movieActor', movieActor);
@@ -456,6 +458,7 @@ const Info: React.FC = () => {
                 formData.append('movieGenreList', item);
             }
         });
+
 
         if (movieImageFile) {
             formData.append('movieImage', movieImageFile, movieImageFileName);
@@ -1773,6 +1776,38 @@ const Info: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Modal Đăng xuất */}
+                            {showLogoutModal && (
+                                <div style={modalOverlayStyle}>
+                                    <div style={{ background: '#4c65a8', padding: '24px', borderRadius: '8px', textAlign: 'center', color: 'white', width: '300px' }}>
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                                                <img src="/images/warning.png" alt="!" style={{ width: '40px' }} />
+                                            </div>
+                                        </div>
+                                        <p>Bạn chắc chắn muốn đăng xuất không?</p>
+                                        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px' }}>
+                                            <button
+                                                onClick={() => {
+                                                    alert('Đã đăng xuất');
+                                                    setShowLogoutModal(false);
+                                                    navigate('/');
+                                                }}
+                                                style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: 'lightgreen', color: 'black' }}
+                                            >
+                                                Có
+                                            </button>
+                                            <button
+                                                onClick={() => setShowLogoutModal(false)}
+                                                style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: '#cc3380', color: 'white' }}
+                                            >
+                                                Không
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
