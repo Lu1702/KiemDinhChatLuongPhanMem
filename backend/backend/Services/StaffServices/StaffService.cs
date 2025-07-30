@@ -279,16 +279,20 @@ public class StaffService(DataContext dbContext) : IStaffService
         try
         {
             var staffList = _context.Staff
-                .Include(x => x.Cinema).ToList();
+                .Include(x => x.Cinema)
+                .Include(x => x.userInformation)
+                .ThenInclude(x => x.userRoleInformation)
+                .ThenInclude(x => x.roleInformation)
+                .AsSplitQuery()
+                .Where(x => x.userInformation.userRoleInformation
+                    .Select(x => x.roleInformation).Any(y => y.roleName.Equals("Cashier")))
+                .ToList();
 
             if (staffList.Count > 0)
             {
                 List<GetStaffInfoDTO> staffInfoList = new List<GetStaffInfoDTO>();
                 foreach (var staffInfo in staffList)
                 {
-                    var getStaffRole = _context.userRoleInformation
-                        .Where(x => x.userId.Equals(staffInfo.userID))
-                        .Include(x => x.roleInformation);
                     staffInfoList.Add(new GetStaffInfoDTO
                     {
                         StaffName = staffInfo.Name,
@@ -297,7 +301,7 @@ public class StaffService(DataContext dbContext) : IStaffService
                         StaffId = staffInfo.Id,
                         CinemaId = staffInfo.Cinema.cinemaId,
                         StaffPhoneNumber = staffInfo.phoneNumber,
-                        StaffRole = String.Join(",", getStaffRole.Select(x => x.roleInformation.roleName)),
+                        StaffRole = String.Join(",", staffInfo.userInformation.userRoleInformation.Select(x => x.roleInformation.roleName)),
                     });
                 }
 
