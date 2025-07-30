@@ -1,16 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
 
+// Define the Movie interface for TypeScript
+interface Movie {
+    movieID: string;
+    movieName: string;
+    movieImage: string;
+    movieTrailerUrl: string;
+}
+
 function Listfilm() {
     const [showTrailer, setShowTrailer] = useState(false);
     const [trailerUrl, setTrailerUrl] = useState("");
+    const [movies, setMovies] = useState<Movie[]>([]);
     const navigate = useNavigate();
+
+    // Fetch movies from API
+    useEffect(() => {
+        fetch("http://localhost:5229/api/movie/getAllMoviesPagniation/1")
+            .then((response) => response.json())
+            .then((data) => {
+                setMovies(data.movieRespondDTOs);
+            })
+            .catch((error) => console.error("Error fetching movies:", error));
+    }, []);
 
     const handleShowtimes = () => {
         navigate("/showtimes");
     };
+
     const handleOpenTrailer = (url: string) => {
         let embedUrl = url;
 
@@ -25,141 +45,8 @@ function Listfilm() {
         setShowTrailer(true);
     };
 
-    const movies = [
-        {
-            title: "BUÔN THẦN BÁN THÁNH (T16)",
-            image: "https://bloganchoi.com/wp-content/uploads/2019/03/tam-cam-chuyen-chua-ke.jpg",
-            trailer: "https://www.youtube.com/watch?v=Ud-YVnRK_kY",
-        },
-        {
-            title: "LÂM GIANG TIÊN (T18)",
-            image: "https://static2.vieon.vn/vieplay-image/poster_v4/2025/06/02/djtoaqo5_660x946-lamgiangtien2.png",
-            trailer: "https://youtu.be/-hTr-NBoDnU?si=idCRW93f3kx6j7ZV",
-        },
-        {
-            title: "TRƯỜNG NGUYỆT TẪN MINH",
-            image: "https://bazaarvietnam.vn/wp-content/uploads/2023/04/harper-bazaar-review-phim-truong-nguyet-tan-minh-till-the-end-of-the-moon-101-e1680702014162.jpg",
-            trailer: "https://youtu.be/7kRzVm_umc0?si=bjoPQPcEVgsWZ2AL",
-        },
-        {
-            title: "Tấm Cám chuyện Quỳnh Lập kể",
-            image: "https://cdn.eva.vn/upload/2-2017/images/2017-05-10/tam-cam-chuyen-huynh-lap-ke-hay-chuyen-ai-cho-tao-luong-thien-cua-me-ghe-ac-nhat-hanh-tinh-tamcam-huynh-lap-1494403229-width500height683.jpg",
-            trailer: "https://youtu.be/I5SL4kNC7rk?si=HSB1PYMD2C6x6N0p",
-        },
-        {
-            title: "BÍ KÍP LUYỆN RỒNG (K)",
-            image: "https://cinestar.com.vn/_next/image/?url=https%3A%2F%2Fapi-website.cinestar.com.vn%2Fmedia%2Fwysiwyg%2FPosters%2F06-2025%2Fbi-kip-luyen-rong_1.jpg&w=1200&q=75",
-            trailer: "https://youtu.be/JD-idNoeiPE",
-        },
-        {
-            title: "NĂM MƯƠI (T18)",
-            image: "https://th.bing.com/th/id/R.4b3f8ee56b9334f4958f75a5f45362a9?rik=JkvbTUiZTAlZYQ&pid=ImgRaw&r=0g",
-            trailer: "https://youtu.be/miUjcCPpVGo",
-        },
-        {
-            title: "BUÔN THẦN BÁN THÁNH (T16)",
-            image: "https://bloganchoi.com/wp-content/uploads/2019/03/tam-cam-chuyen-chua-ke.jpg",
-            trailer: "https://www.youtube.com/watch?v=Ud-YVnRK_kY",
-        },
-        {
-            title: "Tấm Cám chuyện Quỳnh Lập kể",
-            image: "https://cdn.eva.vn/upload/2-2017/images/2017-05-10/tam-cam-chuyen-huynh-lap-ke-hay-chuyen-ai-cho-tao-luong-thien-cua-me-ghe-ac-nhat-hanh-tinh-tamcam-huynh-lap-1494403229-width500height683.jpg",
-            trailer: "https://youtu.be/I5SL4kNC7rk?si=HSB1PYMD2C6x6N0p",
-        },
-        {
-            title: "LÂM GIANG TIÊN (T18)",
-            image: "https://static2.vieon.vn/vieplay-image/poster_v4/2025/06/02/djtoaqo5_660x946-lamgiangtien2.png",
-            trailer: "https://youtu.be/-hTr-NBoDnU?si=idCRW93f3kx6j7ZV",
-        },
-        {
-            title: "TRƯỜNG NGUYỆT TẪN MINH",
-            image: "https://bazaarvietnam.vn/wp-content/uploads/2023/04/harper-bazaar-review-phim-truong-nguyet-tan-minh-till-the-end-of-the-moon-101-e1680702014162.jpg",
-            trailer: "https://youtu.be/7kRzVm_umc0?si=bjoPQPcEVgsWZ2AL",
-        },
-        {
-            title: "BÍ KÍP LUYỆN RỒNG (K)",
-            image: "https://cinestar.com.vn/_next/image/?url=https%3A%2F%2Fapi-website.cinestar.com.vn%2Fmedia%2Fwysiwyg%2FPosters%2F06-2025%2Fbi-kip-luyen-rong_1.jpg&w=1200&q=75",
-            trailer: "https://youtu.be/JD-idNoeiPE",
-        },
-        {
-            title: "Tấm Cám chuyện Quỳnh Lập kể",
-            image: "https://cdn.eva.vn/upload/2-2017/images/2017-05-10/tam-cam-chuyen-huynh-lap-ke-hay-chuyen-ai-cho-tao-luong-thien-cua-me-ghe-ac-nhat-hanh-tinh-tamcam-huynh-lap-1494403229-width500height683.jpg",
-            trailer: "https://youtu.be/I5SL4kNC7rk?si=HSB1PYMD2C6x6N0p",
-        },
-        {
-            title: "NĂM MƯƠI (T18)",
-            image: "https://th.bing.com/th/id/R.4b3f8ee56b9334f4958f75a5f45362a9?rik=JkvbTUiZTAlZYQ&pid=ImgRaw&r=0g",
-            trailer: "https://youtu.be/miUjcCPpVGo",
-        },
-        {
-            title: "BUÔN THẦN BÁN THÁNH (T16)",
-            image: "https://bloganchoi.com/wp-content/uploads/2019/03/tam-cam-chuyen-chua-ke.jpg",
-            trailer: "https://www.youtube.com/watch?v=Ud-YVnRK_kY",
-        },
-        {
-            title: "TRƯỜNG NGUYỆT TẪN MINH",
-            image: "https://bazaarvietnam.vn/wp-content/uploads/2023/04/harper-bazaar-review-phim-truong-nguyet-tan-minh-till-the-end-of-the-moon-101-e1680702014162.jpg",
-            trailer: "https://youtu.be/7kRzVm_umc0?si=bjoPQPcEVgsWZ2AL",
-        },
-        {
-            title: "Tấm Cám chuyện Quỳnh Lập kể",
-            image: "https://cdn.eva.vn/upload/2-2017/images/2017-05-10/tam-cam-chuyen-huynh-lap-ke-hay-chuyen-ai-cho-tao-luong-thien-cua-me-ghe-ac-nhat-hanh-tinh-tamcam-huynh-lap-1494403229-width500height683.jpg",
-            trailer: "https://youtu.be/I5SL4kNC7rk?si=HSB1PYMD2C6x6N0p",
-        },
-        {
-            title: "BÍ KÍP LUYỆN RỒNG (K)",
-            image: "https://cinestar.com.vn/_next/image/?url=https%3A%2F%2Fapi-website.cinestar.com.vn%2Fmedia%2Fwysiwyg%2FPosters%2F06-2025%2Fbi-kip-luyen-rong_1.jpg&w=1200&q=75",
-            trailer: "https://youtu.be/JD-idNoeiPE",
-        },
-        {
-            title: "Tấm Cám chuyện Quỳnh Lập kể",
-            image: "https://cdn.eva.vn/upload/2-2017/images/2017-05-10/tam-cam-chuyen-huynh-lap-ke-hay-chuyen-ai-cho-tao-luong-thien-cua-me-ghe-ac-nhat-hanh-tinh-tamcam-huynh-lap-1494403229-width500height683.jpg",
-            trailer: "https://youtu.be/I5SL4kNC7rk?si=HSB1PYMD2C6x6N0p",
-        },
-        {
-            title: "TRƯỜNG NGUYỆT TẪN MINH",
-            image: "https://bazaarvietnam.vn/wp-content/uploads/2023/04/harper-bazaar-review-phim-truong-nguyet-tan-minh-till-the-end-of-the-moon-101-e1680702014162.jpg",
-            trailer: "https://youtu.be/7kRzVm_umc0?si=bjoPQPcEVgsWZ2AL",
-        },
-        {
-            title: "BÍ KÍP LUYỆN RỒNG (K)",
-            image: "https://cinestar.com.vn/_next/image/?url=https%3A%2F%2Fapi-website.cinestar.com.vn%2Fmedia%2Fwysiwyg%2FPosters%2F06-2025%2Fbi-kip-luyen-rong_1.jpg&w=1200&q=75",
-            trailer: "https://youtu.be/JD-idNoeiPE",
-        },
-        {
-            title: "NĂM MƯƠI (T18)",
-            image: "https://th.bing.com/th/id/R.4b3f8ee56b9334f4958f75a5f45362a9?rik=JkvbTUiZTAlZYQ&pid=ImgRaw&r=0g",
-            trailer: "https://youtu.be/miUjcCPpVGo",
-        },
-        {
-            title: "LÂM GIANG TIÊN (T18)",
-            image: "https://static2.vieon.vn/vieplay-image/poster_v4/2025/06/02/djtoaqo5_660x946-lamgiangtien2.png",
-            trailer: "https://youtu.be/-hTr-NBoDnU?si=idCRW93f3kx6j7ZV",
-        },
-        {
-            title: "TRƯỜNG NGUYỆT TẪN MINH",
-            image: "https://bazaarvietnam.vn/wp-content/uploads/2023/04/harper-bazaar-review-phim-truong-nguyet-tan-minh-till-the-end-of-the-moon-101-e1680702014162.jpg",
-            trailer: "https://youtu.be/7kRzVm_umc0?si=bjoPQPcEVgsWZ2AL",
-        },
-        {
-            title: "BÍ KÍP LUYỆN RỒNG (K)",
-            image: "https://cinestar.com.vn/_next/image/?url=https%3A%2F%2Fapi-website.cinestar.com.vn%2Fmedia%2Fwysiwyg%2FPosters%2F06-2025%2Fbi-kip-luyen-rong_1.jpg&w=1200&q=75",
-            trailer: "https://youtu.be/JD-idNoeiPE",
-        },
-        {
-            title: "Tấm Cám chuyện Quỳnh Lập kể",
-            image: "https://cdn.eva.vn/upload/2-2017/images/2017-05-10/tam-cam-chuyen-huynh-lap-ke-hay-chuyen-ai-cho-tao-luong-thien-cua-me-ghe-ac-nhat-hanh-tinh-tamcam-huynh-lap-1494403229-width500height683.jpg",
-            trailer: "https://youtu.be/I5SL4kNC7rk?si=HSB1PYMD2C6x6N0p",
-        },
-        {
-            title: "NĂM MƯƠI (T18)",
-            image: "https://th.bing.com/th/id/R.4b3f8ee56b9334f4958f75a5f45362a9?rik=JkvbTUiZTAlZYQ&pid=ImgRaw&r=0g",
-            trailer: "https://youtu.be/miUjcCPpVGo",
-        },
-    ];
-
     return (
-        <div className="App bg-fixed w-ful  min-h-screen bg-cover bg-center "
+        <div className="App bg-fixed w-full min-h-screen bg-cover bg-center"
             style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
             {/* Header */}
             <div className="sticky top-0 z-50 bg-slate-900 shadow-md">
@@ -174,22 +61,22 @@ function Listfilm() {
                 <main className="max-w-screen-xl mx-auto px-8 py-12 top-0">
                     <h2 className="text-3xl text-white font-bold mb-8 uppercase">-- Phim đang chiếu --</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                        {movies.map((movie, index) => (
+                        {movies.map((movie) => (
                             <div
-                                key={index}
+                                key={movie.movieID}
                                 className="bg-slate-800 rounded-xl shadow-lg p-4 flex flex-col items-center object-cover">
                                 <img
-                                    src={movie.image}
-                                    alt={movie.title}
+                                    src={movie.movieImage}
+                                    alt={movie.movieName}
                                     className="w-full h-[420px] object-cover rounded-md cursor-pointer hover:scale-105 transition"
-                                    onClick={() => handleOpenTrailer(movie.trailer)}
+                                    onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
                                 />
                                 <h3 className="text-white font-semibold text-center mt-4 min-h-[48px] line-clamp-2">
-                                    {movie.title}
+                                    {movie.movieName}
                                 </h3>
                                 <div className="mt-3 flex flex-col sm:flex-row gap-3 items-center justify-center w-full">
                                     <button
-                                        onClick={() => handleOpenTrailer(movie.trailer)}
+                                        onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
                                         className="w-12 h-12 p-3 flex items-center justify-center rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden">
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
                                         <div className="relative z-10">
@@ -219,7 +106,6 @@ function Listfilm() {
                             </div>
                         ))}
                     </div>
-
                 </main>
                 {/* Trailer Popup */}
                 {showTrailer && (
@@ -242,7 +128,7 @@ function Listfilm() {
             </div>
             <button
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointers"
+                className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointer"
             >
                 ↑
             </button>

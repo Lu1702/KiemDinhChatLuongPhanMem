@@ -1,57 +1,140 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TicketIcon, MapPinIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import user from "../image/user.png";
 import logo from '../image/logocinema1.png';
 import { useNavigate } from 'react-router-dom';
 
+// Định nghĩa interface cho rạp chiếu phim
+interface Cinema {
+    cinemaId: string;
+    cinemaName: string;
+    cinemaLocation: string;
+}
+
+// Định nghĩa interface cho phim dựa trên phản hồi API
+interface Movie {
+    movieID: string;
+    movieName: string;
+    movieImage: string;
+    movieTrailerUrl: string;
+    movieDuration: number;
+    isRelease: boolean;
+    releaseDate: string;
+    listLanguageName: string;
+    movieVisualFormat: string[];
+    movieGenres: string[];
+}
 
 function Nav() {
     const userEmail = localStorage.getItem('userEmail');
-    const handleInfo = () => {
-    // Retrieve roleName from localStorage and split into an array
-    const roleName = localStorage.getItem('role') || '';
-    const roles: string[] = roleName ? roleName.split(',') : [];
-
-    // Role-based navigation
-    if (roles.includes('Cashier') || roles.includes('TheaterManager') || roles.includes('Director') || roles.includes('MovieManager') || roles.includes('FacilitiesManager')) {
-        navigate('/HomeAdmin');
-    } else if (roles.includes('Customer')) {
-        navigate('/info');
-    }
-};
-    const handleBooking = () => {
-        navigate('/booking');
-    }
-
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [cinemas, setCinemas] = useState<Cinema[]>([]);
+    const [searchResults, setSearchResults] = useState<Movie[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
+    // Lấy danh sách rạp từ API
+    useEffect(() => {
+        fetch('http://localhost:5229/api/Cinema/getCinemaList')
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.status === 'Success') {
+                    setCinemas(data.data);
+                }
+            })
+            .catch((error) => console.error('Lỗi khi lấy danh sách rạp:', error));
+    }, []);
 
-    //tạo giả định để find nóa
-    const mockMovies = [
-        { id: 1, title: "Avengers: Endgame" },
-        { id: 2, title: "Spider-Man: No Way Home" },
-        { id: 3, title: "Doctor Strange" },
-        { id: 4, title: "Black Panther" },
-        { id: 5, title: "Iron Man" },
-        { id: 6, title: "Conan" },
-        { id: 7, title: "Thám tử Read" },
-        { id: 8, title: "Doraemon" },
+    // Cache kết quả tìm kiếm
+    const cache = useMemo(() => new Map<string, Movie[]>(), []);
+
+    // Dữ liệu mẫu fallback
+    const fallbackMovies: Movie[] = [
+        { movieID: "6956fbf4-6d8e-4523-b03b-3de42ef84200", movieName: "TOÀN TRÍ ĐỘC GIẢ", movieImage: "", movieTrailerUrl: "https://youtu.be/gvmtoe9zpWM", movieDuration: 116, isRelease: false, releaseDate: "2025-08-01T00:00:00", listLanguageName: "Korean", movieVisualFormat: ["2D"], movieGenres: ["Hành động"] },
     ];
-    const [searchResults, setSearchResults] = useState<{ id: number; title: string }[]>([]);
-    const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const results = mockMovies.filter((movie) =>
-            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setSearchResults(results);
-        console.log("Kết quả tìm kiếm:", results);
+
+    // Tìm kiếm realtime với cache và retry
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setSearchResults([]);
+            setError(null);
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        const cachedResults = cache.get(searchTerm.toLowerCase());
+        if (cachedResults) {
+            setSearchResults(cachedResults);
+            setIsLoading(false);
+            return;
+        }
+
+        let retries = 0;
+        const maxRetries = 3;
+        const retryDelay = 2000; // 2 giây giữa các lần thử lại
+
+        const fetchData = () => {
+            const url = `http://localhost:5229/api/movie/SearchMovieTake5?movieName=${encodeURIComponent(searchTerm.trim())}`;
+            console.log('URL yêu cầu:', url);
+
+            fetch(url)
+                .then((response) => {
+                    console.log('Trạng thái HTTP:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`Lỗi HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    console.log('Dữ liệu API:', data);
+                    if (data.status === 'Success' && Array.isArray(data.data)) {
+                        const results = data.data;
+                        cache.set(searchTerm.toLowerCase(), results);
+                        setSearchResults(results);
+                    } else {
+                        setSearchResults([]);
+                        setError('Không tìm thấy phim.');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Lỗi khi gọi API:', error.message);
+                    if (retries < maxRetries) {
+                        retries++;
+                        console.log(`Thử lại lần ${retries}/${maxRetries} sau ${retryDelay}ms...`);
+                        setTimeout(fetchData, retryDelay);
+                    } else {
+                        setError('Không thể kết nối đến server. Sử dụng dữ liệu mẫu.');
+                        setSearchResults(fallbackMovies); // Sử dụng dữ liệu mẫu sau khi hết retries
+                    }
+                })
+                .finally(() => setIsLoading(false));
+        };
+
+        fetchData();
+    }, [searchTerm, cache, fallbackMovies]);
+
+    const handleInfo = () => {
+        const roleName = localStorage.getItem('role') || '';
+        const roles: string[] = roleName ? roleName.split(',') : [];
+
+        if (roles.includes('Cashier') || roles.includes('TheaterManager') || roles.includes('Director') || roles.includes('MovieManager') || roles.includes('FacilitiesManager')) {
+            navigate('/HomeAdmin');
+        } else if (roles.includes('Customer')) {
+            navigate('/info');
+        }
+    };
+
+    const handleBooking = () => {
+        navigate('/booking');
     };
 
     return (
-        <nav className=" shadow-md text-white relative z-50">
+        <nav className="shadow-md text-white relative z-50">
             <div className="flex items-center justify-between px-4 py-2">
                 <div className="flex justify-start items-start">
                     <button onClick={() => navigate("/")} className="flex items-center space-x-2">
@@ -81,36 +164,55 @@ function Nav() {
                     </div>
                 </div>
                 <div className="flex justify-center flex-row">
-                    <form
-                        onSubmit={handleSearch}
-                        className="flex items-center border border-gray-300 rounded-3xl overflow-hidden shadow-sm w-[250px] mr-5">
-                        <input
-                            type="text"
-                            placeholder="Tìm phim..."
-                            className="px-4 py-2 w-full text-black focus:outline-none"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)} />
-                        <button type="submit" className="bg-purple-600 text-white px-4 py-2 hover:bg-purple-800 transition">Tìm</button>
-                        {/* Phần giả định dữ liệu */}
-                        {searchResults.length > 0 && (
-                            <div className="absolute top-full mt-2 bg-white text-black rounded shadow-md w-[250px] z-50">
+                    <div className="relative">
+                        <form
+                            onSubmit={(e) => e.preventDefault()}
+                            className="flex items-center bg-gray-800 text-gray-400 border border-gray-700 rounded-full px-4 py-2 w-[300px] focus-within:border-indigo-500 transition duration-300">
+                            <input
+                                type="text"
+                                placeholder="Tìm phim, rạp"
+                                className="w-full bg-transparent outline-none text-sm"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)} />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="ml-2"
+                            >
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </form>
+                        {isLoading && (
+                            <div className="absolute top-full mt-2 bg-gray-800 text-white rounded shadow-md w-[300px] z-50 p-2 text-center">
+                                Đang tải...
+                            </div>
+                        )}
+
+                        {searchResults.length > 0 && !isLoading && !error && (
+                            <div className="absolute top-full mt-2 bg-white text-black rounded shadow-md w-[300px] z-50 max-h-48 overflow-y-auto">
                                 {searchResults.map((movie) => (
                                     <div
-                                        key={movie.id}
+                                        key={movie.movieID}
                                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                                         onClick={() => {
-                                            console.log("Chọn phim:", movie.title);
-                                            setSearchTerm(movie.title); // Set lại input nếu muốn
+                                            setSearchTerm(movie.movieName);
                                             setSearchResults([]);
                                         }}
                                     >
-                                        {movie.title}
+                                        {movie.movieName}
                                     </div>
                                 ))}
                             </div>
                         )}
-
-                    </form>
+                    </div>
                     {userEmail ? (
                         <div className="flex items-center gap-2">
                             <img src={user} alt="user" className="w-7" />
@@ -124,7 +226,6 @@ function Nav() {
                 </div>
             </div>
 
-            {/* Mobile menu overlay */}
             {isMenuOpen && (
                 <div className="fixed inset-0 bg-slate-900/90 text-white p-6 z-50" style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
                     <div className="flex justify-between items-center mb-6">
@@ -145,7 +246,7 @@ function Nav() {
                 </div>
             )}
 
-            <div className={`md:flex justify-between items-center px-4 py-2  text-sm ${isMenuOpen ? 'hidden' : 'block'} md:block`}>
+            <div className={`md:flex justify-between items-center px-4 py-2 text-sm ${isMenuOpen ? 'hidden' : 'block'} md:block`}>
                 <div className="flex flex-wrap gap-4 w-full md:w-1/2">
                     <span onClick={() => setIsOpen(!isOpen)} className="cursor-pointer flex items-center gap-1 hover:text-purple-300">
                         <MapPinIcon className="w-5 h-5 text-purple-400" />
@@ -153,9 +254,15 @@ function Nav() {
                     </span>
                     {isOpen && (
                         <div className="absolute left-4 top-[131px] z-50 bg-slate-900 rounded shadow-lg p-4 grid grid-cols-3 md:grid-cols-3 gap-3">
-                            <div onClick={() => navigate('/cinezone')} className="text-slate-200 font-bold cursor-pointer">Cinema Hòa Hưng (TP HCM)</div>
-                            <div onClick={() => navigate('/cinezone')} className="text-slate-200 font-bold cursor-pointer">Cinema Vũng Tàu (TP HCM)</div>
-                            <div onClick={() => navigate('/cinezone')} className="text-slate-200 font-bold cursor-pointer">Cinema Quốc Thanh (TP HCM)</div>
+                            {cinemas.map((cinema) => (
+                                <div
+                                    key={cinema.cinemaId}
+                                    onClick={() => navigate('/cinezone')}
+                                    className="text-slate-200 font-bold cursor-pointer"
+                                >
+                                    {cinema.cinemaName} ({cinema.cinemaLocation})
+                                </div>
+                            ))}
                         </div>
                     )}
                     <span onClick={() => navigate('/listfilm')} className="cursor-pointer flex items-center gap-1 hover:text-purple-300">

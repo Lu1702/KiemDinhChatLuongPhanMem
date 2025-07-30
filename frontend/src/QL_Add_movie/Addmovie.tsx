@@ -437,8 +437,11 @@ const AddMovie: React.FC = () => {
             const movieId = movies[deleteIndex].movieId;
             if (movieId) {
                 try {
-                    await axios.delete(`http://localhost:5229/api/movie/deleteMovie/${movieId}`, {
-                        headers: { Authorization: `Bearer ${TOKEN}` },
+                    await axios.delete(`http://localhost:5229/api/movie/DeleteMovie/${movieId}`, {
+                        headers: {
+                            Authorization: `Bearer ${TOKEN}`,
+                            accept: '*/*'
+                        },
                     });
                     setThanhCong("Xóa phim thành công!");
                     fetchMovies(page);
@@ -515,7 +518,7 @@ const AddMovie: React.FC = () => {
                                     className="p-2 border rounded bg-transparent text-slate-300 font-normal"
                                 >
                                     <option className="text-black bg-slate-600" value="">
-                                        Chọn ngôn ngữ
+                                        Chọn ngôn ngữ gốc
                                     </option>
                                     {languageOptions.map((lang) => (
                                         <option
@@ -781,12 +784,78 @@ const AddMovie: React.FC = () => {
                                             <td className="text-white">
                                                 {m.dinhdang?.length > 0 ? m.dinhdang.join(", ") : "Không có định dạng"}
                                             </td>
-                                            <td className="text-white">
-                                                <button onClick={() => handleEdit(i)} className="text-blue-500 mr-2">
+                                            <td className="text-white flex flex-row gap-2 pt-6">
+                                                <button
+                                                    onClick={() => handleEdit(i)}
+                                                    className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 ease-in-out delay-75 hover:bg-blue-700 text-white text-xs font-medium rounded-md hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-200"
+                                                >
+                                                    <svg
+                                                        className="h-4 w-4 mr-0.5 self-center items-center"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                    >
+                                                        <path
+                                                            d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"
+                                                        ></path>
+                                                    </svg>
                                                     Sửa
                                                 </button>
-                                                <button onClick={() => handleDelete(i)} className="text-red-500">
-                                                    Xóa
+                                                <button
+                                                    onClick={() => handleDelete(i)}
+                                                    className="group relative flex h-10 w-10 flex-col items-center justify-center overflow-hidden rounded-md border-2 border-red-800 bg-red-400 hover:bg-red-600"
+                                                >
+                                                    <svg
+                                                        viewBox="0 0 1.625 1.625"
+                                                        className="absolute -top-5 fill-white delay-100 group-hover:top-4 group-hover:animate-[spin_1.4s] group-hover:duration-1000"
+                                                        height="12"
+                                                        width="12"
+                                                    >
+                                                        <path
+                                                            d="M.471 1.024v-.52a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099h-.39c-.107 0-.195 0-.195-.195"
+                                                        ></path>
+                                                        <path
+                                                            d="M1.219.601h-.163A.1.1 0 0 1 .959.504V.341A.033.033 0 0 0 .926.309h-.26a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099v-.39a.033.033 0 0 0-.032-.033"
+                                                        ></path>
+                                                        <path
+                                                            d="m1.245.465-.15-.15a.02.02 0 0 0-.016-.006.023.023 0 0 0-.023.022v.108c0 .036.029.065.065.065h.107a.023.023 0 0 0 .023-.023.02.02 0 0 0-.007-.016"
+                                                        ></path>
+                                                    </svg>
+                                                    <svg
+                                                        width="12"
+                                                        fill="none"
+                                                        viewBox="0 0 39 7"
+                                                        className="origin-right duration-500 group-hover:rotate-90"
+                                                    >
+                                                        <line stroke-width="3" stroke="white" y2="5" x2="39" y1="5"></line>
+                                                        <line
+                                                            stroke-width="2"
+                                                            stroke="white"
+                                                            y2="1.5"
+                                                            x2="26.0357"
+                                                            y1="1.5"
+                                                            x1="12"
+                                                        ></line>
+                                                    </svg>
+                                                    <svg
+                                                        width="12"
+                                                        fill="none"
+                                                        viewBox="0 0 33 39"
+                                                        className=""
+                                                    >
+                                                        <mask fill="white" id="path-1-inside-1_8_19">
+                                                            <path
+                                                                d="M0 0H33V35C33 37.2091 31.2091 39 29 39H4C1.79086 39 0 37.2091 0 35V0Z"
+                                                            ></path>
+                                                        </mask>
+                                                        <path
+                                                            mask="url(#path-1-inside-1_8_19)"
+                                                            fill="white"
+                                                            d="M0 0H33H0ZM37 35C37 39.4183 33.4183 43 29 43H4C-0.418278 43 -4 39.4183 -4 35H4H29H37ZM4 43C-0.418278 43 -4 39.4183 -4 35V0H4V35V43ZM37 0V35C37 39.4183 33.4183 43 29 43V35V0H37Z"
+                                                        ></path>
+                                                        <path stroke-width="3" stroke="white" d="M12 6L12 29"></path>
+                                                        <path stroke-width="3" stroke="white" d="M21 6V29"></path>
+                                                    </svg>
                                                 </button>
                                             </td>
                                         </tr>

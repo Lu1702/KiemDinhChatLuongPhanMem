@@ -265,7 +265,7 @@ namespace backend.Services.MovieServices
                             return new GenericRespondDTOs()
                             {
                                 Status = GenericStatusEnum.Success.ToString(),
-                                message = "Xoóa thành công"
+                                message = "Xóa thành công"
                             };
 
                         }else if (findOrder.Any())
@@ -285,7 +285,7 @@ namespace backend.Services.MovieServices
                             return new GenericRespondDTOs()
                             {
                                 Status = GenericStatusEnum.Success.ToString(),
-                                message = "Xoóa thành công"
+                                message = "Xóa thành công"
                             };
                         }
                 }

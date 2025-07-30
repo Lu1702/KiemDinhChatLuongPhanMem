@@ -7,25 +7,20 @@ import { useNavigate } from "react-router-dom";
 
 const MovieSlider = () => {
     const navigate = useNavigate();
-    const handleShowtimes = () => {
-        navigate("/showtimes");
+    const handleListfilm = () => {
+        navigate("/listfilm");
     }
     const slides = [
         {
             image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/chaching.jpg",
         },
         {
-            image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/1215wx365h_6_.jpg",
+            image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/BANNER-WEB.jpg",
         },
         {
-            image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/1215wx365h_7_.jpg",
+            image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/1215wx365h_8_.jpg",
         },
-        {
-            image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/1215wx365h_7_.jpg",
-        },
-        {
-            image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/1215wx365h_7_.jpg",
-        },
+
     ];
 
     return (
@@ -40,7 +35,7 @@ const MovieSlider = () => {
                     <SwiperSlide key={index}>
                         <div className="relative w-full flex justify-center items-center">
                             <img
-                                onClick={handleShowtimes}
+                                onClick={handleListfilm}
                                 src={slide.image}
                                 alt={`slide-${index}`}
                                 className="w-full max-h-[400px] object-cover aspect-[1215/365] rounded-md"
