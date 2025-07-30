@@ -7,4 +7,6 @@ public class GetMovieShowedDTOList
     public string MovieName { get; set; } = string.Empty;
     
     public string MovieImage { get; set; } = string.Empty;
+    
+    public string TrailerURL { get; set; } = string.Empty;
 }

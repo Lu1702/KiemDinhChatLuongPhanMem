@@ -689,6 +689,7 @@ namespace backend.Services.MovieServices
                 MovieId = x.movieId,
                 MovieName = x.movieName,
                 MovieImage = x.movieImage,
+                TrailerURL = x.movieTrailerUrl
             }).Take(5).ToListAsync();
             return new GenericRespondWithObjectDTO<List<GetMovieShowedDTOList>>()
             {
@@ -710,6 +711,7 @@ namespace backend.Services.MovieServices
                 MovieId = x.movieId,
                 MovieName = x.movieName,
                 MovieImage = x.movieImage,
+                TrailerURL = x.movieTrailerUrl
             }).Take(5).ToListAsync();
             return new GenericRespondWithObjectDTO<List<GetMovieShowedDTOList>>()
             {
