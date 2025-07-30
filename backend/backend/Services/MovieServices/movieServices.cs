@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
+using System.Transactions;
 
 namespace backend.Services.MovieServices
 {
@@ -124,9 +125,185 @@ namespace backend.Services.MovieServices
         // Không xóa phim chỉ set bằng isDelete = true thôi tùy lúc
         public async Task<GenericRespondDTOs> remove(string Id)
         {
-            // Logic như sau nêếu phim chưa có lic chiếu th xóa cứng
-            // Nếu phim có lịch chiếu rồi mà nó đã chiếu và 
-            return null!;
+            if (String.IsNullOrEmpty(Id))
+            {
+                return new GenericRespondDTOs
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Bạn chưa nhập ID"
+                };
+            }
+            
+            var findMovie = await _dataContext.movieInformation.FindAsync(Id);
+            var findMovieGenres = _dataContext.movieGenreInformation.Where(genre => genre.movieId == Id).ToList();
+            var findMovieVisualFormat = _dataContext
+                .movieVisualFormatDetails.Where(visualFormat => visualFormat.movieId == Id).ToList();
+            if (findMovie == null && !findMovieGenres.Any() && !findMovieVisualFormat.Any())
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Không tìm thấy phim"
+                };
+            }
+         
+            var timKiemLichChieuLienQuan =
+                await _dataContext.movieSchedule.Where
+                    (x => x.movieId.Equals(Id)).ToListAsync();
+            
+            await using var transaction = await _dataContext.Database.BeginTransactionAsync();
+            try
+            {
+                if (!timKiemLichChieuLienQuan.Any())
+                {
+                    _dataContext.movieGenreInformation.RemoveRange(findMovieGenres);
+                    _dataContext.movieVisualFormatDetails.RemoveRange(findMovieVisualFormat);
+                    _dataContext.movieInformation.Remove(findMovie);
+                    await _dataContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Success.ToString(),
+                        message = "Đã xóa thành công"
+                    };
+                }
+                
+                var findTicket = await _dataContext
+                    .TicketOrderDetail.Where(order => timKiemLichChieuLienQuan.Select(x => x.movieScheduleId).Contains(order.movieScheduleID)).ToListAsync();
+                if (!findTicket.Any())
+                {
+                    _dataContext.movieGenreInformation.RemoveRange(findMovieGenres);
+                    _dataContext.movieVisualFormatDetails.RemoveRange(findMovieVisualFormat);
+                    _dataContext.movieInformation.Remove(findMovie);
+                    _dataContext.movieSchedule.RemoveRange(timKiemLichChieuLienQuan);
+                    await _dataContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Success.ToString(),
+                        message = "Đã xóa thành công"
+                    };
+                }
+
+                var timKiemLichChieuDaChieu =
+                    timKiemLichChieuLienQuan.ToList();
+                
+                // Tầng số 1 : Kiểm tra để xóa mềm  
+                
+                // Case chuaw chieu
+                if (timKiemLichChieuDaChieu.Any(x => !x.IsDelete))
+                {
+                   
+                         // Tiếnhanfnhf tìm kiếm
+                        var timKiemLichChuaChieu =  
+                            timKiemLichChieuLienQuan.Where(x => x.IsDelete == false).ToList();
+                        // Tiep Tuc Tim Kiem Order Liên quan
+                        var findUnshowedTicket =
+                            findTicket
+                                .Where(x => timKiemLichChuaChieu
+                                    .Select(x => x.movieScheduleId).Contains(x.movieScheduleID)).ToList();
+                        var findOrder = 
+                            _dataContext.Order
+                                .Where(order => findUnshowedTicket.Select(x => x.orderId).Contains(order.orderId)).ToList();
+                        
+                        // Case 1 : Nếu phim chưa chiếu mà đã có người thanh toán thành công thì Khoong cho xoa
+                        if (findOrder.Any(x => !x.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString())))
+                        {
+                            return new GenericRespondDTOs()
+                            {
+                                Status = GenericStatusEnum.Failure.ToString(),
+                                message = "Loi Da co nguoi Dat Ve Khong The Xoa"
+                            };
+
+                        }else if (findOrder.Any(x => x.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString())))
+                        {
+                            // Case 2 : Nếu phim chưa chiếu mà thanh toán thât bại thfi xóa cứng
+                            // Neeus thanh toan that bai
+                            findOrder = findOrder.Where(x => x.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString())).ToList();
+                            _dataContext.movieSchedule.RemoveRange(timKiemLichChuaChieu);
+                            _dataContext.TicketOrderDetail.RemoveRange(findUnshowedTicket);
+                            _dataContext.Order.RemoveRange(findOrder);
+                            _dataContext.movieInformation.Remove(findMovie);
+                            _dataContext.movieGenreInformation.RemoveRange(findMovieGenres);
+                            _dataContext.movieVisualFormatDetails.RemoveRange(findMovieVisualFormat);
+
+                            await _dataContext.SaveChangesAsync();
+                            await transaction.CommitAsync();
+                            
+                            return new GenericRespondDTOs()
+                            {
+                                Status = GenericStatusEnum.Success.ToString(),
+                                message = "Xoóa thành công"
+                            };
+                        }
+                }else if(timKiemLichChieuDaChieu.Any())
+                {
+                    // Tìm kiếm case đã chiếu
+                    timKiemLichChieuDaChieu = timKiemLichChieuDaChieu.Where(x => x.IsDelete == true).ToList();
+                    var findShowedTicket =
+                        findTicket
+                            .Where(x => timKiemLichChieuDaChieu
+                                .Select(x => x.movieScheduleId).Contains(x.movieScheduleID)).ToList();
+                    var findOrder = 
+                        _dataContext.Order
+                            .Where(order => findShowedTicket.Select(x => x.orderId).Contains(order.orderId)
+                                            && order.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString())).ToList();
+                    // Case 1 : Nếu phim đã chiếu mà đã có người thanh toán thành công thì tiến hành xóa mềm
+                        if (!findOrder.Any())
+                        {
+                            var findTicketContaintOrder = _dataContext.TicketOrderDetail
+                                .Where(order => findOrder.Select(x => x.orderId).Contains(order.orderId)).ToList();
+                            _dataContext.TicketOrderDetail.RemoveRange(findTicketContaintOrder);
+                            // Xoas những cái thông tin thanh toán thất bại cho đỡ nănng Dâtabase
+                            _dataContext.Order.RemoveRange(findOrder);
+                            // Tien Hanh Update
+                            findMovie.isDelete = true;
+                            _dataContext.movieInformation.Update(findMovie);
+                            await _dataContext.SaveChangesAsync();
+                            await transaction.CommitAsync();
+
+                            return new GenericRespondDTOs()
+                            {
+                                Status = GenericStatusEnum.Success.ToString(),
+                                message = "Xoóa thành công"
+                            };
+
+                        }else if (findOrder.Any())
+                        {
+                            // Case 2 : Nếu phim đã chiếu mà thanh toán thât bại thfi xóa cứng
+                            // Neeus thanh toan that bai
+                            _dataContext.movieSchedule.RemoveRange(timKiemLichChieuDaChieu);
+                            _dataContext.TicketOrderDetail.RemoveRange(findShowedTicket);
+                            _dataContext.Order.RemoveRange(findOrder);
+                            _dataContext.movieInformation.Remove(findMovie);
+                            _dataContext.movieGenreInformation.RemoveRange(findMovieGenres);
+                            _dataContext.movieVisualFormatDetails.RemoveRange(findMovieVisualFormat);
+
+                            await _dataContext.SaveChangesAsync();
+                            await transaction.CommitAsync();
+
+                            return new GenericRespondDTOs()
+                            {
+                                Status = GenericStatusEnum.Success.ToString(),
+                                message = "Xoóa thành công"
+                            };
+                        }
+                }
+            }
+            catch (Exception e)
+            {
+                await transaction.RollbackAsync();
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Không thể xóa được do lỗi"
+                };
+            }
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Không thể xóa được do lỗi"
+            };
         }
         
 
@@ -143,12 +320,20 @@ namespace backend.Services.MovieServices
                 var findMovieVisualFormat = _dataContext.movieVisualFormatDetails
                     .Where(x => x.movieId == movieID)
                     .Include(x => x.movieVisualFormat)
-                    .ToDictionary(x => x.movieVisualFormatId, x => x.movieVisualFormat.movieVisualFormatName);
+                    .Select(x => new MovieVisualFormatGetDetailResponseDTO()
+                    {
+                        movieVisualFormatId = x.movieVisualFormat.movieVisualFormatId,
+                        movieVisualFormatName = x.movieVisualFormat.movieVisualFormatName,
+                    }).ToList();
 
                 var findMovieGenre = _dataContext.movieGenreInformation.
                     Where(x => x.movieId == movieID)
                     .Include(x => x.movieGenre)
-                    .ToDictionary(x => x.movieGenreId, x => x.movieGenre.movieGenreName);
+                    .Select(x => new MovieGenreGetDetailResponseDTO()
+                    {
+                        movieGenreId = x.movieGenre.movieGenreId,
+                        movieGenreName = x.movieGenre.movieGenreName,
+                    }).ToList();
                 Dictionary<string , string> MovieLanguage = new Dictionary<string, string>();
                 Dictionary<string , string> MovieMiniumAge = new Dictionary<string, string>();
                 
@@ -194,9 +379,7 @@ namespace backend.Services.MovieServices
                 .Include(x => x.Language)
                 .Include(x => x.minimumAge)
                 .FirstOrDefault();
-
-
-
+            
             if (findLanguageAndMiniumAgeAndMovieInfo != null)
             {
 
