@@ -730,15 +730,16 @@ const AddMovie: React.FC = () => {
                                     backgroundImage: "url('https://www.lfs.com.my/images/cinema%20background.jpg')",
                                 }}
                             >
-                                <thead className="bg-slate-800 text-white">
+                                <thead className="bg-slate-600 text-white">
                                     <tr>
                                         <th className="px-4 py-2">STT</th>
                                         <th className="px-4 py-2">Poster</th>
                                         <th className="px-4 py-2 w-72">Tên</th>
                                         <th className="px-4 py-2">Thể loại</th>
+                                        <th className="px-4 py-2">Trailer</th>
                                         <th className="px-4 py-2">Ngày ra mắt</th>
                                         <th className="px-4 py-2">Ngôn ngữ</th>
-                                        <th className="px-4 py-2">Đạo diễn</th>
+                                        <th className="px-4 py-2">Địn dạng</th>
                                         <th className="px-4 py-2">Hành động</th>
                                     </tr>
                                 </thead>
@@ -761,9 +762,25 @@ const AddMovie: React.FC = () => {
                                             <td className="text-white">
                                                 {m.genres?.length > 0 ? m.genres.join(", ") : "Không có thể loại"}
                                             </td>
+                                            <td className="text-white">
+                                                {m.trailer ? (
+                                                    <a
+                                                        href={m.trailer}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-500 hover:underline"
+                                                    >
+                                                        Xem Trailer
+                                                    </a>
+                                                ) : (
+                                                    <span>Không có trailer</span>
+                                                )}
+                                            </td>
                                             <td className="text-white">{m.releaseDate || "Không có ngày"}</td>
                                             <td className="text-white">{m.language || "Không có ngôn ngữ"}</td>
-                                            <td className="text-white">{m.director || "Không có đạo diễn"}</td>
+                                            <td className="text-white">
+                                                {m.dinhdang?.length > 0 ? m.dinhdang.join(", ") : "Không có định dạng"}
+                                            </td>
                                             <td className="text-white">
                                                 <button onClick={() => handleEdit(i)} className="text-blue-500 mr-2">
                                                     Sửa
@@ -780,17 +797,23 @@ const AddMovie: React.FC = () => {
                                 <button
                                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={page === 1}
-                                    className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
-                                >
-                                    Trang trước
+                                    className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-transparent backdrop-blur-lg px-6 py-2 text-base text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20">
+                                    <span className="text-lg">Trang trước</span>
+                                    <div
+                                        className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
+                                        <div className="relative h-full w-10 bg-white/30"></div>
+                                    </div>
                                 </button>
-                                <span className="px-4 py-2 text-white">Trang {page} / {totalPages}</span>
+                                <span className="px-4 py-2 text-white text-lg">Trang {page} / {totalPages}</span>
                                 <button
                                     onClick={() => setPage((prev) => prev + 1)}
                                     disabled={page === totalPages}
-                                    className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
-                                >
-                                    Trang sau
+                                    className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-transparent backdrop-blur-lg px-6 py-2 text-base text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20">
+                                    <span className="text-lg">Trang sau</span>
+                                    <div
+                                        className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
+                                        <div className="relative h-full w-10 bg-white/30"></div>
+                                    </div>
                                 </button>
                             </div>
                         </>

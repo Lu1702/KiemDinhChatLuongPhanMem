@@ -336,7 +336,8 @@ namespace backend.Services.MovieServices
             // Lấy giờ hiện tại
             DateTime dateTime = DateTime.Now;
             var getAllData = _dataContext.movieInformation.ToList();
-            var getAllMovieData = await _dataContext.movieInformation
+            Console.WriteLine((page - 1) * pagesize);
+            var getAllMovieData = _dataContext.movieInformation
                 .Select(x => new movieRespondDTO()
                 {
                     movieName = x.movieName,
@@ -349,16 +350,15 @@ namespace backend.Services.MovieServices
                     releaseDate = x.ReleaseDate,
                     movieVisualFormat = x.movieVisualFormatDetail.Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
                     isRelease = x.movieSchedule.Any(x => x.movieId.Equals(x.movieId) && dateTime >= x.ScheduleDate && !x.IsDelete) ? true : false,
-                    minimumAge = 
+                    minimumAge =
                     _dataContext.minimumAges.FirstOrDefault(m => m.minimumAgeID.Equals(x.minimumAgeID)).minimumAgeInfo,
-                    minimumAgeDescription = 
+                    minimumAgeDescription =
                     _dataContext.minimumAges.FirstOrDefault(m => m.minimumAgeID.Equals(x.minimumAgeID)).minimumAgeDescription
-                }).
-                Take(pagesize).Skip((page - 1) * pagesize).
-                ToListAsync();
+                })
+                .Skip((page - 1) * pagesize).Take(pagesize);
             var newPagniationRespond = new PagniationRespond()
             {
-                movieRespondDTOs = getAllMovieData,
+                movieRespondDTOs = getAllMovieData.ToList(),
                 page = page,
                 pageSize = (int)Math.Ceiling((double)getAllData.Count() / pagesize),
                 totalCount = getAllData.Count,
