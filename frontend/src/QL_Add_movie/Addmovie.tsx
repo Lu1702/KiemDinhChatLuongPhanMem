@@ -26,14 +26,15 @@ interface VisualFormat {
 }
 
 interface Movie {
+    movieId?: string;
     name: string;
     image: string | null;
-    description: string;
-    director: string;
-    cast: string;
+    description?: string;
+    director?: string;
+    cast?: string;
     trailer: string;
     duration: number;
-    ageLimit: string;
+    ageLimit?: string;
     language: string;
     releaseDate: string;
     genres: string[];
@@ -45,12 +46,12 @@ interface ErrorResponse {
         status: string;
         message: string;
     };
-    errors?: string[];
+    errors?: string | string[];
 }
 
 interface CreateMovieResponse {
-    imageUrl?: string;
-    movieId?: string;
+    movieID?: string;
+    movieImage?: string;
     message?: string;
 }
 
@@ -67,6 +68,7 @@ interface FormState {
 }
 
 const TOKEN = localStorage.getItem('authToken');
+
 const AddMovie: React.FC = () => {
     const [theloaiOptions, setTheloaiOptions] = useState<Genre[]>([]);
     const [dinhDangOptions, setDinhDangOptions] = useState<VisualFormat[]>([]);
@@ -92,6 +94,10 @@ const AddMovie: React.FC = () => {
     const [editIndex, setEditIndex] = useState<number | null>(null);
     const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         return () => {
@@ -117,18 +123,51 @@ const AddMovie: React.FC = () => {
                 );
             }
             const data = await res.json();
-            if (!Array.isArray(data)) {
-                throw new Error(`${errorMessage}: Dữ liệu không đúng định dạng`);
-            }
-            setData(data);
             console.log(`${errorMessage.split(":")[0]}:`, data);
+            setData(data);
         } catch (err: any) {
             console.error("Lỗi chi tiết:", err);
             setLoi(`${errorMessage}: ${err.message}`);
+        } finally {
+            if (url.includes("getAllMoviesPagniation")) {
+                setLoading(false);
+            }
         }
     };
 
+    const fetchMovies = (page: number) => {
+        fetchData(
+            `http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`,
+            (data) => {
+                const formattedMovies = (Array.isArray(data.movieRespondDTOs) ? data.movieRespondDTOs : []).map((item: any) => ({
+                    movieId: item.movieID || undefined,
+                    name: item.movieName || "Không có tên",
+                    image: item.movieImage || null,
+                    description: item.movieDescription || "Không có mô tả",
+                    director: item.movieDirector || "Không có đạo diễn",
+                    cast: item.movieActor || "Không có diễn viên",
+                    trailer: item.movieTrailerUrl || "",
+                    duration: item.movieDuration || 0,
+                    ageLimit: item.minimumAgeID || "",
+                    language: item.listLanguageName || "Không có ngôn ngữ",
+                    releaseDate: item.releaseDate ? new Date(item.releaseDate).toLocaleDateString() : "Không có ngày",
+                    genres: item.movieGenres || [],
+                    dinhdang: item.movieVisualFormat || [],
+                }));
+                setMovies(formattedMovies);
+                setTotalPages(Math.ceil(data.totalCount / data.pageSize));
+            },
+            "Không thể tải danh sách phim"
+        );
+    };
+
     useEffect(() => {
+        if (!TOKEN) {
+            setLoi("Không tìm thấy token xác thực");
+            setLoading(false);
+            return;
+        }
+
         fetchData(
             "http://localhost:5229/api/MovieGenre/GetMovieGenreList",
             setTheloaiOptions,
@@ -149,7 +188,8 @@ const AddMovie: React.FC = () => {
             setLanguageOptions,
             "Không thể tải danh sách ngôn ngữ"
         );
-    }, []);
+        fetchMovies(page);
+    }, [page]);
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -185,48 +225,98 @@ const AddMovie: React.FC = () => {
         event.preventDefault();
         setLoi("");
         setThanhCong("");
+        setIsSubmitting(true);
 
-        // Validation
-        if (!form.name) return setLoi("Vui lòng nhập tên phim");
-        if (!form.description) return setLoi("Vui lòng nhập mô tả phim");
-        if (!form.duration || isNaN(parseInt(form.duration)) || parseInt(form.duration) <= 0)
-            return setLoi("Vui lòng nhập thời lượng hợp lệ (số phút lớn hơn 0)");
-        if (!form.actor) return setLoi("Vui lòng nhập diễn viên");
-        if (!form.director) return setLoi("Vui lòng nhập đạo diễn");
-        if (!form.trailer) return setLoi("Vui lòng nhập URL trailer");
+        // Xác thực
+        if (!form.name) {
+            setLoi("Vui lòng nhập tên phim");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!form.description) {
+            setLoi("Vui lòng nhập mô tả phim");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!form.duration || isNaN(parseInt(form.duration)) || parseInt(form.duration) <= 0) {
+            setLoi("Vui lòng nhập thời lượng hợp lệ (số phút lớn hơn 0)");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!form.actor) {
+            setLoi("Vui lòng nhập diễn viên");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!form.director) {
+            setLoi("Vui lòng nhập đạo diễn");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!form.trailer) {
+            setLoi("Vui lòng nhập URL trailer");
+            setIsSubmitting(false);
+            return;
+        }
         const urlPattern = /^(https?:\/\/[^\s$.?#].[^\s]*)$/;
-        if (!urlPattern.test(form.trailer)) return setLoi("URL trailer không hợp lệ");
-        if (!form.releaseDate) return setLoi("Vui lòng chọn ngày ra mắt");
+        if (!urlPattern.test(form.trailer)) {
+            setLoi("URL trailer không hợp lệ");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!form.releaseDate) {
+            setLoi("Vui lòng chọn ngày ra mắt");
+            setIsSubmitting(false);
+            return;
+        }
         const parsedDate = new Date(form.releaseDate);
-        if (isNaN(parsedDate.getTime())) return setLoi("Ngày ra mắt không hợp lệ");
-        if (!form.languageId) return setLoi("Vui lòng chọn ngôn ngữ");
-        if (!form.ageId) return setLoi("Vui lòng chọn độ tuổi");
-        if (selectedGenres.length === 0) return setLoi("Vui lòng chọn ít nhất một thể loại");
-        if (selectedDinhdang.length === 0) return setLoi("Vui lòng chọn ít nhất một định dạng");
-        if (!selectedFile) return setLoi("Vui lòng chọn poster phim");
-        if (!["image/jpeg", "image/png"].includes(selectedFile.type))
-            return setLoi("Poster phim phải là file JPEG hoặc PNG");
-        if (selectedFile.size > 5 * 1024 * 1024)
-            return setLoi("Poster phim không được vượt quá 5MB");
-
-        // Kiểm tra dữ liệu options
-        if (theloaiOptions.length === 0) return setLoi("Danh sách thể loại chưa được tải");
-        if (dinhDangOptions.length === 0) return setLoi("Danh sách định dạng chưa được tải");
-        if (languageOptions.length === 0) return setLoi("Danh sách ngôn ngữ chưa được tải");
-        if (ageOptions.length === 0) return setLoi("Danh sách độ tuổi chưa được tải");
+        if (isNaN(parsedDate.getTime())) {
+            setLoi("Ngày ra mắt không hợp lệ");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!form.languageId) {
+            setLoi("Vui lòng chọn ngôn ngữ");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!form.ageId) {
+            setLoi("Vui lòng chọn độ tuổi");
+            setIsSubmitting(false);
+            return;
+        }
+        if (selectedGenres.length === 0) {
+            setLoi("Vui lòng chọn ít nhất một thể loại");
+            setIsSubmitting(false);
+            return;
+        }
+        if (selectedDinhdang.length === 0) {
+            setLoi("Vui lòng chọn ít nhất một định dạng");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!selectedFile && editIndex === null) {
+            setLoi("Vui lòng chọn poster phim");
+            setIsSubmitting(false);
+            return;
+        }
+        if (selectedFile && !["image/jpeg", "image/png"].includes(selectedFile.type)) {
+            setLoi("Poster phim phải là file JPEG hoặc PNG");
+            setIsSubmitting(false);
+            return;
+        }
+        if (selectedFile && selectedFile.size > 5 * 1024 * 1024) {
+            setLoi("Poster phim không được vượt quá 5MB");
+            setIsSubmitting(false);
+            return;
+        }
 
         const language = languageOptions.find((lang) => lang.languageId === form.languageId);
-        if (!language) return setLoi("Ngôn ngữ không hợp lệ");
-
-        const genres = selectedGenres.map((id) => {
-            const genre = theloaiOptions.find((g) => g.genreId === id);
-            return genre ? genre.genreName : "Unknown Genre";
-        });
-
-        const dinhdang = selectedDinhdang.map((id) => {
-            const format = dinhDangOptions.find((d) => d.movieVisualId === id);
-            return format ? format.movieVisualFormatDetail : "Unknown Format";
-        });
+        if (!language) {
+            setLoi("Ngôn ngữ không hợp lệ");
+            setIsSubmitting(false);
+            return;
+        }
 
         // Tạo FormData
         const formData = new FormData();
@@ -239,66 +329,41 @@ const AddMovie: React.FC = () => {
         formData.append("releaseDate", parsedDate.toISOString());
         formData.append("languageId", form.languageId);
         formData.append("minimumAgeID", form.ageId);
-        selectedGenres.forEach((genreId) => formData.append("movieGenreList[]", genreId));
-        selectedDinhdang.forEach((formatId) => formData.append("visualFormatList[]", formatId));
-        formData.append("movieImage", selectedFile);
+        selectedGenres.forEach((genreId) => formData.append("movieGenreList", genreId));
+        selectedDinhdang.forEach((formatId) => formData.append("visualFormatList", formatId));
+        if (selectedFile) {
+            formData.append("movieImage", selectedFile);
+        }
 
-        console.log("FormData entries:");
-        Array.from(formData.entries()).forEach(([key, value]) => {
-            console.log(`${key}: ${value instanceof File ? value.name : value}`);
+        // Ghi log nội dung FormData để gỡ lỗi
+        const formDataEntries: [string, FormDataEntryValue][] = [];
+        formData.forEach((value, key) => formDataEntries.push([key, value]));
+        formDataEntries.forEach(([key, value]) => {
+            console.log(`${key}: ${value}`);
         });
-        console.log("TOKEN:", TOKEN);
-        console.log("Genres selected:", selectedGenres);
-        console.log("Formats selected:", selectedDinhdang);
-        console.log("Language selected:", form.languageId);
-
-        // Kiểm tra TOKEN
-        if (!TOKEN) return setLoi("Không tìm thấy token xác thực");
 
         try {
-            const res = await axios.post<CreateMovieResponse>(
-                "http://localhost:5229/api/movie/createMovie",
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${TOKEN}`,
-                        "Content-Type": "multipart/form-data",
-                    },
-                    timeout: 30000,
-                }
-            );
+            const url = editIndex !== null
+                ? `http://localhost:5229/api/movie/editMovie?movieID=${movies[editIndex].movieId}`
+                : "http://localhost:5229/api/movie/createMovie";
+            const method = editIndex !== null ? "patch" : "post";
 
-            console.log("API response:", res.data);
+            const res = await axios.request<CreateMovieResponse>({
+                method,
+                url,
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    "Content-Type": "multipart/form-data",
+                },
+                data: formData as any,
+                timeout: 30000,
+            });
+
+            console.log("Phản hồi từ API (create/update):", res.data);
 
             if (res.status === 200 || res.status === 201 || res.status === 204) {
-                setThanhCong("Tạo phim thành công!");
-                if (!res.data.imageUrl) {
-                    console.warn("API không trả về imageUrl, sử dụng URL tạm thời.");
-                }
-                const newMovie: Movie = {
-                    name: form.name,
-                    image: res.data.imageUrl || (selectedFile ? URL.createObjectURL(selectedFile) : null),
-                    description: form.description,
-                    director: form.director,
-                    cast: form.actor,
-                    trailer: form.trailer,
-                    duration: parseInt(form.duration) || 0,
-                    ageLimit: form.ageId,
-                    language: language.languageDetail || "Unknown Language",
-                    releaseDate: form.releaseDate,
-                    genres,
-                    dinhdang,
-                };
-
-                if (editIndex !== null) {
-                    const updatedMovies = [...movies];
-                    updatedMovies[editIndex] = newMovie;
-                    setMovies(updatedMovies);
-                    setEditIndex(null);
-                } else {
-                    setMovies((prev) => [...prev, newMovie]);
-                }
-
+                setThanhCong(editIndex !== null ? "Cập nhật phim thành công!" : "Tạo phim thành công!");
+                fetchMovies(page);
                 setForm({
                     name: "",
                     description: "",
@@ -313,25 +378,25 @@ const AddMovie: React.FC = () => {
                 setSelectedFile(null);
                 setSelectedGenres([]);
                 setSelectedDinhdang([]);
-                console.log("Form after reset:", form);
-                console.log("Movies after update:", movies);
+                setEditIndex(null);
             } else {
                 throw new Error(`Lỗi từ server: ${res.status}`);
             }
         } catch (err: any) {
-            console.error("Lỗi chi tiết:", err);
             let errorMessage = "Lỗi không xác định";
             if (err.response) {
+                const errorData = err.response.data;
                 errorMessage =
-                    err.response.data?.thongTinLoi?.message ||
-                    err.response.data?.errors?.join(", ") ||
-                    `Lỗi từ server: ${err.response.status}`;
+                    errorData?.thongTinLoi?.message ||
+                    (Array.isArray(errorData?.errors) ? errorData.errors.join(", ") : errorData?.errors || `Lỗi từ server: ${err.response.status}`);
             } else if (err.request) {
                 errorMessage = "Không nhận được phản hồi từ server. Vui lòng kiểm tra kết nối mạng.";
             } else {
                 errorMessage = err.message || "Lỗi không xác định";
             }
             setLoi("Lỗi: " + errorMessage);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -347,23 +412,19 @@ const AddMovie: React.FC = () => {
 
         setForm({
             name: movie.name,
-            description: movie.description,
+            description: movie.description || "",
             duration: movie.duration.toString(),
-            actor: movie.cast,
-            director: movie.director,
+            actor: movie.cast || "",
+            director: movie.director || "",
             trailer: movie.trailer,
             releaseDate: movie.releaseDate,
             languageId,
-            ageId: movie.ageLimit,
+            ageId: movie.ageLimit || "",
         });
         setSelectedGenres(genres);
         setSelectedDinhdang(dinhdang);
         setSelectedFile(null);
         setEditIndex(index);
-        console.log("Editing movie:", movie);
-        console.log("Form after edit:", { ...form, languageId });
-        console.log("Genres after edit:", genres);
-        console.log("Formats after edit:", dinhdang);
     };
 
     const handleDelete = (index: number) => {
@@ -371,9 +432,22 @@ const AddMovie: React.FC = () => {
         setShowConfirm(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deleteIndex !== null) {
-            setMovies((prev) => prev.filter((_, i) => i !== deleteIndex));
+            const movieId = movies[deleteIndex].movieId;
+            if (movieId) {
+                try {
+                    await axios.delete(`http://localhost:5229/api/movie/deleteMovie/${movieId}`, {
+                        headers: { Authorization: `Bearer ${TOKEN}` },
+                    });
+                    setThanhCong("Xóa phim thành công!");
+                    fetchMovies(page);
+                } catch (err: any) {
+                    setLoi("Lỗi khi xóa phim: " + (err.response?.data?.message || err.message));
+                }
+            } else {
+                setLoi("Không tìm thấy movieId để xóa");
+            }
         }
         setShowConfirm(false);
         setDeleteIndex(null);
@@ -621,18 +695,15 @@ const AddMovie: React.FC = () => {
                             <div className="text-right mt-4 py-5">
                                 <button
                                     type="submit"
-                                    className="cursor-pointer bg-gradient-to-b from-indigo-500 to-indigo-600 shadow-[0px_4px_32px_0_rgba(99,102,241,.70)] px-6 py-3 rounded-xl border-[1px] border-slate-500 text-white font-medium group"
+                                    disabled={isSubmitting}
+                                    className={`cursor-pointer bg-gradient-to-b from-indigo-500 to-indigo-600 shadow-[0px_4px_32px_0_rgba(99,102,241,.70)] px-6 py-3 rounded-xl border-[1px] border-slate-500 text-white font-medium group ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                                 >
                                     <div className="relative overflow-hidden">
-                                        <p
-                                            className="group-hover:-translate-y-7 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]"
-                                        >
-                                            {editIndex !== null ? "Cập nhật" : "Thêm phim"}
+                                        <p className="group-hover:-translate-y-7 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]">
+                                            {editIndex !== null ? "Cập nhật" : isSubmitting ? "Đang thêm..." : "Thêm phim"}
                                         </p>
-                                        <p
-                                            className="absolute top-7 left-0 group-hover:top-0 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]"
-                                        >
-                                            {editIndex !== null ? "Cập nhật" : "Thêm phim"}
+                                        <p className="absolute top-7 left-0 group-hover:top-0 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]">
+                                            {editIndex !== null ? "Cập nhật" : isSubmitting ? "Đang thêm..." : "Thêm phim"}
                                         </p>
                                     </div>
                                 </button>
@@ -645,81 +716,85 @@ const AddMovie: React.FC = () => {
 
                 <div className="mt-10 px-10">
                     <h3 className="text-3xl font-semibold text-white mb-4">Danh sách phim</h3>
-                    <table
-                        className="w-full backdrop-blur-md p-6 rounded-xl shadow-xl space-y-4 relative z-10 overflow-hidden py-5"
-                        style={{
-                            backgroundImage:
-                                "url('https://www.lfs.com.my/images/cinema%20background.jpg')",
-                        }}
-                    >
-                        <thead className="bg-slate-800 text-white">
-                            <tr>
-                                <th className="px-4 py-2">#</th>
-                                <th className="px-4 py-2">Poster</th>
-                                <th className="px-4 py-2">Tên</th>
-                                <th className="px-4 py-2 w-72">Thể loại</th>
-                                <th className="px-4 py-2">Định dạng</th>
-                                <th className="px-4 py-2">Ngày ra mắt</th>
-                                <th className="px-4 py-2">Thời lượng</th>
-                                <th className="px-4 py-2">Ngôn ngữ</th>
-                                <th className="px-4 py-2">Đạo diễn</th>
-                                <th className="px-4 py-2 w-56">Diễn viên</th>
-                                <th className="px-4 py-2 w-80">Mô tả</th>
-                                <th className="px-4 py-2">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {movies.length > 0 ? (
-                                movies.map((m, i) => (
-                                    <tr key={m.name + i} className="text-center border-b">
-                                        <td className="text-white">{i + 1}</td>
-                                        <td className="text-white">
-                                            {m.image ? (
-                                                <img
-                                                    src={m.image}
-                                                    alt={m.name}
-                                                    className="w-20 h-20 object-cover mx-auto"
-                                                />
-                                            ) : (
-                                                <img
-                                                    src="https://via.placeholder.com/80"
-                                                    alt="No image"
-                                                    className="w-20 h-20 object-cover mx-auto"
-                                                />
-                                            )}
-                                        </td>
-                                        <td className="text-white">{m.name || "Không có tên"}</td>
-                                        <td className="text-white">
-                                            {m.genres.length > 0 ? m.genres.join(", ") : "Không có thể loại"}
-                                        </td>
-                                        <td className="text-white">
-                                            {m.dinhdang.length > 0 ? m.dinhdang.join(", ") : "Không có định dạng"}
-                                        </td>
-                                        <td className="text-white">{m.releaseDate || "Không có ngày"}</td>
-                                        <td className="text-white">{m.duration || 0}</td>
-                                        <td className="text-white">{m.language || "Không có ngôn ngữ"}</td>
-                                        <td className="text-white">{m.director || "Không có đạo diễn"}</td>
-                                        <td className="text-white">{m.cast || "Không có diễn viên"}</td>
-                                        <td className="text-white">{m.description || "Không có mô tả"}</td>
-                                        <td className="text-white">
-                                            <button onClick={() => handleEdit(i)} className="text-blue-500 mr-2">
-                                                Sửa
-                                            </button>
-                                            <button onClick={() => handleDelete(i)} className="text-red-500">
-                                                Xóa
-                                            </button>
-                                        </td>
+                    {loading ? (
+                        <p className="text-white text-center">Đang tải...</p>
+                    ) : loi ? (
+                        <p className="text-red-500 text-center">{loi}</p>
+                    ) : movies.length === 0 ? (
+                        <p className="text-white text-center">Chưa có phim nào</p>
+                    ) : (
+                        <>
+                            <table
+                                className="w-full backdrop-blur-md p-6 rounded-xl shadow-xl space-y-4 relative z-10 overflow-hidden py-5"
+                                style={{
+                                    backgroundImage: "url('https://www.lfs.com.my/images/cinema%20background.jpg')",
+                                }}
+                            >
+                                <thead className="bg-slate-800 text-white">
+                                    <tr>
+                                        <th className="px-4 py-2">STT</th>
+                                        <th className="px-4 py-2">Poster</th>
+                                        <th className="px-4 py-2 w-72">Tên</th>
+                                        <th className="px-4 py-2">Thể loại</th>
+                                        <th className="px-4 py-2">Ngày ra mắt</th>
+                                        <th className="px-4 py-2">Ngôn ngữ</th>
+                                        <th className="px-4 py-2">Đạo diễn</th>
+                                        <th className="px-4 py-2">Hành động</th>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={12} className="text-white text-center py-4">
-                                        Chưa có phim nào
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                    {movies.map((m, i) => (
+                                        <tr key={m.movieId || m.name + i} className="text-center border-b">
+                                            <td className="text-white">{i + 1}</td>
+                                            <td className="text-white">
+                                                {m.image ? (
+                                                    <img
+                                                        src={m.image}
+                                                        alt={m.name}
+                                                        className="w-20 h-20 object-cover mx-auto"
+                                                    />
+                                                ) : (
+                                                    <span>Không có poster</span>
+                                                )}
+                                            </td>
+                                            <td className="text-white">{m.name || "Không có tên"}</td>
+                                            <td className="text-white">
+                                                {m.genres?.length > 0 ? m.genres.join(", ") : "Không có thể loại"}
+                                            </td>
+                                            <td className="text-white">{m.releaseDate || "Không có ngày"}</td>
+                                            <td className="text-white">{m.language || "Không có ngôn ngữ"}</td>
+                                            <td className="text-white">{m.director || "Không có đạo diễn"}</td>
+                                            <td className="text-white">
+                                                <button onClick={() => handleEdit(i)} className="text-blue-500 mr-2">
+                                                    Sửa
+                                                </button>
+                                                <button onClick={() => handleDelete(i)} className="text-red-500">
+                                                    Xóa
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <div className="flex justify-center mt-4">
+                                <button
+                                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                                    disabled={page === 1}
+                                    className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
+                                >
+                                    Trang trước
+                                </button>
+                                <span className="px-4 py-2 text-white">Trang {page} / {totalPages}</span>
+                                <button
+                                    onClick={() => setPage((prev) => prev + 1)}
+                                    disabled={page === totalPages}
+                                    className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
+                                >
+                                    Trang sau
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {showConfirm && (
