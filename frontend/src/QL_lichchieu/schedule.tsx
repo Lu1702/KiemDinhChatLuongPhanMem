@@ -1,330 +1,305 @@
-import React, { useState, useEffect } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import React, { useEffect, useState } from "react";
+import "./SchedulePage.css"; // Make sure this path is correct for your CSS file
 
-interface Room {
-  cinemaRoomId: string;
-  cinemaRoomNumber: number;
-}
+const SchedulePage = () => {
+  // Define types for each state variable based on your API response structure
+  interface Cinema {
+    cinemaId: string;
+    cinemaName: string;
+  }
 
-interface Movie {
-  movieID: string;
-  movieName: string;
-}
+  interface CinemaRoom {
+    cinemaRoomId: string;
+    cinemaRoomNumber: string;
+  }
 
-interface Cinema {
-  cinemaId: string;
-  cinemaName: string;
-}
-
-interface VisualFormat {
-  movieVisualId: string;
-  movieVisualFormatDetail: string;
-}
-
-interface Schedule {
-  scheduleId: string;
-  cinemaName: string;
-  movieVisualFormatInfo: string;
-  showTime: string;
-  showDate: string;
-  cinemaRoom: number;
-}
-
-interface ScheduleResponse {
-  status: string;
-  message: string;
-  data: {
+  interface Movie {
+    movieID: string;
     movieName: string;
-    getListSchedule: Schedule[];
-  }[];
-}
+  }
 
-const ScheduleForm: React.FC = () => {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [movies, setMovies] = useState<Movie[]>([]);
+  interface VisualFormat {
+    movieVisualId: string;
+    movieVisualFormatDetail: string;
+  }
+
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [selectedCinemaId, setSelectedCinemaId] = useState("");
+
+  const [cinemaRooms, setCinemaRooms] = useState<CinemaRoom[]>([]);
+  const [selectedRoomId, setSelectedRoomId] = useState("");
+
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [selectedMovieId, setSelectedMovieId] = useState("");
+
   const [visualFormats, setVisualFormats] = useState<VisualFormat[]>([]);
-  const [selectedRoom, setSelectedRoom] = useState<string>('');
-  const [selectedMovie, setSelectedMovie] = useState<string>('');
-  const [selectedCinema, setSelectedCinema] = useState<string>('');
-  const [selectedVisualFormat, setSelectedVisualFormat] = useState<string>('');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [showTimeID] = useState<string>('default-showtime-id'); // Placeholder
-  const [message, setMessage] = useState<string>('');
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [selectedFormatId, setSelectedFormatId] = useState("");
 
-  // Fetch initial data: cinemas, rooms, movies
+  const [selectedDateTime, setSelectedDateTime] = useState(""); // Format: "YYYY-MM-DDTHH:MM"
+
+  // 1. Lấy danh sách rạp
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCinemas = async () => {
       try {
-        const token = localStorage.getItem('authToken');
-        const [cinemaRes, roomRes, movieRes] = await Promise.all([
-          fetch('http://localhost:5229/api/Cinema/GetCinemaList', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch('http://localhost:5229/api/CinemaRoom/GetRoomList', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch('http://localhost:5229/api/movie/getAllMoviesPagniation/1', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-        ]);
-
-        const cinemaData = await cinemaRes.json();
-        const roomData = await roomRes.json();
-        const movieData = await movieRes.json();
-
-        if (cinemaData.status === 'Success') setCinemas(cinemaData.data);
-        if (roomData.status === 'Success') setRooms(roomData.data);
-        if (movieData.movieRespondDTOs) setMovies(movieData.movieRespondDTOs);
-      } catch (error) {
-        console.error('Error fetching initial data:', error);
+        const res = await fetch("http://localhost:5229/api/Cinema/getCinemaList");
+        const data = await res.json();
+        if (data.status === "Success") {
+          setCinemas(data.data);
+        }
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách rạp:", err);
       }
     };
-
-    fetchData();
+    fetchCinemas();
   }, []);
 
-  // Fetch all visual formats
+  // 2. Khi chọn rạp → lấy danh sách phòng
   useEffect(() => {
-    fetch('http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList', {
-      headers: {
-        'Accept': '*/*',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'Success') {
-          setVisualFormats(data.data);
-        } else {
-          console.warn('Visual format fetch failed:', data);
-          setVisualFormats([]);
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching visual formats:', err);
-        setVisualFormats([]);
-      });
-  }, []);
-
-  // Fetch schedules by movie name
-  const fetchSchedules = async (movieName: string) => {
-    try {
-      const response = await fetch(`http://localhost:5229/api/Schedule/getScheduleByName?name=${encodeURIComponent(movieName)}`, {
-        headers: {
-          'Accept': '*/*',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-
-      if (response.ok) {
-        const data: ScheduleResponse = await response.json();
-        if (data.status === 'Success' && Array.isArray(data.data)) {
-          const scheduleList = data.data.flatMap(item => item.getListSchedule);
-          setSchedules(scheduleList);
-          if (scheduleList.length > 0 && scheduleList[0].movieVisualFormatInfo) {
-            setSelectedVisualFormat(scheduleList[0].movieVisualFormatInfo);
-          }
-        } else {
-          setSchedules([]);
-        }
-      } else {
-        console.error('Failed to fetch schedules');
-        setSchedules([]);
-      }
-    } catch (error) {
-      console.error('Error fetching schedules:', error);
-      setSchedules([]);
-    }
-  };
-
-  // Fetch schedules when selected movie changes
-  useEffect(() => {
-    if (selectedMovie) {
-      const selectedMovieName = movies.find(m => m.movieID === selectedMovie)?.movieName || '';
-      if (selectedMovieName) {
-        localStorage.setItem('tenphim', selectedMovieName);
-        fetchSchedules(selectedMovieName);
-      } else {
-        setSchedules([]);
-      }
-    } else {
-      setSchedules([]);
-    }
-  }, [selectedMovie, movies]);
-
-  // Handle form submit
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedRoom || !selectedMovie || !startDate || !selectedCinema || !selectedVisualFormat) {
-      setMessage('Please fill all fields');
+    if (!selectedCinemaId) {
+      setCinemaRooms([]); // Clear rooms if no cinema is selected
       return;
     }
 
-    localStorage.setItem('CinemaID', selectedCinema);
-    const selectedMovieName = movies.find(m => m.movieID === selectedMovie)?.movieName || '';
-    localStorage.setItem('tenphim', selectedMovieName);
-
-    const payload = {
-      movieID: selectedMovie,
-      scheduleDateDTOs: [
-        {
-          startDate: startDate.toISOString(),
-          scheduleVisualFormatDTOs: [
-            {
-              visualFormatID: selectedVisualFormat, // value is now ID
-              scheduleShowTimeDTOs: [
-                {
-                  showTimeID: showTimeID,
-                  roomId: selectedRoom
-                }
-              ]
-            }
-          ]
+    const fetchCinemaRooms = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5229/api/CinemaRoom/SearchRoomByCinemaId?CinemaId=${selectedCinemaId}`
+        );
+        const data = await res.json();
+        if (data.status === "Success") {
+          setCinemaRooms(data.data);
+        } else {
+          setCinemaRooms([]);
+          console.warn("Không tìm thấy phòng cho rạp này hoặc lỗi API:", data.message);
         }
-      ]
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách phòng chiếu:", err);
+        setCinemaRooms([]);
+      }
     };
 
+    fetchCinemaRooms();
+  }, [selectedCinemaId]);
+
+  // 3. Lấy danh sách định dạng
+  useEffect(() => {
+    const fetchVisualFormats = async () => {
+      try {
+        const res = await fetch("http://localhost:5229/api/MovieVisualFormat/GetMovieVisualFormatList");
+        const data: VisualFormat[] = await res.json(); 
+        
+        if (Array.isArray(data) && data.length > 0) {
+          setVisualFormats(data);
+        } else {
+          setVisualFormats([]);
+        }
+      } catch (err) {
+        console.error("Lỗi khi lấy định dạng:", err);
+        setVisualFormats([]);
+      }
+    };
+    fetchVisualFormats();
+  }, []);
+
+  // 4. Lấy danh sách phim
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const res = await fetch("http://localhost:5229/api/movie/getAllMoviesPagniation/1");
+        const data = await res.json();
+        if (data.movieRespondDTOs) {
+          setMovies(data.movieRespondDTOs);
+        }
+      } catch (err) {
+        console.error("Lỗi khi lấy phim:", err);
+      }
+    };
+    fetchMovies();
+  }, []);
+
+  // 5. Hàm tạo lịch chiếu
+  const handleCreateSchedule = async () => {
+    if (!selectedCinemaId || !selectedRoomId || !selectedMovieId || !selectedFormatId || !selectedDateTime) {
+      alert("Vui lòng chọn đầy đủ các thông tin.");
+      return;
+    }
+
+    let formattedDateTime = selectedDateTime;
     try {
-      const cinemaId = localStorage.getItem('CinemaID');
-      if (!cinemaId) {
-        setMessage('Cinema ID is missing');
-        return;
-      }
+      const now = new Date(); 
+      console.log("Current local time (for reference):", now.toLocaleString());
+      formattedDateTime = new Date(selectedDateTime).toISOString();
+      console.log("Formatted DateTime (ISO):", formattedDateTime);
+    } catch (e) {
+      console.error("Could not format date, using raw string:", selectedDateTime, e);
+      formattedDateTime = selectedDateTime + ':00.000Z'; 
+    }
 
-      const response = await fetch(`http://localhost:5229/api/Schedule/addSchedule?cinemaId=${cinemaId}`, {
-        method: 'POST',
-        headers: {
-          'Accept': '*/*',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+    const payload = {
+      movieID: selectedMovieId,
+      scheduleDateDTOs: [
+        {
+          startDate: formattedDateTime,
+          scheduleVisualFormatDTOs: [
+            {
+              visualFormatID: selectedFormatId,
+              scheduleShowTimeDTOs: [
+                {
+                  showTimeID: "00000000-0000-0000-0000-000000000000", 
+                  roomId: selectedRoomId,
+                },
+              ],
+            },
+          ],
         },
-        body: JSON.stringify(payload)
-      });
+      ],
+    };
 
-      if (response.ok) {
-        setMessage('Schedule added successfully!');
-        await fetchSchedules(selectedMovieName);
+    console.log("Payload gửi đi:", JSON.stringify(payload, null, 2));
+
+    try {
+      const res = await fetch(
+        `http://localhost:5229/api/Schedule/addSchedule?cinemaId=${selectedCinemaId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "accept": "*/*"
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok && data.status === "Success") {
+        alert("Tạo lịch chiếu thành công!");
+        setSelectedCinemaId("");
+        setSelectedRoomId("");
+        setSelectedMovieId("");
+        setSelectedFormatId("");
+        setSelectedDateTime("");
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        setMessage(`Failed to add schedule: ${errorData.message || response.statusText}`);
+        alert("Tạo lịch chiếu thất bại: " + (data.message || "Lỗi không xác định."));
       }
-    } catch (err) {
-      console.error('Error submitting schedule:', err);
-      setMessage('Failed to add schedule');
+    } catch (error) {
+      console.error("Lỗi tạo lịch chiếu:", error);
+      alert("Đã xảy ra lỗi khi gửi lịch chiếu.");
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Schedule a Movie</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Cinema</label>
+    // Main wrapper div with form-bg-opacity-30 and padding
+    <div className="form-bg-opacity-30" style={{ padding: 20 }}>
+      <h2>Quản lý lịch chiếu</h2>
+
+      {/* Rạp */}
+      <div className="uiverse-pixel-input-wrapper" style={{ marginBottom: 15 }}>
+        <label className="uiverse-pixel-label">Chọn rạp: </label>
+        <select
+          value={selectedCinemaId}
+          onChange={(e) => {
+            setSelectedCinemaId(e.target.value);
+            setSelectedRoomId("");
+          }}
+          className="uiverse-pixel-input"
+        >
+          <option value="">-- Chọn rạp --</option>
+          {cinemas.map((cinema) => (
+            <option key={cinema.cinemaId} value={cinema.cinemaId}>
+              {cinema.cinemaName}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Phòng */}
+      {selectedCinemaId && cinemaRooms.length > 0 && (
+        <div className="uiverse-pixel-input-wrapper" style={{ marginBottom: 15 }}>
+          <label className="uiverse-pixel-label">Chọn phòng chiếu: </label>
           <select
-            value={selectedCinema}
-            onChange={(e) => setSelectedCinema(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            value={selectedRoomId}
+            onChange={(e) => setSelectedRoomId(e.target.value)}
+            className="uiverse-pixel-input"
           >
-            <option value="">Select a cinema</option>
-            {cinemas.map(c => (
-              <option key={c.cinemaId} value={c.cinemaId}>{c.cinemaName}</option>
+            <option value="">-- Chọn phòng --</option>
+            {cinemaRooms.map((room) => (
+              <option key={room.cinemaRoomId} value={room.cinemaRoomId}>
+                {room.cinemaRoomNumber}
+              </option>
             ))}
           </select>
         </div>
+      )}
+      {selectedCinemaId && cinemaRooms.length === 0 && (
+        <div style={{ marginBottom: 15, color: 'orange' }}>
+          Không có phòng nào cho rạp này.
+        </div>
+      )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Movie</label>
+      {/* Phim */}
+      {movies.length > 0 && (
+        <div className="uiverse-pixel-input-wrapper" style={{ marginBottom: 15 }}>
+          <label className="uiverse-pixel-label">Chọn phim: </label>
           <select
-            value={selectedMovie}
-            onChange={(e) => setSelectedMovie(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            value={selectedMovieId}
+            onChange={(e) => setSelectedMovieId(e.target.value)}
+            className="uiverse-pixel-input"
           >
-            <option value="">Select a movie</option>
-            {movies.map(m => (
-              <option key={m.movieID} value={m.movieID}>{m.movieName}</option>
+            <option value="">-- Chọn phim --</option>
+            {movies.map((movie) => (
+              <option key={movie.movieID} value={movie.movieID}>
+                {movie.movieName}
+              </option>
             ))}
           </select>
         </div>
+      )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Visual Format</label>
+      {/* Định dạng */}
+      {visualFormats.length > 0 && (
+        <div className="uiverse-pixel-input-wrapper" style={{ marginBottom: 15 }}>
+          <label className="uiverse-pixel-label">Chọn định dạng: </label>
           <select
-            value={selectedVisualFormat}
-            onChange={(e) => setSelectedVisualFormat(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            value={selectedFormatId}
+            onChange={(e) => setSelectedFormatId(e.target.value)}
+            className="uiverse-pixel-input"
           >
-            <option value="">Select a visual format</option>
-            {visualFormats.map(vf => (
+            <option value="">-- Chọn định dạng --</option>
+            {visualFormats.map((vf) => (
               <option key={vf.movieVisualId} value={vf.movieVisualId}>
                 {vf.movieVisualFormatDetail}
               </option>
             ))}
           </select>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Room</label>
-          <select
-            value={selectedRoom}
-            onChange={(e) => setSelectedRoom(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-          >
-            <option value="">Select a room</option>
-            {rooms.map(r => (
-              <option key={r.cinemaRoomId} value={r.cinemaRoomId}>
-                Room {r.cinemaRoomNumber}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Start Date</label>
-          <DatePicker
-            selected={startDate}
-            onChange={(date) => setStartDate(date)}
-            showTimeSelect
-            dateFormat="Pp"
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
-        >
-          Add Schedule
-        </button>
-      </form>
-
-      {message && <p className="mt-4 text-center text-sm text-red-600">{message}</p>}
-
-      {selectedMovie && (
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Schedules for Selected Movie</h2>
-          {schedules.length > 0 ? (
-            <ul className="space-y-2">
-              {schedules.map((s) => (
-                <li key={s.scheduleId} className="p-4 border rounded-md shadow-sm">
-                  <p><strong>Start Date:</strong> {new Date(s.showDate).toLocaleString()}</p>
-                  <p><strong>Visual Format:</strong> {s.movieVisualFormatInfo}</p>
-                  <p><strong>Show Time:</strong> {s.showTime}</p>
-                  <p><strong>Cinema Room:</strong> {s.cinemaRoom}</p>
-                  <p><strong>Cinema:</strong> {s.cinemaName}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">No schedules found for this movie.</p>
-          )}
+      )}
+      {visualFormats.length === 0 && (
+        <div style={{ marginBottom: 15, color: 'red' }}>
+          Đang tải định dạng hoặc không có định dạng nào được tìm thấy. Vui lòng kiểm tra Console.
         </div>
       )}
+
+      {/* Thời gian chiếu */}
+      <div className="uiverse-pixel-input-wrapper" style={{ marginBottom: 15 }}>
+        <label className="uiverse-pixel-label">Chọn thời gian chiếu: </label>
+        <input
+          type="datetime-local"
+          value={selectedDateTime}
+          onChange={(e) => setSelectedDateTime(e.target.value)}
+          className="uiverse-pixel-input"
+        />
+      </div>
+
+      {/* Nút tạo */}
+      <button
+        onClick={handleCreateSchedule}
+        className="button2" 
+      >
+        Tạo Lịch Chiếu
+      </button>
     </div>
   );
 };
 
-export default ScheduleForm;
+export default SchedulePage;
