@@ -73,7 +73,7 @@ namespace backend.Controllers
             var getStatus = scheduleServices.getVisualFormatListByMovieId(movieId);
             if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
-                return BadRequest();
+                return BadRequest(getStatus);
             }
             return Ok(getStatus);
         }

@@ -99,5 +99,27 @@ namespace backend.Controllers
             var gettersList = await IMovieService.getFullSearchResult(movieName , page);
             return Ok(gettersList);
         }
+
+        [HttpGet("GetInShowedMovie")]
+        public async Task<IActionResult> GetInShowedMovie()
+        {
+            var getData = await IMovieService.GetShowedMovieTake5();
+            if (getData.Status.Equals(GenericStatusEnum.Success.ToString()))
+            {
+                return Ok(getData);
+            }
+            return NotFound(new { message = "Cannot Find Movie There's an error" });
+        }
+
+        [HttpGet("GetUnShowedMovie")]
+        public async Task<IActionResult> GetUnShowedMovie()
+        {
+            var getData = await IMovieService.GetUnShowedMovieTake5();
+            if (getData.Status.Equals(GenericStatusEnum.Success.ToString()))
+            {
+                return Ok(getData);
+            }
+            return NotFound(new { message = "Cannot Find Movie There's an error" });
+        }
     }
 }

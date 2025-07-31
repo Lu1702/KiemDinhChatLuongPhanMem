@@ -4,6 +4,7 @@ using backend.ModelDTO.MoviesDTO.MovieRespond;
 using Microsoft.EntityFrameworkCore.Update.Internal;
 using backend.ModelDTO.PaginiationDTO.Respond;
 using backend.ModelDTO.GenericRespond;
+using backend.ModelDTO.MoviesDTO;
 
 namespace backend.Interface.MovieInterface
 {
@@ -39,7 +40,8 @@ namespace backend.Interface.MovieInterface
 
         //Task<List<movieRespondDTO>> getMovie(string movieID);
 
-
-        Task SaveChanges();
+        Task<GenericRespondWithObjectDTO<List<GetMovieShowedDTOList>>> GetShowedMovieTake5();
+        
+        Task<GenericRespondWithObjectDTO<List<GetMovieShowedDTOList>>> GetUnShowedMovieTake5();
     }
 }

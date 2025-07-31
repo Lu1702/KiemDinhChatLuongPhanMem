@@ -22,9 +22,24 @@ namespace backend.ModelDTO.MoviesDTO.MovieRespond
         public DateTime ReleaseDate { get; set; }
         
         public Dictionary<string , string> MovieLanguage {get; set;} = new Dictionary<string , string>();
-        public Dictionary<string , string> movieVisualFormat { get; set; } = new Dictionary<string , string>();
-        public Dictionary<string , string> movieGenre { get; set; } = new Dictionary<string , string>();
+        
+        public List<MovieVisualFormatGetDetailResponseDTO> movieVisualFormat { get; set; } = new List<MovieVisualFormatGetDetailResponseDTO>();
+        
+        public List<MovieGenreGetDetailResponseDTO> movieGenre { get; set; } = new List<MovieGenreGetDetailResponseDTO>();
 
+    }
+
+    public class MovieVisualFormatGetDetailResponseDTO
+    {
+        public string movieVisualFormatId { get; set; } = string.Empty;
+        
+        public string movieVisualFormatName { get; set; } = string.Empty;
+    }
+
+    public class MovieGenreGetDetailResponseDTO
+    {
+        public string movieGenreId { get; set; } = "";
+        public string movieGenreName { get; set; } = "";
     }
     
 }
