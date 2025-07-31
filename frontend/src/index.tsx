@@ -23,7 +23,7 @@ import FutureFilm from './Bookig/FutureFilm';
 import Booking from './Bookig/Booking';
 import BookingHistory from './Account/BookingHistory';
 import Addmovie from './QL_Add_movie/Addmovie';
-
+import Test from './QL_lichchieu/schedule';
 
 
 
@@ -51,6 +51,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/booking" element={<Booking />} />
         <Route path="/bookinghistory" element={<BookingHistory />} />
         <Route path="/addmovie" element={<Addmovie />} />
+        <Route path="/test" element={<Test />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
