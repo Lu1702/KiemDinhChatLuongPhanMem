@@ -4,6 +4,7 @@ import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import SCHEDULE from '../QL_lichchieu/schedule';
 interface FoodItem {
     foodId: string;
     foodName: string;
@@ -508,7 +509,7 @@ const Info: React.FC = () => {
     };
 
     const [userRole, setUserRole] = useState<string | null>(localStorage.getItem("role") || null);
-    const [activeTab, setActiveTab] = useState<"password" | "nhanvien" | "quanlynoidung" | "doanhthu" | "xacdinhdichvu" | "csphongrap" | "room">("password");
+    const [activeTab, setActiveTab] = useState<"password" | "nhanvien" | "quanlynoidung"| "schedule" | "doanhthu" | "xacdinhdichvu" | "csphongrap" | "room">("password");
     const [addStaffFormData, setAddStaffFormData] = useState<AddStaffFormData>({
         staffId: "",
         cinemaId: "",
@@ -997,6 +998,7 @@ const Info: React.FC = () => {
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Nội Dung</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "quanlynoidung" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => navigate('/Addmovie')}>Nội dung</button>
+                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "schedule" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("schedule")}>Tạo lịch chiếu</button>
                         </div>
                     )}
                     {roles1.includes('Cashier') && (
@@ -1209,6 +1211,11 @@ const Info: React.FC = () => {
                     {activeTab === "quanlynoidung" && (
                        <div>
                         
+                       </div>
+                    )}
+                    {activeTab === "schedule" && (
+                       <div>
+                            <SCHEDULE/>
                        </div>
                     )}
                     {activeTab === "doanhthu" && roles1.includes('Director') && (
