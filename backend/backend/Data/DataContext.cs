@@ -192,6 +192,7 @@ namespace backend.Data
             var genreId2 = "f6a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c1"; // Hài hước
             var genreId3 = "a1a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c2"; // Kinh dị
             var genreId4 = "b2b7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c3"; // Khoa học viễn tưởng
+            
             var genreId5 = "c3c7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c4"; // Lãng mạng
             var genreId6 = "d4d7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c5"; // Hoạt hình
             modelBuilder.Entity<movieGenre>().HasData(

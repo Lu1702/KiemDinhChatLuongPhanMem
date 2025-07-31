@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Nav from "../Header/nav";
 import Footer from "../Footer/bottom";
 import filmszone from "../image/filmszone.jpg";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; 
 
 function TabsExample() {
     const navigate = useNavigate();

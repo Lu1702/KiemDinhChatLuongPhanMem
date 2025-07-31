@@ -53,7 +53,16 @@ function Nav() {
 
     // Dữ liệu mẫu fallback
     const fallbackMovies: Movie[] = [
-        { movieID: "6956fbf4-6d8e-4523-b03b-3de42ef84200", movieName: "TOÀN TRÍ ĐỘC GIẢ", movieImage: "", movieTrailerUrl: "https://youtu.be/gvmtoe9zpWM", movieDuration: 116, isRelease: false, releaseDate: "2025-08-01T00:00:00", listLanguageName: "Korean", movieVisualFormat: ["2D"], movieGenres: ["Hành động"] },
+        {
+            movieID: "6956fbf4-6d8e-4523-b03b-3de42ef84200",
+            movieName: "TOÀN TRÍ ĐỘC GIẢ", movieImage: "",
+            movieTrailerUrl: "https://youtu.be/gvmtoe9zpWM",
+            movieDuration: 116, isRelease: false,
+            releaseDate: "2025-08-01T00:00:00",
+            listLanguageName: "Korean",
+            movieVisualFormat: ["2D"],
+            movieGenres: ["Hành động"]
+        },
     ];
 
     // Tìm kiếm realtime với cache và retry
