@@ -276,6 +276,10 @@ namespace backend.Services.BookingServices
                             seatsId = getSeats.seatID,
                             orderId = generateOrderId,
                             movieScheduleID = orderRequestDTO.movieScheduleId,
+                            PriceEach = 
+                                _dataContext.priceInformationForEachUserFilmType.FirstOrDefault
+                                    (x => x.userTypeId.Equals(getUserType.userTypeID) &&
+                                          x.movieVisualFormatId.Equals(Schedules.movieVisualFormatID)).PriceInformation.priceAmount
                         });
                         SeatsLists.Add(getSeats.seatID);
                     }

@@ -24,6 +24,9 @@ namespace backend.Model.Booking
         [Column(TypeName = "varchar(100)")]
         [ForeignKey("Seats")]
         public string seatsId { get; set; } = "";
+        
+        [Required]
+        public decimal PriceEach { get; set; } = 0;
 
         public Order Order { get; set; } = null!;
 
