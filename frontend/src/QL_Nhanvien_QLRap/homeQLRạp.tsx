@@ -4,6 +4,7 @@ import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import SCHEDULE from '../QL_lichchieu/schedule';
 interface FoodItem {
     foodId: string;
     foodName: string;
@@ -512,7 +513,7 @@ const Info: React.FC = () => {
     };
 
     const [userRole, setUserRole] = useState<string | null>(localStorage.getItem("role") || null);
-    const [activeTab, setActiveTab] = useState<"password" | "nhanvien" | "quanlynoidung" | "doanhthu" | "xacdinhdichvu" | "csphongrap" | "room">("password");
+    const [activeTab, setActiveTab] = useState<"password" | "nhanvien" | "quanlynoidung"| "schedule" | "doanhthu" | "xacdinhdichvu" | "csphongrap" | "room">("password");
     const [addStaffFormData, setAddStaffFormData] = useState<AddStaffFormData>({
         staffId: "",
         cinemaId: "",
@@ -995,12 +996,13 @@ const Info: React.FC = () => {
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Rạp</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "nhanvien" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("nhanvien")}>Danh sách nhân viên</button>
+                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "schedule" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("schedule")}>Tạo lịch chiếu</button>
                         </div>
                     )}
                     {roles1.includes('MovieManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Nội Dung</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "quanlynoidung" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("quanlynoidung")}>Nội dung</button>
+                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "quanlynoidung" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => navigate('/Addmovie')}>Nội dung</button>
                         </div>
                     )}
                     {roles1.includes('Cashier') && (
@@ -1334,274 +1336,14 @@ const Info: React.FC = () => {
 
                     {/* Trang Add_movie */}
                     {activeTab === "quanlynoidung" && (
-                        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
-                            {/* The CSS styles are now in a separate style.css file and should be linked in your HTML or imported in your main JS/TS file */}
-                            {/* Updated form container with bg-white/20 and backdrop-blur-md */}
-                            <form onSubmit={handleSubmit} className="bg-white/20 backdrop-blur-md p-6 sm:p-8 lg:p-10 rounded-xl shadow-xl w-full max-w-2xl">
-                                <h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">Movie Details Form</h1>
-
-                                {/* Message display area */}
-                                {message && (
-                                    <div className={`p-3 mb-4 rounded-md text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                        {message.text}
-                                    </div>
-                                )}
-
-                                {/* movieName */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="movieName" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        movieName <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="text"
-                                            id="movieName"
-                                            className="uiverse-pixel-input"
-                                            value={movieName}
-                                            onChange={(e) => setMovieName(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* movieImage */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="movieImage" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        movieImage <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="flex items-center space-x-2 w-full sm:w-2/3">
-                                        <label htmlFor="movieImageInput" className="button2 cursor-pointer">
-                                            Choose File
-                                        </label>
-                                        <input
-                                            type="file"
-                                            id="movieImageInput"
-                                            className="hidden" // Hide the default file input
-                                            onChange={handleMovieImageChange}
-                                            required
-                                        />
-                                        <span className="text-gray-700 text-sm truncate flex-1">{movieImageFileName || 'No file chosen'}</span>
-                                    </div>
-                                </div>
-
-                                {/* movieDescription */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="movieDescription" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        movieDescription <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="text"
-                                            id="movieDescription"
-                                            className="uiverse-pixel-input"
-                                            value={movieDescription}
-                                            onChange={(e) => setMovieDescription(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* movieDirector */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="movieDirector" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        movieDirector <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="text"
-                                            id="movieDirector"
-                                            className="uiverse-pixel-input"
-                                            value={movieDirector}
-                                            onChange={(e) => setMovieDirector(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* movieActor */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="movieActor" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        movieActor <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="text"
-                                            id="movieActor"
-                                            className="uiverse-pixel-input"
-                                            value={movieActor}
-                                            onChange={(e) => setMovieActor(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* movieTrailerUrl */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="movieTrailerUrl" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        movieTrailerUrl <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="text"
-                                            id="movieTrailerUrl"
-                                            className="uiverse-pixel-input"
-                                            value={movieTrailerUrl}
-                                            onChange={(e) => setMovieTrailerUrl(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* movieDuration */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="movieDuration" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        movieDuration <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="number"
-                                            id="movieDuration"
-                                            className="uiverse-pixel-input"
-                                            value={movieDuration}
-                                            onChange={(e) => setMovieDuration(Number(e.target.value))}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* minimumAgeID */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="minimumAgeID" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        minimumAgeID <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="text"
-                                            id="minimumAgeID"
-                                            className="uiverse-pixel-input"
-                                            value={minimumAgeID}
-                                            onChange={(e) => setMinimumAgeID(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* languageId */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="languageId" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        languageId <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="text"
-                                            id="languageId"
-                                            className="uiverse-pixel-input"
-                                            value={languageId}
-                                            onChange={(e) => setLanguageId(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* releaseDate */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center">
-                                    <label htmlFor="releaseDate" className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        releaseDate <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="uiverse-pixel-input-wrapper w-full sm:w-2/3">
-                                        <input
-                                            type="datetime-local"
-                                            id="releaseDate"
-                                            className="uiverse-pixel-input"
-                                            value={releaseDate}
-                                            onChange={(e) => setReleaseDate(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* visualFormatList */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
-                                    <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        visualFormatList <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="flex flex-col gap-2 w-full sm:w-2/3">
-                                        {visualFormatList.map((item, index) => (
-                                            <div key={index} className="flex items-center gap-2">
-                                                <div className="uiverse-pixel-input-wrapper flex-grow">
-                                                    <input
-                                                        type="text"
-                                                        className="uiverse-pixel-input"
-                                                        value={item}
-                                                        onChange={(e) => handleListItemChange('visual', index, e.target.value)}
-                                                        required
-                                                    />
-                                                </div>
-                                                {visualFormatList.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        className="remove-button"
-                                                        onClick={() => handleRemoveListItem('visual', index)}
-                                                    >
-                                                        -
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                        <button
-                                            type="button"
-                                            className="button2 mt-2 self-start"
-                                            onClick={() => handleAddListItem('visual')}
-                                        >
-                                            Add string item
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* movieGenreList */}
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-start">
-                                    <label className="uiverse-pixel-label w-full sm:w-1/3 mb-1 sm:mb-0">
-                                        movieGenreList <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="flex flex-col gap-2 w-full sm:w-2/3">
-                                        {movieGenreList.map((item, index) => (
-                                            <div key={index} className="flex items-center gap-2">
-                                                <div className="uiverse-pixel-input-wrapper flex-grow">
-                                                    <input
-                                                        type="text"
-                                                        className="uiverse-pixel-input"
-                                                        value={item}
-                                                        onChange={(e) => handleListItemChange('genre', index, e.target.value)}
-                                                        required
-                                                    />
-                                                </div>
-                                                {movieGenreList.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        className="remove-button"
-                                                        onClick={() => handleRemoveListItem('genre', index)}
-                                                    >
-                                                        -
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                        <button
-                                            type="button"
-                                            className="button2 mt-2 self-start"
-                                            onClick={() => handleAddListItem('genre')}
-                                        >
-                                            Add string item
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Add button at the bottom */}
-                                <button type="submit" className="button2 w-full mt-6" disabled={loading}>
-                                    {loading ? 'Adding...' : 'Thêm'}
-                                </button>
-                            </form>
-                        </div>
+                       <div>
+                        
+                       </div>
+                    )}
+                    {activeTab === "schedule" && (
+                       <div>
+                            <SCHEDULE/>
+                       </div>
                     )}
                     {activeTab === "doanhthu" && roles1.includes('Director') && (
                         <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
