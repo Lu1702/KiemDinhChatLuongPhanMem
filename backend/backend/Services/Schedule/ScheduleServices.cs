@@ -221,13 +221,13 @@ namespace backend.Services.Schedule
             
             // Tien Hanh chỉnh sửa
             
-            findMovieSchedule.cinemaRoomId = String.IsNullOrEmpty(editScheduleDto.MovieId) 
-                ? findMovieSchedule.cinemaRoomId : editScheduleDto.MovieId;
+            findMovieSchedule.cinemaRoomId = String.IsNullOrEmpty(editScheduleDto.CinemaRoomId) 
+                ? findMovieSchedule.cinemaRoomId : editScheduleDto.CinemaRoomId;
             
             findMovieSchedule.movieId = String.IsNullOrEmpty(editScheduleDto.MovieId) ? findMovieSchedule.movieId : editScheduleDto.MovieId;
             
             findMovieSchedule.DayInWeekendSchedule = String.IsNullOrEmpty(editScheduleDto.DayInWeekendSchedule) 
-                ? findMovieSchedule.cinemaRoomId : editScheduleDto.DayInWeekendSchedule;
+                ? findMovieSchedule.DayInWeekendSchedule : editScheduleDto.DayInWeekendSchedule;
             
             findMovieSchedule.movieVisualFormatID = String.IsNullOrEmpty
                 (editScheduleDto.MovieVisualFormatId) ? findMovieSchedule.movieVisualFormatID

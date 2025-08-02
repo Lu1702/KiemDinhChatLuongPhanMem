@@ -572,7 +572,7 @@ namespace backend.Services.MovieServices
                 }).Skip((page - 1) * pagesize).Take(pagesize).ToListAsync();
             var newPagniationRespond = new PagniationRespond()
             {
-                movieRespondDTOs = getAllMovieData,
+                movieRespondDTOs = getAllMovieData.ToList(),
                 page = page,
                 pageSize = (int)Math.Ceiling((double)getAllData.Count() / pagesize),
                 totalCount = getAllData.Count,
