@@ -114,8 +114,10 @@ public class EmailService : IEmailService
             }
         }
     }
-
-    public GenericRespondDTOs SendPdf(string to, string subject, string body, string pdfPath)
+    
+    // 
+    
+    public GenericRespondDTOs SendPdf(string to, string subject, string body , string pdfPath , byte[] data)
     {
         return null!;
     }

@@ -1,8 +1,11 @@
 using backend.Enum;
+using backend.ModelDTO.GenericRespond;
 
 namespace backend.Interface.PDFInterface;
 
-public interface IPDFService
+public interface IPDFService<T>
 {
-    byte[] GetPDF(string T);
+    GenericRespondDTOs GeneratePdfUserOrder(T userOrder);
+    
+    GenericRespondDTOs GeneratePdfStaffOrder(T staffOrder);
 }
