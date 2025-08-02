@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
 
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250802075951_Fix_Data")]
+    partial class Fix_Data
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -745,32 +748,32 @@ namespace backend.Migrations
                         new
                         {
                             movieGenreId = "e5f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0",
-                            movieGenreName = "Hành động"
+                            movieGenreName = "Action"
                         },
                         new
                         {
                             movieGenreId = "f6a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c1",
-                            movieGenreName = "Hài hước"
+                            movieGenreName = "Comedy"
                         },
                         new
                         {
                             movieGenreId = "a1a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c2",
-                            movieGenreName = "Kinh dị"
+                            movieGenreName = "Horror"
                         },
                         new
                         {
                             movieGenreId = "b2b7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c3",
-                            movieGenreName = "Khoa học viễn tưởng"
+                            movieGenreName = "Sci-Fi"
                         },
                         new
                         {
                             movieGenreId = "c3c7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c4",
-                            movieGenreName = "Lãng mạng"
+                            movieGenreName = "Romance"
                         },
                         new
                         {
                             movieGenreId = "d4d7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c5",
-                            movieGenreName = "Hoạt hình"
+                            movieGenreName = "Animation"
                         });
                 });
 

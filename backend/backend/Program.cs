@@ -27,6 +27,7 @@ using backend.Interface.EmailInterface;
 using backend.Interface.FoodInterface;
 using backend.Interface.MovieGenreInterface;
 using backend.Interface.PriceInterfaces;
+using backend.Interface.RevenueInterface;
 using backend.Interface.RoomInferface;
 using backend.Interface.StaffInterface;
 using backend.Interface.VisualFormatInterface;
@@ -44,6 +45,7 @@ using backend.Services.FoodServices;
 using backend.Services.MovieGenreServices;
 using backend.Services.MovieVisualServices;
 using backend.Services.PriceServices;
+using backend.Services.RevenueServices;
 using backend.Services.RoomServices;
 using backend.Services.StaffService;
 using Microsoft.AspNetCore.DataProtection;
@@ -153,7 +155,9 @@ builder.Services.AddSingleton<IDataProtector>(serviceProvider => {
     // Chuỗi này PHẢI DUY NHẤT cho mục đích mã hóa này trong ứng dụng của bạn.
     return dataProtectionProvider.CreateProtector("CitizenIdEncryptionPurpose");
 });
-
+// DI cuar Revune
+builder.Services.AddScoped<IRevenueService, RevenueService>();
+// DI cua Price
 builder.Services.AddScoped<IPriceService, PriceService>();
 
 // DI cua Food

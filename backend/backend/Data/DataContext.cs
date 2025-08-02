@@ -222,16 +222,17 @@ namespace backend.Data
             var movieId3 = "2f3a4b5c-6d7e-8f9a-0b1c2d3e4f5a6b7c"; // The Conjuring
             var movieId4 = "3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d"; // Interstellar
             var movieId5 = "4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e"; // Spirited Away
+            
             modelBuilder.Entity<movieInformation>().HasData(
                 new movieInformation
                 {
                     movieId = movieId1,
                     movieName = "Phim Hành Động 1",
-                    movieImage = "aa.com",
+                    movieImage = "https://images.unsplash.com/flagged/photo-1577912504896-abc46b500434?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmxhZGUlMjBydW5uZXIlMjAyMDQ5fGVufDB8fDB8fHww",
                     movieDescription = "Đây là một bộ phim hành động đầy kịch tính.",
                     movieDirector = "Đạo Diễn A",
                     movieActor = "Diễn Viên X, Diễn Viên Y",
-                    movieTrailerUrl = "http://trailer.com/phimhanhdong1",
+                    movieTrailerUrl = "https://youtu.be/bNRzyCm2uME",
                     movieDuration = 120,
                     minimumAgeID = minAge13Id,
                     languageId = langId1,
@@ -242,11 +243,11 @@ namespace backend.Data
                 {
                     movieId = movieId2,
                     movieName = "Comedy Film 1",
-                    movieImage = "aa.com.vn",
+                    movieImage = "https://media.wired.com/photos/59323c08aef9a462de9817dc/master/w_1800,h_1200,c_limit/ut_interstellarOpener_f.png",
                     movieDescription = "A funny movie for the whole family.",
                     movieDirector = "Director B",
                     movieActor = "Actor Z, Actress W",
-                    movieTrailerUrl = "http://trailer.com/comedyfilm1",
+                    movieTrailerUrl = "https://youtu.be/yF2pXRJictA",
                     movieDuration = 90,
                     languageId = langId2,
                     minimumAgeID = minAge18Id,
@@ -257,11 +258,11 @@ namespace backend.Data
                 {
                     movieId = movieId3,
                     movieName = "Ám Ảnh Kinh Hoàng",
-                    movieImage = "conjuring.com",
+                    movieImage = "https://www.tallengestore.com/cdn/shop/products/TINY_74e4fc80-aebb-484d-9025-014b40c61c8a.jpg?v=1530520655",
                     movieDescription = "Dựa trên một câu chuyện có thật, phim theo chân hai nhà điều tra hiện tượng siêu nhiên.",
                     movieDirector = "James Wan",
                     movieActor = "Vera Farmiga, Patrick Wilson",
-                    movieTrailerUrl = "http://trailer.com/conjuring",
+                    movieTrailerUrl = "https://youtu.be/bMgfsdYoEEo",
                     movieDuration = 112,
                     languageId = langId2,
                     minimumAgeID = minAge18Id,
@@ -272,11 +273,11 @@ namespace backend.Data
                 {
                     movieId = movieId4,
                     movieName = "Hố Đen Du Hành",
-                    movieImage = "interstellar.com",
+                    movieImage = "https://www.posterposse.com/wp-content/uploads/2017/10/Blad-Runner-2049_-Orlando-Arocena-mexifunk_vectorart_2017.png",
                     movieDescription = "Một nhóm các nhà du hành vũ trụ đi qua một hố sâu để tìm một ngôi nhà mới cho nhân loại.",
                     movieDirector = "Christopher Nolan",
                     movieActor = "Matthew McConaughey, Anne Hathaway",
-                    movieTrailerUrl = "http://trailer.com/interstellar",
+                    movieTrailerUrl = "https://youtu.be/lbpduKrFRSc?feature=shared",
                     movieDuration = 169,
                     languageId = langId2,
                     minimumAgeID = minAge13Id,
@@ -287,11 +288,11 @@ namespace backend.Data
                 {
                     movieId = movieId5,
                     movieName = "Vùng Đất Linh Hồn",
-                    movieImage = "spiritedaway.com",
+                    movieImage = "https://images.thedirect.com/media/article_full/superman-logo.jpg",
                     movieDescription = "Trong lúc chuyển nhà, cô bé Chihiro và gia đình đã lạc vào một thế giới của các vị thần.",
                     movieDirector = "Hayao Miyazaki",
                     movieActor = "Rumi Hiiragi, Miyu Irino",
-                    movieTrailerUrl = "http://trailer.com/spiritedaway",
+                    movieTrailerUrl = "https://youtu.be/VLS9xSsfxkQ",
                     movieDuration = 125,
                     languageId = langId4,
                     minimumAgeID = minAgePId,
@@ -454,11 +455,50 @@ namespace backend.Data
             var foodId3 = "4f5a6b7c-8d9e-0f1a-2b3c-4d5e6f7a8b9c"; // Nachos
             var foodId4 = "5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d"; // Hot Dog
             modelBuilder.Entity<foodInformation>().HasData(
-                new foodInformation { foodInformationId = foodId1, foodInformationName = "Popcorn", foodPrice = 50000 },
-                new foodInformation { foodInformationId = foodId2, foodInformationName = "Coca-Cola", foodPrice = 25000 },
-                new foodInformation { foodInformationId = foodId3, foodInformationName = "Nachos", foodPrice = 65000 },
-                new foodInformation { foodInformationId = foodId4, foodInformationName = "Hot Dog", foodPrice = 45000 }
+                new foodInformation
+                {
+                    foodInformationId = foodId1, foodInformationName = "Popcorn", foodPrice = 50000
+                    , foodImageURL = "https://recipeforperfection.com/wp-content/uploads/2017/11/Movie-Theater-Popcorn-in-a-popcorn-bucket.jpg"
+                },
+                new foodInformation
+                {
+                    foodInformationId = foodId2, foodInformationName = "Coca-Cola", foodPrice = 25000 
+                    , foodImageURL = "https://product.hstatic.net/1000230954/product/z5097801162745_cc1e0be47992663fe974e135fb0fe2dd_3696c0b4f0c6405982bd558d8f26e0fc_1024x1024.jpg"
+                },
+                new foodInformation
+                {
+                    foodInformationId = foodId3, foodInformationName = "Nachos", foodPrice = 65000
+                    , foodImageURL = "https://www.stillwoodkitchen.com/wp-content/uploads/2023/02/DSC05431.jpg"
+                },
+                new foodInformation
+                {
+                    foodInformationId = foodId4, foodInformationName = "Hot Dog", foodPrice = 45000 ,
+                    foodImageURL = "https://backend.awrestaurants.com/sites/default/files/styles/responsive_image_5x4/public/2024-11/Hot-Dog-Hot-Dog_0.jpg?itok=PfAxxdhG"
+                }
             );
+            
+            var newDirectorStaffId = "d8d11645-73f0-4c54-a68e-88e8afe4c7e9";
+            var newCinemaStaffId = "f1eb0376-dfda-4570-85f9-021469e5593b";
+            DateTime StaffDateTime = new DateTime(1997 , 01 , 01);
+            modelBuilder.Entity<Staff>().HasData(
+                new Staff()
+                {
+                    userID = UserDirectorId ,
+                    Id = newDirectorStaffId ,
+                    dateOfBirth = StaffDateTime ,
+                    cinemaID = "2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c" ,
+                    Name = "Director Staff" ,
+                    phoneNumber = "0123456789"
+                    
+                } , new Staff()
+                {
+                    userID  = UserTheaterManagerId ,
+                    Id = newCinemaStaffId ,
+                    dateOfBirth = StaffDateTime ,
+                    cinemaID = "2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c" ,
+                    Name = "Theater Manager Staff",
+                    phoneNumber = "0123456789"
+                });
         }
     }
 }
