@@ -6,6 +6,6 @@ namespace backend.Interface.BookingInterface
 {
     public interface IBookingServices
     {
-        Task<GenericRespondWithObjectDTO<Dictionary<string , string>>> booking(OrderRequestDTO orderRequestDTO , HttpContext httpContext);
+        Task<GenericRespondWithObjectDTO<OrderRespondDTO>> booking(OrderRequestDTO orderRequestDTO , HttpContext httpContext);
     }
 }

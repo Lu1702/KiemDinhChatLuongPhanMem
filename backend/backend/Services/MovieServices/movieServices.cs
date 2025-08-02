@@ -562,10 +562,7 @@ namespace backend.Services.MovieServices
                     releaseDate = x.ReleaseDate,
                     movieVisualFormat = x.movieVisualFormatDetail
                         .Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
-                    isRelease = x.movieSchedule.Any(x =>
-                        x.movieId.Equals(x.movieId) && dateTime >= x.ScheduleDate && !x.IsDelete)
-                        ? true
-                        : false,
+                    isRelease = x.ReleaseDate > DateTime.Now ? false : true,
                     minimumAge =
                         _dataContext.minimumAges.FirstOrDefault(m => m.minimumAgeID.Equals(x.minimumAgeID))
                             .minimumAgeInfo,
@@ -599,10 +596,7 @@ namespace backend.Services.MovieServices
                     releaseDate = x.ReleaseDate,
                     movieVisualFormat = x.movieVisualFormatDetail
                         .Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
-                    isRelease = x.movieSchedule.Any(x =>
-                        x.movieId.Equals(x.movieId) && dateTime >= x.ScheduleDate && !x.IsDelete)
-                        ? true
-                        : false,
+                    isRelease = x.ReleaseDate > DateTime.Now ? false : true,
 
                 })
                 .Take(5).ToListAsync();
@@ -627,10 +621,7 @@ namespace backend.Services.MovieServices
                     releaseDate = x.ReleaseDate,
                     movieVisualFormat = x.movieVisualFormatDetail
                         .Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
-                    isRelease = x.movieSchedule.Any(x =>
-                        x.movieId.Equals(x.movieId) && dateTime >= x.ScheduleDate && !x.IsDelete)
-                        ? true
-                        : false,
+                    isRelease = x.ReleaseDate > DateTime.Now ? false : true,
                     minimumAge =
                         _dataContext.minimumAges.FirstOrDefault(m => m.minimumAgeID.Equals(x.minimumAgeID))
                             .minimumAgeInfo,
@@ -653,7 +644,7 @@ namespace backend.Services.MovieServices
         {
             DateTime dateTime = DateTime.Now;
             var getAllMovieData = await _dataContext.movieInformation
-                .Where(x => x.movieName.Contains(movie))
+                .Where(x => x.movieName.Contains(movie) && !x.isDelete)
                 .Select(x => new movieRespondDTO()
                 {
                     movieName = x.movieName,
@@ -664,10 +655,7 @@ namespace backend.Services.MovieServices
                     movieTrailerUrl = x.movieTrailerUrl,
                     movieVisualFormat = x.movieVisualFormatDetail
                         .Select(vs => vs.movieVisualFormat.movieVisualFormatName).ToArray(),
-                    isRelease = x.movieSchedule.Any(x =>
-                        x.movieId.Equals(x.movieId) && dateTime >= x.ScheduleDate && !x.IsDelete)
-                        ? true
-                        : false,
+                    isRelease = x.ReleaseDate > DateTime.Now ? false : true,
 
                 }).ToListAsync();
             return getAllMovieData;
@@ -679,11 +667,9 @@ namespace backend.Services.MovieServices
             // Layas Danh Sách check ở MovieSchedule coi đã có lịch chiếu chưa 
             // Lấy Random 5 Phim Đã chiếu
             // Lấy thông tin 
-            var findShowedMovie = _dataContext.movieInformation
-                .Where(x =>
-                    !x.isDelete && x.movieSchedule.Any(y => y.movieId.Equals(x.movieId) && y.IsDelete == false
-                    && 
-                    (y.ScheduleDate >= DateTime.Now && y.ScheduleDate <= DateTime.Now.AddDays(7))));
+            var findShowedMovie = _dataContext
+                .movieInformation
+                .Where(x => !x.isDelete && x.ReleaseDate < DateTime.Now);
             var selectData = await findShowedMovie.Select(x => new GetMovieShowedDTOList()
             {
                 MovieId = x.movieId,
@@ -703,9 +689,7 @@ namespace backend.Services.MovieServices
         {
             var findShowedMovie = _dataContext.movieInformation
                 .Where(x =>
-                    !x.isDelete && x.movieSchedule.Any(y => y.movieId.Equals(x.movieId) && y.IsDelete == false
-                        &&
-                        y.ScheduleDate >= DateTime.Now.AddDays(7)));
+                    !x.isDelete && x.ReleaseDate > DateTime.Now);
             var selectData = await findShowedMovie.Select(x => new GetMovieShowedDTOList()
             {
                 MovieId = x.movieId,

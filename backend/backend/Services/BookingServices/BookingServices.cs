@@ -21,15 +21,15 @@ namespace backend.Services.BookingServices
         public BookingServices(DataContext dataContext, IVnpayService vnpayService)
         {
             _dataContext = dataContext;
-            _vnpayService = vnpayService; // Assigned to the renamed field
+            _vnpayService = vnpayService; 
         }
 
-        public async Task<GenericRespondWithObjectDTO<Dictionary<string , string>>> booking(OrderRequestDTO orderRequestDTO, HttpContext httpContext)
+        public async Task<GenericRespondWithObjectDTO<OrderRespondDTO>> booking(OrderRequestDTO orderRequestDTO, HttpContext httpContext)
         {
             // Phần Booking vé
             if (String.IsNullOrEmpty(orderRequestDTO.movieScheduleId))
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Lỗi lịch chiếu đã bị xóa"
@@ -39,10 +39,10 @@ namespace backend.Services.BookingServices
             if (_dataContext.movieSchedule.Any(x => x.movieScheduleId.Equals
                     (orderRequestDTO.movieScheduleId) && x.IsDelete))
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
-                    message = ""
+                    message = "Lỗi không tìm thấy lịch chiếu"
                 };
             }
 
@@ -50,7 +50,7 @@ namespace backend.Services.BookingServices
                 await _dataContext.Customers.FirstOrDefaultAsync(x => x.userID.Equals(orderRequestDTO.userId));
             if (getData == null)
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Khong Tim Thay Nguoi Dung"
@@ -82,7 +82,7 @@ namespace backend.Services.BookingServices
 
             if (!checkSeats)
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Loi , Ghe Khong Thuoc Ve Phong"
@@ -91,7 +91,7 @@ namespace backend.Services.BookingServices
 
             if (!orderRequestDTO.userTypeRequestDTO.Any())
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Loi Chưa có chọn thể loại người dùng"
@@ -100,7 +100,7 @@ namespace backend.Services.BookingServices
 
             if (orderRequestDTO.userTypeRequestDTO.Any(x => !x.SeatsList.Any()))
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Ban Chua Chon Ghe"
@@ -112,7 +112,7 @@ namespace backend.Services.BookingServices
                 .FirstOrDefault(x => x.movieScheduleId == orderRequestDTO.movieScheduleId && !x.IsDelete);
             if (getMovieScheduleData == null)
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Khong Tim Thay Lich Chieu"
@@ -122,7 +122,7 @@ namespace backend.Services.BookingServices
             var selectMovieVisualFormat = getMovieScheduleData.movieVisualFormatID;
             if (String.IsNullOrEmpty(selectMovieVisualFormat))
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Khong Tim Thay Dinh Dang Hinh Anh"
@@ -132,7 +132,7 @@ namespace backend.Services.BookingServices
             // Bắt lôix
             if(orderRequestDTO.userTypeRequestDTO.Any(x => x.quantity > x.SeatsList.Count))
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Ban Dat Thiếu Ghe Roi"
@@ -141,10 +141,32 @@ namespace backend.Services.BookingServices
             
             if(orderRequestDTO.userTypeRequestDTO.Any(x => x.quantity < x.SeatsList.Count))
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Ban Dat Du Ghe Roi"
+                };
+            }
+
+            var checkValidSeats = true;
+            foreach (var seat in orderRequestDTO.userTypeRequestDTO.Select(x => x.SeatsList.Select(x => x.seatID)))
+            {
+                foreach (var seatId in seat)
+                {
+                    var getInfo = _dataContext.Seats.Any(x => x.seatsId.Equals(seatId) && (x.isDelete || x.isTaken ));
+                    if (getInfo)
+                    {
+                        checkValidSeats = false;
+                    }
+                }
+            }
+
+            if (!checkValidSeats)
+            {
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Ghế Không tồn tại rồi baạn ơi"
                 };
             }
             
@@ -158,7 +180,7 @@ namespace backend.Services.BookingServices
                         x.userTypeId , x => x.priceInformationID);
             if (!ToDictionayDataPriceWithUserType.Any())
             {
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Loi Khong Tim Thay Gia"
@@ -196,8 +218,7 @@ namespace backend.Services.BookingServices
                 var getFoodInfo = await _dataContext.foodInformation.ToDictionaryAsync(x => x.foodInformationId , x => x.foodPrice);
                 if (!getFoodInfo.Any())
                 {
-                    return new GenericRespondWithObjectDTO<Dictionary<string , string>>
-                    {
+                    return new GenericRespondWithObjectDTO<OrderRespondDTO>()                    {
                         Status = GenericStatusEnum.Failure.ToString(),
                         message = "Lay Data Product That Bai"
                     };
@@ -223,7 +244,8 @@ namespace backend.Services.BookingServices
                     orderId = generateOrderId,
                     customerID = getData.Id,
                     PaymentStatus = PaymentStatus.Pending.ToString(),
-                    totalAmount = TotalAmount 
+                    totalAmount = TotalAmount ,
+                    paymentRequestCreatedDate = DateTime.Now
                 });
                 
                 // Sau Do Tien Hanh Update Database
@@ -279,23 +301,153 @@ namespace backend.Services.BookingServices
 
                 var generateVnpayUrl = _vnpayService
                     .createURL(TotalAmount, generateOrderId, httpContext);
-                
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+
+                var findMovieId = await _dataContext.movieSchedule
+                    .Include(movieSchedule => movieSchedule.movieVisualFormat)
+                    .FirstOrDefaultAsync(x => x.movieScheduleId.Equals(orderRequestDTO.movieScheduleId));
+                if (findMovieId != null)
                 {
-                    Status = GenericStatusEnum.Success.ToString(),
-                    message = "Order Thanh Cong" ,
-                    data = new Dictionary<string, string>()
+                    var findRoomInfo = findMovieId.cinemaRoomId;
+                    var getMovieInfo =  
+                        await _dataContext.movieInformation
+                            .FirstOrDefaultAsync(x => x.movieId.Equals(findMovieId.movieId));
+                    var selectCinemaInfo =
+                        await _dataContext.cinemaRoom.Include(cinemaRoom => cinemaRoom.Cinema).FirstOrDefaultAsync(x => x.cinemaRoomId.Equals(findRoomInfo));
+                    if (selectCinemaInfo != null && getMovieInfo != null)
                     {
-                        {"VnpayURL" , generateVnpayUrl} ,
-                        {"TotalAmount" , TotalAmount.ToString() }
+                        var cinemaLocation =
+                            selectCinemaInfo.Cinema.cinemaLocation;
+                        var roomNumber = selectCinemaInfo.cinemaRoomNumber;
+                        var movieName =
+                            getMovieInfo.movieName;
+                        var getShowedDate =
+                            findMovieId.ScheduleDate;
+                        var getVisualInfo =
+                            findMovieId.movieVisualFormat.movieVisualFormatName;
+                        
+                        // Tieeps tuc Tiem Kiem Thong tin UserType (Có sẵn trong DTO)
+                        List<OrderRespondUserTypeInfo> orderRespondUserType = new List<OrderRespondUserTypeInfo>();
+                        foreach (var userType in orderRequestDTO.userTypeRequestDTO)
+                        {
+                            long getPrice = 0;
+                            var PricesInfo = _dataContext.priceInformationForEachUserFilmType
+                                .FirstOrDefault(x => x.userTypeId == userType.userTypeID && x.movieVisualFormatId
+                                    .Equals(findMovieId.movieVisualFormatID))!.PriceInformation
+                                .priceAmount;
+                            getPrice += PricesInfo * userType.quantity;
+                            orderRespondUserType.Add(new OrderRespondUserTypeInfo()
+                            {
+                                UserType = _dataContext.userType.FirstOrDefault(x
+                                => x.userTypeId.Equals(userType.userTypeID)).userTypeDescription ,
+                                SeatsNumber = String.Join("," , 
+                                    _dataContext.Seats.Where(x => userType.SeatsList.Select(x => x.seatID).Contains(x.seatsId)).Select(x => x.seatsNumber)) ,
+                                PriceTicket = getPrice
+                            });
+                        }
+
+                        OrderRespondUserTypeWithPrices orderRespondUserTypeWithPrices =
+                            new OrderRespondUserTypeWithPrices()
+                            {
+                                OrderRespondUserTypeInfos = orderRespondUserType ,
+                                TotalPriceTicket = orderRespondUserType.Sum(x => x.PriceTicket)
+                            };
+                        
+                        List<OrderRespondProductsInfo> orderRespondProducts = new List<OrderRespondProductsInfo>();
+                        if (orderRequestDTO.foodRequestDTOs.Any())
+                        {
+                            foreach (var foodRequestInfo in orderRequestDTO.foodRequestDTOs)
+                            {
+                                var findFoodInfo =
+                                    _dataContext.foodInformation.FirstOrDefault(x => x.foodInformationId.Equals(foodRequestInfo.foodID));
+                                if (findFoodInfo != null)
+                                {
+                                    var foodName =
+                                        findFoodInfo.foodInformationName;
+                                    var foodPrice =
+                                        findFoodInfo.foodPrice;
+                                    orderRespondProducts.Add(new OrderRespondProductsInfo()
+                                    {
+                                        ProductName = foodName,
+                                        Amount = foodPrice,
+                                        ProductPrice = foodPrice * foodRequestInfo.quantity
+                                    });
+                                    // Tinh toan
+                                }
+                            }
+
+                            OrderRespondProductsInfoWithTotalPrice orderRespondProductsInfoWithTotalPrice
+                                = new OrderRespondProductsInfoWithTotalPrice()
+                                {
+                                    OrderRespondProductsInfos = orderRespondProducts,
+                                    TotalPrice = orderRespondProducts.Sum(x => x.ProductPrice)
+                                };
+                            
+                            return new GenericRespondWithObjectDTO<OrderRespondDTO>()
+                            {
+                                Status = GenericStatusEnum.Success.ToString(),
+                                message = "Thông tin checkOut Order" ,
+                                data = new OrderRespondDTO()
+                                {
+                                    VnpayInfo  = new Dictionary<string, string>()
+                                    {
+                                        {"VnpayURL" , generateVnpayUrl}
+                                    },
+                                    OrderRespondDtoInfo = new OrderRespondDTOInfo()
+                                    {
+                                        MovieName = movieName ,
+                                        CinemaLocation = cinemaLocation ,
+                                        RoomNumber = roomNumber.ToString() ,
+                                        ShowedDate = getShowedDate ,
+                                        VisualFormat = getVisualInfo,
+                                        OrderRespondUserTypeWithPrices = orderRespondUserTypeWithPrices ,
+                                        OrderRespondProductsInfoWithTotalPrice = orderRespondProductsInfoWithTotalPrice ,
+                                        TotalPrice = orderRespondUserTypeWithPrices.TotalPriceTicket + orderRespondProductsInfoWithTotalPrice.TotalPrice
+                                    }
+                                }
+                            };
+                        }
+                        
+                        return new GenericRespondWithObjectDTO<OrderRespondDTO>()
+                        {
+                            Status = GenericStatusEnum.Success.ToString(),
+                            message = "Thông tin checkout Order" ,
+                            data = new OrderRespondDTO()
+                            {
+                                VnpayInfo  = new Dictionary<string, string>()
+                                {
+                                    {"VnpayURL" , generateVnpayUrl}
+                                },
+                                OrderRespondDtoInfo = new OrderRespondDTOInfo()
+                                {
+                                    MovieName = movieName ,
+                                    CinemaLocation = cinemaLocation ,
+                                    RoomNumber = roomNumber.ToString() ,
+                                    ShowedDate = getShowedDate ,
+                                    VisualFormat = getVisualInfo,
+                                    OrderRespondUserTypeWithPrices = orderRespondUserTypeWithPrices ,
+                                    TotalPrice = orderRespondUserTypeWithPrices.TotalPriceTicket 
+                                }
+                            }
+                        };
                     }
+
+                    return new GenericRespondWithObjectDTO<OrderRespondDTO>()
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Khng tìm thấy thông tin rạp hoặc thông tin phim"
+                    };
+                }
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Không tìm thấy thông tin Lịch chiếu"
                 };
                 
             }
             catch (Exception e)
             {
                 await Transaction.RollbackAsync();
-                return new GenericRespondWithObjectDTO<Dictionary<string, string>>()
+                return new GenericRespondWithObjectDTO<OrderRespondDTO>()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
                     message = "Loi Databases"

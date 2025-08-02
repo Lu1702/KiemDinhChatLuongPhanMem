@@ -1,4 +1,5 @@
-﻿using backend.Enum;
+﻿using backend.Data;
+using backend.Enum;
 using backend.Interface.Schedule;
 using backend.ModelDTO.ScheduleDTO;
 using backend.ModelDTO.ScheduleDTO.Request;
@@ -13,10 +14,13 @@ namespace backend.Controllers
     public class ScheduleController : ControllerBase
     {
         private readonly IScheduleServices scheduleServices;
+        
+        private readonly DataContext dataContext;
 
-        public ScheduleController(IScheduleServices scheduleServices)
+        public ScheduleController(IScheduleServices scheduleServices , DataContext dataContext)
         {
             this.scheduleServices = scheduleServices;
+            this.dataContext = dataContext;
         }
         [HttpPost("addSchedule")]
         [Authorize(Policy = "TheaterManager")]
@@ -76,6 +80,18 @@ namespace backend.Controllers
                 return BadRequest(getStatus);
             }
             return Ok(getStatus);
+        }
+
+        [HttpGet("GetAllTimes")]
+        public IActionResult GetAllTimes()
+        {
+            var getAllTimes = dataContext.HourSchedule
+                .Select(x => new
+                {
+                    HourScheduleID = x.HourScheduleID,
+                    HourScheduleShowTime = x.HourScheduleShowTime
+                });
+            return Ok(getAllTimes);
         }
     }
 }

@@ -32,6 +32,7 @@ public class FoodService : IFoodService
                     FoodId = getFood.foodInformationId,
                     FoodName = getFood.foodInformationName,
                     FoodPrice = getFood.foodPrice,
+                    FoodImageURL = getFood.foodImageURL
                 });
             }
 
