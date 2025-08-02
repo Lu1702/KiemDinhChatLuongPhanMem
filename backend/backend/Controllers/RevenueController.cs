@@ -1,5 +1,6 @@
 using backend.Enum;
 using backend.Interface.RevenueInterface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers;
@@ -16,6 +17,7 @@ public class RevenueController : ControllerBase
     }
 
     [HttpGet("GetRevenueByCinemaId")]
+    [Authorize(Policy = "Director")]
     public async Task<IActionResult> GetRevenueByCinemaId(string cinemaId)
     {
         var getData = await _revenueService.GetRevenueByCinemaId(cinemaId);
@@ -27,6 +29,7 @@ public class RevenueController : ControllerBase
     }
 
     [HttpGet("GetAllRevenue")]
+    [Authorize(Policy = "Director")]
     public async Task<IActionResult> GetAllRevenue()
     {
         var getData = await _revenueService.GetAllRevenue();
