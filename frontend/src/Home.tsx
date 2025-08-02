@@ -7,21 +7,14 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
-import QuickBooking from "./Bookig/QuickBooking";
+import QuickBooking from './Bookig/QuickBooking';
 import { useNavigate } from 'react-router-dom';
 
 interface Movie {
-  movieID: string;
-  movieName: string;
-  movieImage: string;
-  movieTrailerUrl: string;
-}
-
-interface movies123 {
   movieId: string;
   movieName: string;
   movieImage: string;
-  trailerURL: string;
+  trailerUrl: string;
 }
 
 function Home() {
@@ -29,28 +22,47 @@ function Home() {
   const [showTrailer, setShowTrailer] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState('');
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [upcomingMovies, setUpcomingMovies] = useState<movies123[]>([]);
+  const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch currently showing movies
   useEffect(() => {
-    setIsLoading(true);
-    fetch('http://localhost:5229/api/movie/getAllMoviesPagniation/1')
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.movieRespondDTOs && Array.isArray(data.movieRespondDTOs)) {
-          setMovies(data.movieRespondDTOs);
-        } else {
-          console.error('Dữ liệu API không đúng định dạng:', data);
-          setMovies([]);
+    const fetchAllMovies = async () => {
+      let allMovies: Movie[] = [];
+      let page = 1;
+      let hasMore = true;
+
+      try {
+        while (hasMore) {
+          const response = await fetch(`http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          const moviesData = data.movieRespondDTOs || data.data || data;
+          if (!Array.isArray(moviesData) || moviesData.length === 0) {
+            hasMore = false;
+          } else {
+            const formattedMovies = moviesData.map((item: any) => ({
+              movieId: item.movieID || item.movieId || '',
+              movieName: item.movieName || '',
+              movieImage: item.movieImage || '',
+              trailerUrl: item.movieTrailerUrl || item.trailerURL || '',
+            }));
+            allMovies = [...allMovies, ...formattedMovies];
+            page++;
+          }
         }
-        setIsLoading(false);
-      })
-      .catch((error) => {
+        setMovies(allMovies);
+      } catch (error) {
         console.error('Lỗi khi lấy danh sách phim:', error);
         setMovies([]);
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+
+    fetchAllMovies();
   }, []);
 
   // Fetch upcoming movies
@@ -59,8 +71,15 @@ function Home() {
     fetch('http://localhost:5229/api/movie/GetUnShowedMovie')
       .then((response) => response.json())
       .then((data) => {
-        if (data.movieRespondDTOs && Array.isArray(data.movieRespondDTOs)) {
-          setUpcomingMovies(data.movieRespondDTOs);
+        console.log('Dữ liệu API phim sắp chiếu:', JSON.stringify(data, null, 2));
+        if (data.status === 'Success' && Array.isArray(data.data)) {
+          const formattedMovies = data.data.map((item: any) => ({
+            movieId: item.movieID || item.movieId || '',
+            movieName: item.movieName || '',
+            movieImage: item.movieImage || '',
+            trailerUrl: item.movieTrailerUrl || item.trailerURL || '',
+          }));
+          setUpcomingMovies(formattedMovies);
         } else {
           console.error('Dữ liệu API không đúng định dạng:', data);
           setUpcomingMovies([]);
@@ -103,18 +122,18 @@ function Home() {
   };
 
   const renderMovieSlide = (movie: Movie, index: number) => (
-    <SwiperSlide key={movie.movieID}>
+    <SwiperSlide key={movie.movieId}>
       <div className="flex flex-col items-center">
         <img
           src={movie.movieImage}
           alt={movie.movieName}
-          onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
+          onClick={() => handleOpenTrailer(movie.trailerUrl)}
           className="w-80 h-[400px] object-cover rounded shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
         />
         <p className="text-white mt-4 font-semibold text-center max-w-[280px] truncate">{movie.movieName}</p>
         <div className="mt-2 flex gap-2">
           <button
-            onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
+            onClick={() => handleOpenTrailer(movie.trailerUrl)}
             className="p-3 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
@@ -145,19 +164,19 @@ function Home() {
     </SwiperSlide>
   );
 
-  const renderMovieSlide1 = (movie123: movies123, index: number) => (
-    <SwiperSlide key={movie123.movieId}>
+  const renderMovieSlide1 = (movie: Movie, index: number) => (
+    <SwiperSlide key={movie.movieId}>
       <div className="flex flex-col items-center">
         <img
-          src={movie123.movieImage}
-          alt={movie123.movieName}
-          onClick={() => handleOpenTrailer(movie123.trailerURL)}
+          src={movie.movieImage}
+          alt={movie.movieName}
+          onClick={() => handleOpenTrailer(movie.trailerUrl)}
           className="w-80 h-[400px] object-cover rounded shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
         />
-        <p className="text-white mt-4 font-semibold text-center">{movie123.movieName}</p>
+        <p className="text-white mt-4 font-semibold text-center">{movie.movieName}</p>
         <div className="mt-2 flex gap-2">
           <button
-            onClick={() => handleOpenTrailer(movie123.trailerURL)}
+            onClick={() => handleOpenTrailer(movie.trailerUrl)}
             className="p-3 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>

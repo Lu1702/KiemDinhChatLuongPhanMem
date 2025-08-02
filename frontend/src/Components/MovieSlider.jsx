@@ -11,15 +11,18 @@ const MovieSlider = () => {
         navigate("/listfilm");
     }
     const slides = [
-        {
-            image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/chaching.jpg",
-        },
+
         {
             image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/BANNER-WEB.jpg",
         },
         {
             image: "https://api-website.cinestar.com.vn/media/MageINIC/bannerslider/1215wx365h_8_.jpg",
         },
+        {
+            image: "https://thumbs.dreamstime.com/b/color-vector-cinema-building-red-chair-giant-popcorn-boxes-drink-movie-night-commercial-online-concept-invitation-to-premiere-316893647.jpg?w=1400",
+        },
+
+
 
     ];
 

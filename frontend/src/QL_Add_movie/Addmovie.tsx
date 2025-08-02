@@ -462,46 +462,46 @@ const AddMovie: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-cover bg-fixed bg-center" style={{ backgroundImage: `url(${bg})` }}>
+        <div className="flex flex-col min-h-screen bg-cover bg-fixed bg-center" style={{ backgroundImage: `url(${bg})` }}>
             <header className="sticky top-0 z-50 bg-slate-950 shadow-md mb-4">
-                <div className="max-w-screen-xl mx-auto px-8"><Nav /></div>
+                <div className="max-w-screen-xl mx-auto px-4 sm:px-8"><Nav /></div>
             </header>
 
-            <main>
-                <h2 className="text-3xl font-bold text-white text-center uppercase mt-14 mb-6">
+            <main className="flex-grow">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white text-center uppercase mt-8 sm:mt-14 mb-6">
                     {editIndex !== null ? "Cập nhật phim" : "Thêm phim"}
                 </h2>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="flex justify-center">
+                    <div className="flex justify-center px-4 sm:px-0">
                         <div
-                            className="w-2/3 backdrop-blur-md p-6 rounded-xl shadow-xl space-y-4 relative z-10"
+                            className="w-full sm:w-3/4 md:w-2/3 max-w-4xl backdrop-blur-md p-4 sm:p-6 rounded-xl shadow-xl space-y-4 relative z-10"
                             style={{
                                 backgroundImage:
                                     "url('https://www.lfs.com.my/images/cinema%20background.jpg')",
                             }}
                         >
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <input
                                     name="name"
                                     value={form.name}
                                     onChange={handleInputChange}
                                     placeholder="Tên phim"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300"
+                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 w-full"
                                 />
                                 <input
                                     name="director"
                                     value={form.director}
                                     onChange={handleInputChange}
                                     placeholder="Đạo diễn"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300"
+                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 w-full"
                                 />
                                 <input
                                     name="actor"
                                     value={form.actor}
                                     onChange={handleInputChange}
                                     placeholder="Diễn viên"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300"
+                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 w-full"
                                 />
                                 <input
                                     name="duration"
@@ -509,13 +509,13 @@ const AddMovie: React.FC = () => {
                                     onChange={handleInputChange}
                                     type="number"
                                     placeholder="Thời lượng (phút)"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300"
+                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 w-full"
                                 />
                                 <select
                                     name="languageId"
                                     value={form.languageId}
                                     onChange={handleInputChange}
-                                    className="p-2 border rounded bg-transparent text-slate-300 font-normal"
+                                    className="p-2 border rounded bg-transparent text-slate-300 font-normal w-full"
                                 >
                                     <option className="text-black bg-slate-600" value="">
                                         Chọn ngôn ngữ gốc
@@ -534,7 +534,7 @@ const AddMovie: React.FC = () => {
                                     name="ageId"
                                     value={form.ageId}
                                     onChange={handleInputChange}
-                                    className="p-2 border rounded bg-transparent text-slate-300 font-normal"
+                                    className="p-2 border rounded bg-transparent text-slate-300 font-normal w-full"
                                 >
                                     <option className="text-black bg-slate-600" value="">
                                         Chọn độ tuổi
@@ -555,23 +555,23 @@ const AddMovie: React.FC = () => {
                                         </option>
                                     )}
                                 </select>
-                                <div className="flex flex-row rounded border py-2 px-2">
-                                    <p className="border-e-2 pr-3 text-slate-300">Chọn poster phim</p>
+                                <div className="flex flex-row rounded border py-2 px-2 w-full">
+                                    <p className="border-e-2 pr-3 text-slate-300 shrink-0">Chọn poster phim</p>
                                     <input
                                         name="image"
                                         type="file"
                                         onChange={handleFileChange}
-                                        className="pl-10 bg-transparent text-slate-300 file:hidden"
+                                        className="pl-3 bg-transparent text-slate-300 file:hidden w-full"
                                     />
                                 </div>
-                                <div className="flex flex-row rounded border py-2 px-2">
-                                    <p className="border-e-2 pr-3 text-slate-300">Chọn thời gian ra mắt</p>
+                                <div className="flex flex-row rounded border py-2 px-2 w-full">
+                                    <p className="border-e-2 pr-3 text-slate-300 shrink-0">Chọn thời gian ra mắt</p>
                                     <input
                                         name="releaseDate"
                                         value={form.releaseDate}
                                         onChange={handleInputChange}
                                         type="date"
-                                        className="pl-20 bg-transparent text-slate-300"
+                                        className="pl-3 bg-transparent text-slate-300 w-full"
                                     />
                                 </div>
                                 <input
@@ -580,7 +580,7 @@ const AddMovie: React.FC = () => {
                                     value={form.trailer}
                                     onChange={handleInputChange}
                                     placeholder="Chèn URL Trailer"
-                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 col-span-2"
+                                    className="p-2 border rounded bg-transparent text-white font-medium placeholder:font-normal placeholder:text-slate-300 col-span-1 sm:col-span-2 w-full"
                                 />
                                 <textarea
                                     name="description"
@@ -588,12 +588,12 @@ const AddMovie: React.FC = () => {
                                     onChange={handleInputChange}
                                     rows={5}
                                     placeholder="Mô tả phim"
-                                    className="p-2 border rounded col-span-2 bg-transparent placeholder:font-normal placeholder:text-slate-300 font-medium text-white"
+                                    className="p-2 border rounded col-span-1 sm:col-span-2 bg-transparent placeholder:font-normal placeholder:text-slate-300 font-medium text-white w-full"
                                 />
                             </div>
 
                             <div className="space-y-4">
-                                <label className="block text-white mb-2">Thể loại</label>
+                                <label className="block text-white font-semibold">Thể loại</label>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {selectedGenres.length > 0 ? (
                                         selectedGenres.map((id) => {
@@ -703,7 +703,15 @@ const AddMovie: React.FC = () => {
                                 >
                                     <div className="relative overflow-hidden">
                                         <p className="group-hover:-translate-y-7 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]">
-                                            {editIndex !== null ? "Cập nhật" : isSubmitting ? "Đang thêm..." : "Thêm phim"}
+                                            {editIndex !== null ? "Cập nhật" : isSubmitting ? <div className="flex-col gap-4 w-full flex items-center justify-center">
+                                                <div
+                                                    className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full"
+                                                >
+                                                    <div
+                                                        className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"
+                                                    ></div>
+                                                </div>
+                                            </div> : "Thêm phim"}
                                         </p>
                                         <p className="absolute top-7 left-0 group-hover:top-0 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]">
                                             {editIndex !== null ? "Cập nhật" : isSubmitting ? "Đang thêm..." : "Thêm phim"}
@@ -711,14 +719,14 @@ const AddMovie: React.FC = () => {
                                     </div>
                                 </button>
                             </div>
-                            {loi && <p className="text-red-500">{loi}</p>}
-                            {thanhCong && <p className="text-green-500">{thanhCong}</p>}
+                            {loi && <p className="text-red-500 text-center">{loi}</p>}
+                            {thanhCong && <p className="text-green-500 text-center">{thanhCong}</p>}
                         </div>
                     </div>
                 </form>
 
-                <div className="mt-10 px-10">
-                    <h3 className="text-3xl font-semibold text-white mb-4">Danh sách phim</h3>
+                <div className="mt-10 px-4 sm:px-10">
+                    <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4 text-center sm:text-left">Danh sách phim</h3>
                     {loading ? (
                         <p className="text-white text-center">Đang tải...</p>
                     ) : loi ? (
@@ -727,160 +735,166 @@ const AddMovie: React.FC = () => {
                         <p className="text-white text-center">Chưa có phim nào</p>
                     ) : (
                         <>
-                            <table
-                                className="w-full backdrop-blur-md p-6 rounded-xl shadow-xl space-y-4 relative z-10 overflow-hidden py-5"
-                                style={{
-                                    backgroundImage: "url('https://www.lfs.com.my/images/cinema%20background.jpg')",
-                                }}
-                            >
-                                <thead className="bg-slate-600 text-white">
-                                    <tr>
-                                        <th className="px-4 py-2">STT</th>
-                                        <th className="px-4 py-2">Poster</th>
-                                        <th className="px-4 py-2 w-72">Tên</th>
-                                        <th className="px-4 py-2">Thể loại</th>
-                                        <th className="px-4 py-2">Trailer</th>
-                                        <th className="px-4 py-2">Ngày ra mắt</th>
-                                        <th className="px-4 py-2">Ngôn ngữ</th>
-                                        <th className="px-4 py-2">Địn dạng</th>
-                                        <th className="px-4 py-2">Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {movies.map((m, i) => (
-                                        <tr key={m.movieId || m.name + i} className="text-center border-b">
-                                            <td className="text-white">{i + 1}</td>
-                                            <td className="text-white">
-                                                {m.image ? (
-                                                    <img
-                                                        src={m.image}
-                                                        alt={m.name}
-                                                        className="w-20 h-20 object-cover mx-auto"
-                                                    />
-                                                ) : (
-                                                    <span>Không có poster</span>
-                                                )}
-                                            </td>
-                                            <td className="text-white">{m.name || "Không có tên"}</td>
-                                            <td className="text-white">
-                                                {m.genres?.length > 0 ? m.genres.join(", ") : "Không có thể loại"}
-                                            </td>
-                                            <td className="text-white">
-                                                {m.trailer ? (
-                                                    <a
-                                                        href={m.trailer}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-blue-500 hover:underline"
-                                                    >
-                                                        Xem Trailer
-                                                    </a>
-                                                ) : (
-                                                    <span>Không có trailer</span>
-                                                )}
-                                            </td>
-                                            <td className="text-white">{m.releaseDate || "Không có ngày"}</td>
-                                            <td className="text-white">{m.language || "Không có ngôn ngữ"}</td>
-                                            <td className="text-white">
-                                                {m.dinhdang?.length > 0 ? m.dinhdang.join(", ") : "Không có định dạng"}
-                                            </td>
-                                            <td className="text-white flex flex-row gap-2 pt-6">
-                                                <button
-                                                    onClick={() => handleEdit(i)}
-                                                    className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 ease-in-out delay-75 hover:bg-blue-700 text-white text-xs font-medium rounded-md hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-200"
-                                                >
-                                                    <svg
-                                                        className="h-4 w-4 mr-0.5 self-center items-center"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                    >
-                                                        <path
-                                                            d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"
-                                                        ></path>
-                                                    </svg>
-                                                    Sửa
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(i)}
-                                                    className="group relative flex h-10 w-10 flex-col items-center justify-center overflow-hidden rounded-md border-2 border-red-800 bg-red-400 hover:bg-red-600"
-                                                >
-                                                    <svg
-                                                        viewBox="0 0 1.625 1.625"
-                                                        className="absolute -top-5 fill-white delay-100 group-hover:top-4 group-hover:animate-[spin_1.4s] group-hover:duration-1000"
-                                                        height="12"
-                                                        width="12"
-                                                    >
-                                                        <path
-                                                            d="M.471 1.024v-.52a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099h-.39c-.107 0-.195 0-.195-.195"
-                                                        ></path>
-                                                        <path
-                                                            d="M1.219.601h-.163A.1.1 0 0 1 .959.504V.341A.033.033 0 0 0 .926.309h-.26a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099v-.39a.033.033 0 0 0-.032-.033"
-                                                        ></path>
-                                                        <path
-                                                            d="m1.245.465-.15-.15a.02.02 0 0 0-.016-.006.023.023 0 0 0-.023.022v.108c0 .036.029.065.065.065h.107a.023.023 0 0 0 .023-.023.02.02 0 0 0-.007-.016"
-                                                        ></path>
-                                                    </svg>
-                                                    <svg
-                                                        width="12"
-                                                        fill="none"
-                                                        viewBox="0 0 39 7"
-                                                        className="origin-right duration-500 group-hover:rotate-90"
-                                                    >
-                                                        <line stroke-width="3" stroke="white" y2="5" x2="39" y1="5"></line>
-                                                        <line
-                                                            stroke-width="2"
-                                                            stroke="white"
-                                                            y2="1.5"
-                                                            x2="26.0357"
-                                                            y1="1.5"
-                                                            x1="12"
-                                                        ></line>
-                                                    </svg>
-                                                    <svg
-                                                        width="12"
-                                                        fill="none"
-                                                        viewBox="0 0 33 39"
-                                                        className=""
-                                                    >
-                                                        <mask fill="white" id="path-1-inside-1_8_19">
-                                                            <path
-                                                                d="M0 0H33V35C33 37.2091 31.2091 39 29 39H4C1.79086 39 0 37.2091 0 35V0Z"
-                                                            ></path>
-                                                        </mask>
-                                                        <path
-                                                            mask="url(#path-1-inside-1_8_19)"
-                                                            fill="white"
-                                                            d="M0 0H33H0ZM37 35C37 39.4183 33.4183 43 29 43H4C-0.418278 43 -4 39.4183 -4 35H4H29H37ZM4 43C-0.418278 43 -4 39.4183 -4 35V0H4V35V43ZM37 0V35C37 39.4183 33.4183 43 29 43V35V0H37Z"
-                                                        ></path>
-                                                        <path stroke-width="3" stroke="white" d="M12 6L12 29"></path>
-                                                        <path stroke-width="3" stroke="white" d="M21 6V29"></path>
-                                                    </svg>
-                                                </button>
-                                            </td>
+                            <div className="overflow-x-auto">
+                                <table
+                                    className="w-full backdrop-blur-md p-6 rounded-xl shadow-xl space-y-4 relative z-10"
+                                    style={{
+                                        backgroundImage: "url('https://www.lfs.com.my/images/cinema%20background.jpg')",
+                                    }}
+                                >
+                                    <thead className="bg-slate-600 text-white text-sm sm:text-base">
+                                        <tr>
+                                            <th className="px-2 sm:px-4 py-2">STT</th>
+                                            <th className="px-2 sm:px-4 py-2">Poster</th>
+                                            <th className="px-2 sm:px-4 py-2 w-48 sm:w-72">Tên</th>
+                                            <th className="px-2 sm:px-4 py-2">Thể loại</th>
+                                            <th className="px-2 sm:px-4 py-2">Trailer</th>
+                                            <th className="px-2 sm:px-4 py-2">Ngày ra mắt</th>
+                                            <th className="px-2 sm:px-4 py-2">Ngôn ngữ</th>
+                                            <th className="px-2 sm:px-4 py-2">Định dạng</th>
+                                            <th className="px-2 sm:px-4 py-2">Hành động</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <div className="flex justify-center mt-4">
+                                    </thead>
+                                    <tbody>
+                                        {movies.map((m, i) => (
+                                            <tr key={m.movieId || m.name + i} className="text-center border-b text-sm sm:text-base">
+                                                <td className="text-white px-2 sm:px-4 py-2">{i + 1}</td>
+                                                <td className="text-white px-2 sm:px-4 py-2">
+                                                    {m.image ? (
+                                                        <img
+                                                            src={m.image}
+                                                            alt={m.name}
+                                                            className="w-16 sm:w-20 h-16 sm:h-20 object-cover mx-auto"
+                                                        />
+                                                    ) : (
+                                                        <span>Không có poster</span>
+                                                    )}
+                                                </td>
+                                                <td className="text-white px-2 sm:px-4 py-2">{m.name || "Không có tên"}</td>
+                                                <td className="text-white px-2 sm:px-4 py-2">
+                                                    {m.genres?.length > 0 ? m.genres.join(", ") : "Không có thể loại"}
+                                                </td>
+                                                <td className="text-white px-2 sm:px-4 py-2">
+                                                    {m.trailer ? (
+                                                        <a
+                                                            href={m.trailer}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-500 hover:underline"
+                                                        >
+                                                            Xem Trailer
+                                                        </a>
+                                                    ) : (
+                                                        <span>Không có trailer</span>
+                                                    )}
+                                                </td>
+                                                <td className="text-white px-2 sm:px-4 py-2">{m.releaseDate || "Không có ngày"}</td>
+                                                <td className="text-white px-2 sm:px-4 py-2">{m.language || "Không có ngôn ngữ"}</td>
+                                                <td className="text-white px-2 sm:px-4 py-2">
+                                                    {m.dinhdang?.length > 0 ? m.dinhdang.join(", ") : "Không có định dạng"}
+                                                </td>
+                                                <td className="text-white px-2 sm:px-4 py-2 flex flex-row gap-2 justify-center">
+                                                    <button
+                                                        onClick={() => handleEdit(i)}
+                                                        className="inline-flex items-center justify-center px-2 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-md hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-200"
+                                                    >
+                                                        <svg
+                                                            className="h-4 w-4 mr-0.5 self-center items-center"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                        >
+                                                            <path
+                                                                d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"
+                                                            ></path>
+                                                        </svg>
+                                                        Sửa
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(i)}
+                                                        className="group relative flex h-8 sm:h-10 w-8 sm:w-10 flex-col items-center justify-center overflow-hidden rounded-md border-2 border-red-800 bg-red-400 hover:bg-red-600"
+                                                    >
+                                                        <svg
+                                                            viewBox="0 0 1.625 1.625"
+                                                            className="absolute -top-5 fill-white delay-100 group-hover:top-4 group-hover:animate-[spin_1.4s] group-hover:duration-1000"
+                                                            height="10"
+                                                            width="10"
+                                                        >
+                                                            <path
+                                                                d="M.471 1.024v-.52a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099h-.39c-.107 0-.195 0-.195-.195"
+                                                            ></path>
+                                                            <path
+                                                                d="M1.219.601h-.163A.1.1 0 0 1 .959.504V.341A.033.033 0 0 0 .926.309h-.26a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099v-.39a.033.033 0 0 0-.032-.033"
+                                                            ></path>
+                                                            <path
+                                                                d="m1.245.465-.15-.15a.02.02 0 0 0-.016-.006.023.023 0 0 0-.023.022v.108c0 .036.029.065.065.065h.107a.023.023 0 0 0 .023-.023.02.02 0 0 0-.007-.016"
+                                                            ></path>
+                                                        </svg>
+                                                        <svg
+                                                            width="10"
+                                                            fill="none"
+                                                            viewBox="0 0 39 7"
+                                                            className="origin-right duration-500 group-hover:rotate-90"
+                                                        >
+                                                            <line stroke-width="3" stroke="white" y2="5" x2="39" y1="5"></line>
+                                                            <line
+                                                                stroke-width="2"
+                                                                stroke="white"
+                                                                y2="1.5"
+                                                                x2="26.0357"
+                                                                y1="1.5"
+                                                                x1="12"
+                                                            ></line>
+                                                        </svg>
+                                                        <svg
+                                                            width="10"
+                                                            fill="none"
+                                                            viewBox="0 0 33 39"
+                                                            className=""
+                                                        >
+                                                            <mask fill="white" id="path-1-inside-1_8_19">
+                                                                <path
+                                                                    d="M0 0H33V35C33 37.2091 31.2091 39 29 39H4C1.79086 39 0 37.2091 0 35V0Z"
+                                                                ></path>
+                                                            </mask>
+                                                            <path
+                                                                mask="url(#path-1-inside-1_8_19)"
+                                                                fill="white"
+                                                                d="M0 0H33H0ZM37 35C37 39.4183 33.4183 43 29 43H4C-0.418278 43 -4 39.4183 -4 35H4H29H37ZM4 43C-0.418278 43 -4 39.4183 -4 35V0H4V35V43ZM37 0V35C37 39.4183 33.4183 43 29 43V35V0H37Z"
+                                                            ></path>
+                                                            <path stroke-width="3" stroke="white" d="M12 6L12 29"></path>
+                                                            <path stroke-width="3" stroke="white" d="M21 6V29"></path>
+                                                        </svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="flex justify-center mt-4 gap-2 sm:gap-4 flex-wrap">
                                 <button
                                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={page === 1}
-                                    className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-transparent backdrop-blur-lg px-6 py-2 text-base text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20">
-                                    <span className="text-lg">Trang trước</span>
+                                    className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-transparent backdrop-blur-lg px-4 sm:px-6 py-2 text-sm sm:text-base text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20"
+                                >
+                                    <span>Trang trước</span>
                                     <div
-                                        className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
+                                        className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]"
+                                    >
                                         <div className="relative h-full w-10 bg-white/30"></div>
                                     </div>
                                 </button>
-                                <span className="px-4 py-2 text-white text-lg">Trang {page} / {totalPages}</span>
+                                <span className="px-4 py-2 text-white text-sm sm:text-lg">Trang {page} / {totalPages}</span>
                                 <button
                                     onClick={() => setPage((prev) => prev + 1)}
                                     disabled={page === totalPages}
-                                    className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-transparent backdrop-blur-lg px-6 py-2 text-base text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20">
-                                    <span className="text-lg">Trang sau</span>
+                                    className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-transparent backdrop-blur-lg px-4 sm:px-6 py-2 text-sm sm:text-base text-white transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 border border-white/20"
+                                >
+                                    <span>Trang sau</span>
                                     <div
-                                        className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
+                                        className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]"
+                                    >
                                         <div className="relative h-full w-10 bg-white/30"></div>
                                     </div>
                                 </button>
@@ -929,7 +943,7 @@ const AddMovie: React.FC = () => {
                     </div>
                 )}
             </main>
-            <footer className="pt-32"><Bottom /></footer>
+            <Bottom />
         </div>
     );
 };
