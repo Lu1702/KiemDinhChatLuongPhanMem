@@ -7,9 +7,11 @@ using backend.ModelDTO.ScheduleDTO.Request;
 using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Linq;
 using backend.Model.Booking;
 using backend.ModelDTO.ScheduleDTO;
+using Microsoft.Identity.Client;
 
 namespace backend.Services.Schedule
 {
@@ -274,188 +276,129 @@ namespace backend.Services.Schedule
                 };
             }
 
-            // Tieesn hanh Check Trong các trương
-            // Tìm kiếm Thông tin phim nếu phim có lịch chieeus chưa bị xóa và có người đang đặt thì ko cho
-            // Xóa phòng tiếp tục check nếu chưa đc xóa
-            // Logic xóa có Logic như sau :
-            // Nếu lịch đã chiếu và đã có người đặt THÌ sẽ xóa mềm
-            // Nếu lịch đã chiếu chưa có người đặt THÌ sẽ xóa cứng
-            // Neesu lịch chưa chiếu và đã có người đặt thì kooong được xóa
-            // Nếu lịch chưa chiếu và chưa cos người đặt thì sẽ dd xóa cứng // Tổng cộng có 4 case
+            await using var transaction = await _dataContext.Database.BeginTransactionAsync();
 
-            // Case thứ nhất : Nếu lịch đã chiếu và đã có người đặt THÌ sẽ xóa mềm
-            var findMovieScheduleCase1 = _dataContext
-                .movieSchedule.Where
-                (x => x.movieScheduleId.Equals(id)
-                      && x.IsDelete).ToList();
-            // Tiếp tục tìm tới thông tin vé
-            var Case1SelectTicket = _dataContext
-                .TicketOrderDetail.Where
-                    (x => findMovieScheduleCase1.Select(x => x.movieScheduleId).Contains(x.movieScheduleID))
-                .Select(x => x.orderId);
-            // Check điều kiện
-            await using var Transaction = await _dataContext.Database.BeginTransactionAsync();
+    try
+    {
+        var movieSchedule = await _dataContext.movieSchedule
+            .FirstOrDefaultAsync(x => x.movieScheduleId.Equals(id));
 
-            // Nếu lịch đã chiếu nhưng chưa có ai đặt thì sẽ khóa cứng tổng cộng sex 2 lượt logic
-            try
+        if (movieSchedule == null)
+        {
+            return new GenericRespondDTOs()
             {
-                if (Case1SelectTicket.Any())
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Lịch chiếu không tồn tại."
+            };
+        }
+
+        var hasTickets = await _dataContext.TicketOrderDetail
+            .AnyAsync(x => x.movieScheduleID.Equals(id));
+
+        var hasActiveOrders = await _dataContext.TicketOrderDetail
+            .Where(x => x.movieScheduleID.Equals(id))
+            .Join(_dataContext.Order,
+                ticket => ticket.orderId,
+                order => order.orderId,
+                (ticket, order) => order)
+            .AnyAsync(order => order.PaymentStatus.Equals(PaymentStatus.PaymentSuccess.ToString()) ||
+                               order.PaymentStatus.Equals(PaymentStatus.Pending.ToString()));
+        
+        var getTime =await _dataContext.HourSchedule.FirstOrDefaultAsync(x => x.HourScheduleID.Equals(movieSchedule.HourScheduleID));
+        Console.WriteLine(getTime.HourScheduleShowTime);
+        var time = TimeSpan.ParseExact(getTime.HourScheduleShowTime.ToString(), @"hh\:mm", CultureInfo.InvariantCulture);
+        bool isAired = movieSchedule.ScheduleDate.Add(time) < DateTime.Now; 
+
+        if (isAired)
+        {
+            if (hasActiveOrders)
+            {
+                movieSchedule.IsDelete = true;
+                _dataContext.movieSchedule.Update(movieSchedule);
+                await _dataContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return new GenericRespondDTOs()
                 {
-                    var Case1Checking =
-                        _dataContext.Order.Any
-                        (x => Case1SelectTicket.Contains(x.orderId) &&
-                              (x.PaymentStatus
-                                   .Equals(PaymentStatus.PaymentSuccess.ToString()) ||
-                               x.PaymentStatus.Equals(PaymentStatus.Pending.ToString())));
-
-                    // Case 1
-                    if (Case1Checking)
-                    {
-                        // Xóa mềm
-                        // Tien Hanh Duyet Vong Lap De Xoa Mem
-                        foreach (var Schedule in findMovieScheduleCase1)
-                        {
-                            Schedule.IsDelete = true;
-                        }
-
-                        _dataContext.movieSchedule.UpdateRange(findMovieScheduleCase1);
-                        await _dataContext.SaveChangesAsync();
-                        await Transaction.CommitAsync();
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Success.ToString(),
-                            message = "Đã xóa lịch chiếu thành công"
-                        };
-                    }
-
-                    // Case Thứ 2 : Nếu lịch đã chiếu chưa có người đặt THÌ sẽ xóa cứng
-
-                    // Tận dụng phần của Case1
-                    if (!Case1Checking)
-                    {
-                        // Tien Hanh Xoa Cung Thong TIn
-                        var Case2Checking =
-                            _dataContext.TicketOrderDetail.Where
-                                (x => Case1SelectTicket.Contains(x.orderId)).ToList();
-                        var findOrder =
-                            _dataContext.Order.Where
-                            (x => Case2Checking.Select
-                                      (x => x.orderId).Contains(x.orderId) &&
-                                  x.PaymentStatus.Equals(GenericStatusEnum.Failure.ToString())).ToList();
-
-                        // Tien Hanh Xoa Cung
-                        
-                        _dataContext.movieSchedule.RemoveRange(findMovieScheduleCase1);
-                        _dataContext.TicketOrderDetail.RemoveRange(Case2Checking);
-                        _dataContext.Order.RemoveRange(findOrder);
-
-                        await _dataContext.SaveChangesAsync();
-                        await Transaction.CommitAsync();
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Success.ToString(),
-                            message = "Đã xóa lịch chiếu thành công"
-                        };
-                    }
-                }
-                else
-                {
-                    _dataContext.movieSchedule
-                        .RemoveRange(findMovieScheduleCase1);
-                    await _dataContext.SaveChangesAsync();
-                    await Transaction.CommitAsync();
-                    
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Success.ToString(),
-                        message = "Đã xóa lịch chiếu thành công"
-                    };
-                }
-
-                // Case Thứ 3 : Neesu lịch chưa chiếu và đã có người đặt thì kooong được xóa
-                // Tieeps tucj Case 3
-                var findMovieScheduleCase3 = _dataContext
-                    .movieSchedule.Where
-                        (x => x.movieScheduleId.Equals(id));
-                // Thêm If else Logic
-                var case3SelectTicket = _dataContext
-                    .TicketOrderDetail.Where
-                        (x => findMovieScheduleCase3.Select(x => x.movieScheduleId).Contains(x.movieScheduleID));
-                // Đây là Logic kiểm tra xem có TỒN TẠI VÉ HAY KO neesy không tồn tại thì sẽ dùng Logic của thằng xóa cungws
-                if (case3SelectTicket.Any())
-                {
-                    //
-                    var Case3Checking =
-                        _dataContext.Order.Any
-                        (x => case3SelectTicket.Select(x => x.orderId).Contains(x.orderId) &&
-                              (x.PaymentStatus
-                                   .Equals(PaymentStatus.PaymentSuccess.ToString()) ||
-                               x.PaymentStatus.Equals(PaymentStatus.Pending.ToString())));
-                    // Case 3
-                    //Neesu lịch chưa chiếu và đã có người đặt thì kooong được xóa
-                    if (Case3Checking)
-                    {
-                        // Tien Hanh khong cho xoa
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Failure.ToString(),
-                            message = "Không thể xóa lịch chiếu do lịch chiếu đã có người đặt"
-                        };
-                    }
-
-                    // Case thứ 4 : Nếu lịch chưa chiếu và chưa cos người đặt thì sẽ dd xóa cứng 
-                    if (!Case3Checking)
-                    {
-                        // Tieens hanh Kiem Tra
-                        var findTicketCase4 = 
-                            _dataContext.TicketOrderDetail
-                                .Where(x => findMovieScheduleCase3
-                                    .Select(x => x.movieScheduleId).Contains(x.movieScheduleID));
-                        // Tien Hanh Tim Thong Tin Giao Dich
-                        var findOrder = 
-                            _dataContext
-                                .Order.Where(x => findTicketCase4.Select(x => x.orderId).Contains(x.orderId));
-                        
-                        // Tien hanh xoa cung
-                        _dataContext.movieSchedule.RemoveRange(findMovieScheduleCase3);
-                        _dataContext.TicketOrderDetail.RemoveRange(findTicketCase4);
-                        _dataContext.Order.RemoveRange(findOrder);
-                        
-                        await _dataContext.SaveChangesAsync();
-                        await Transaction.CommitAsync();
-                        
-                        return new GenericRespondDTOs()
-                        {
-                            Status = GenericStatusEnum.Success.ToString(),
-                            message = "Đã xóa lịch chiếu thành công"
-                        };
-                    }
-                }
-                else
-                {
-                    // Truong Hop Khong AI Dat ve // Van Xoa
-                    _dataContext.movieSchedule.RemoveRange(findMovieScheduleCase3);
-                    await _dataContext.SaveChangesAsync();
-                    await Transaction.CommitAsync();
-                   
-                    return new GenericRespondDTOs()
-                    {
-                        Status = GenericStatusEnum.Success.ToString(),
-                        message = "Đã xóa lịch chiếu thành công"
-                    };
-                }
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Đã xóa mềm lịch chiếu thành công (lịch đã chiếu và có người đặt)."
+                };
             }
-            catch (Exception e)
+            else
             {
-                // Rollback Transaction
-                await Transaction.RollbackAsync();
+                // Case 2: If the schedule has aired AND has no active orders (either no tickets or all failed payments)
+                // -> Hard delete the movie schedule and associated data.
+                var ticketsToDelete = await _dataContext.TicketOrderDetail
+                    .Where(x => x.movieScheduleID.Equals(id))
+                    .ToListAsync();
+                var ordersToDelete = new List<Order>();
+                if (ticketsToDelete.Any())
+                {
+                    var orderIds = ticketsToDelete.Select(t => t.orderId).ToList();
+                    ordersToDelete = await _dataContext.Order
+                        .Where(o => orderIds.Contains(o.orderId) && o.PaymentStatus.Equals(PaymentStatus.PaymentFailure.ToString()))
+                        .ToListAsync();
+                }
+
+                _dataContext.movieSchedule.Remove(movieSchedule);
+                _dataContext.TicketOrderDetail.RemoveRange(ticketsToDelete);
+                _dataContext.Order.RemoveRange(ordersToDelete); // Only remove orders with failed payments if they exist.
+
+                await _dataContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Đã xóa cứng lịch chiếu thành công (lịch đã chiếu và không có người đặt)."
+                };
+            }
+        }
+        else 
+        {
+            if (hasActiveOrders)
+            {
                 return new GenericRespondDTOs()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
-                    message = $"Lỗi Database Vui Lòng liên hệ dev để giải quyết Chi tiết lỗi + {e.Message}"
+                    message = "Không thể xóa lịch chiếu do lịch chiếu chưa diễn ra và đã có người đặt vé thành công hoặc đang chờ thanh toán."
                 };
             }
-            return null!;
+            else
+            {
+                var ticketsToDelete = await _dataContext.TicketOrderDetail
+                    .Where(x => x.movieScheduleID.Equals(id))
+                    .ToListAsync();
+                var ordersToDelete = new List<Order>();
+                if (ticketsToDelete.Any())
+                {
+                    var orderIds = ticketsToDelete.Select(t => t.orderId).ToList();
+                    ordersToDelete = await _dataContext.Order
+                        .Where(o => orderIds.Contains(o.orderId)) // For not aired and no active orders, any order linked can be removed.
+                        .ToListAsync();
+                }
+
+                _dataContext.movieSchedule.Remove(movieSchedule);
+                _dataContext.TicketOrderDetail.RemoveRange(ticketsToDelete);
+                _dataContext.Order.RemoveRange(ordersToDelete);
+
+                await _dataContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Đã xóa cứng lịch chiếu thành công (lịch chưa chiếu và không có người đặt)."
+                };
+            }
+        }
+    }
+    catch (Exception e)
+    {
+        await transaction.RollbackAsync();
+        return new GenericRespondDTOs()
+        {
+            Status = GenericStatusEnum.Failure.ToString(),
+            message = $"Lỗi Database Vui Lòng liên hệ dev để giải quyết Chi tiết lỗi: {e.Message}"
+        };
+    }
         }
 
         public GenericRespondWithObjectDTO<List<GetListScheduleDTO>> getAlSchedulesByMovieName(string movieName)

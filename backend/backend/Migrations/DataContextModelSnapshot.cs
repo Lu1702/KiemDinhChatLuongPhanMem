@@ -745,32 +745,32 @@ namespace backend.Migrations
                         new
                         {
                             movieGenreId = "e5f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0",
-                            movieGenreName = "Action"
+                            movieGenreName = "Hành động"
                         },
                         new
                         {
                             movieGenreId = "f6a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c1",
-                            movieGenreName = "Comedy"
+                            movieGenreName = "Hài hước"
                         },
                         new
                         {
                             movieGenreId = "a1a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c2",
-                            movieGenreName = "Horror"
+                            movieGenreName = "Kinh dị"
                         },
                         new
                         {
                             movieGenreId = "b2b7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c3",
-                            movieGenreName = "Sci-Fi"
+                            movieGenreName = "Khoa học viễn tưởng"
                         },
                         new
                         {
                             movieGenreId = "c3c7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c4",
-                            movieGenreName = "Romance"
+                            movieGenreName = "Lãng mạng"
                         },
                         new
                         {
                             movieGenreId = "d4d7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c5",
-                            movieGenreName = "Animation"
+                            movieGenreName = "Hoạt hình"
                         });
                 });
 

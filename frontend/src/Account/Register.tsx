@@ -7,141 +7,184 @@ import Bottom from '../Footer/bottom';
 
 function Register() {
     const navigate = useNavigate();
-    const handleLogin = () => {
-        navigate('/Login')
-    }
     const [startDate, setStartDate] = useState<Date | null>(null);
+
+    const handleLogin = () => {
+        navigate('/Login');
+    };
+
     return (
         <div className="min-h-screen w-full bg-cover bg-center"
-            style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
-            <div className="sticky top-0 z-50 shadow-md" style={{ backgroundImage: "url('https://th.bing.com/th/id/R.9e8b6083d2c56afe3e37c99a0d008551?rik=MgANzjo9WJbFrA&riu=http%3a%2f%2fgetwallpapers.com%2fwallpaper%2ffull%2f5%2f0%2f3%2f718692-amazing-dark-purple-backgrounds-1920x1200.jpg&ehk=QVn3JWJ991bU4NaIVD9w8hngTuAZ1AHehPjBWxqpDUE%3d&risl=&pid=ImgRaw&r=0')" }}>
+             style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
+            <div className="sticky top-0 z-50 shadow-xl bg-[url('https://th.bing.com/th/id/R.9e8b6083d2c56afe3e37c99a0d008551?rik=MgANzjo9WJbFrA&riu=http%3a%2f%2fgetwallpapers.com%2fwallpaper%2ffull%2f5%2f0%2f3%2f718692-amazing-dark-purple-backgrounds-1920x1200.jpg&ehk=QVn3JWJ991bU4NaIVD9w8hngTuAZ1AHehPjBWxqpDUE%3d&risl=&pid=ImgRaw&r=0')]">
                 <header>
-                    <div className="content-wrapper max-w-screen-xl text-base mx-auto px-8">
+                    <div className="max-w-7xl mx-auto px-8">
                         <Nav />
                     </div>
                 </header>
             </div>
-            <div className="content-wrapper max-w-screen-xl text-base mx-auto px-8  min-h-screen pb-32">
-                <div className="content-wrapper max-w-screen-2xl text-base mx-auto px-8  min-h-screen">
-                    <div>
-                        <div className="flex justify-center items-center h-full w-full pt-20">
-                            <div className="grid gap-8  border-4 border-double  border-indigo-500 backdrop-blur-sm">
-                                <section
-                                    id="back-div"
-                                    className="bg-transparent rounded-3xl">
-                                    <div
-                                        className="border-8 border-transparent rounded-xl bg-slate-300 shadow-2xl p-8 m-2">
-                                        <h2
-                                            className="text-2xl font-extrabold text-center cursor-default  text-[#12213c]">
-                                            ĐĂNG KÝ
-                                        </h2>
-                                        <form action="#" method="post" className="space-y-6">
-                                            <div className="w-96">
-                                                <label typeof="text" className="flex justify-start items-start mb-2 text-base text-[#12213c] font-bold px-4 ">Tên đăng nhập</label>
-                                                <input
-                                                    id="TenDN"
-                                                    className="placeholder:text-slate-500 text-base border p-3 shadow-md bg-transparent dark:text-[#12213c] dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105 duration-300"
-                                                    type="text"
-                                                    placeholder="Nhập tên đăng nhập"
-                                                />
-                                            </div>
-                                            <div className="w-96">
-                                                <label typeof="email" className="flex justify-start items-start mb-2 text-base text-[#12213c] font-bold px-4 ">Email</label>
-                                                <input
-                                                    id="email"
-                                                    className="placeholder:text-slate-500 border p-3 shadow-md bg-transparent dark:text-[#12213c] dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105 duration-300"
-                                                    type="email"
-                                                    placeholder="Email"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="flex justify-start items-start mb-2 text-base text-[#12213c] font-bold px-4 ">Mật khẩu</label>
-                                                <input
-                                                    id="password"
-                                                    className="placeholder:text-slate-500 border p-3 shadow-md bg-transparent dark:text-[#12213c] dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105 duration-300"
-                                                    type="password"
-                                                    placeholder="Hãy nhập mật khẩu "
-                                                />
-                                            </div>
-                                            <div className="w-96">
-                                                <label className="flex justify-start items-start mb-2 text-base text-[#12213c] font-bold px-4 ">
-                                                    Ngày sinh
-                                                </label>
-                                                <DatePicker
-                                                    selected={startDate}
-                                                    onChange={(date) => setStartDate(date)}
-                                                    dateFormat="dd/MM/yyyy"
-                                                    isClearable
-                                                    showYearDropdown
-                                                    scrollableMonthYearDropdown placeholderText="Chọn ngày sinh của bạn 🎂"
-                                                    className="placeholder:text-slate-500 border p-3 shadow-md bg-transparent dark:text-[#12213c] dark:border-gray-700 border-gray-300 rounded-lg w-[385px] focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105 duration-300"
-                                                />
-                                            </div>
-                                            <div className="w-96">
-                                                <label className="flex justify-start items-start mb-2 text-base text-[#12213c] font-bold px-4 ">Số điện thoại</label>
-                                                <input
-                                                    id="phone"
-                                                    className="placeholder:text-slate-500 border p-3 shadow-md bg-transparent dark:text-[#12213c] dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105 duration-300"
-                                                    type="tel"
-                                                    maxLength={10}
-                                                    pattern="[0-9]{10}"
-                                                    placeholder="Nhập số điện thoại 📱 "
-                                                />
-                                            </div>
-                                            <div className="w-96">
-                                                <label className="flex justify-start items-start mb-2 text-base text-[#12213c] font-bold px-4 ">Họ và tên</label>
-                                                <input
-                                                    id="TenKH"
-                                                    className="placeholder:text-slate-500 border p-3 shadow-md bg-transparent dark:text-[#12213c] dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105 duration-300"
-                                                    type="text"
-                                                    placeholder="Nhập họ và tên"
-                                                />
-                                            </div>
-                                            <div className="w-96">
-                                                <label className="flex justify-start items-start mb-2 text-base text-[#12213c] font-bold px-4 ">Số CCCD</label>
-                                                <input
-                                                    id="CCCD"
-                                                    className="placeholder:text-slate-500 border p-3 shadow-md bg-transparent dark:text-[#12213c] dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105 duration-300"
-                                                    type="tel"
-                                                    maxLength={12}
-                                                    pattern="[0-9]{12}"
-                                                    placeholder="Nhập số Căn cước công dân 💳"
-                                                />
-                                            </div>
-                                            <div className="flex items-center mt-4">
-                                                <input
-                                                    id="agree"
-                                                    type="checkbox"
-                                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                                />
-                                                <label htmlFor="agree" className="ml-2 w-[360px] text-sm text-gray-900 dark:text-[#12213c]">
-                                                    Khách hàng đã đồng ý các điều khoản, điều kiện của thành viên Cinema
-                                                </label>
-                                            </div>
-                                            <button
-                                                className="w-full font-bold p-3 mt-4 text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:scale-105 transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                type="submit">
-                                                ĐĂNG KÝ
-                                            </button>
-                                        </form>
-                                        <div className="flex flex-col mt-4 text-sm text-center dark:text-[#12213c]">
-                                            <p>
-                                                Bạn đã có tài khoản?
-                                                <span onClick={handleLogin} className="text-blue-400 transition hover:underline cursor-pointer">Đăng nhập</span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </section>
-                            </div>
+            <div className="max-w-7xl mx-auto px-8 min-h-screen pt-24 flex justify-center items-center">
+                <div
+                    className="max-w-lg w-full bg-gradient-to-r from-blue-800 to-purple-600 rounded-xl shadow-2xl overflow-hidden p-10 space-y-8 animate-[slideInFromLeft_1s_ease-out]"
+                >
+                    <h2 className="text-center text-4xl font-extrabold text-white animate-[appear_2s_ease-out]">
+                        Đăng ký
+                    </h2>
+                    <p className="text-center text-gray-200 animate-[appear_3s_ease-out]">
+                        Tạo tài khoản của bạn
+                    </p>
+                    <form action="#" method="post" className="space-y-6">
+                        <div className="relative">
+                            <input
+                                id="TenDN"
+                                name="TenDN"
+                                type="text"
+                                placeholder="Tên đăng nhập"
+                                className="peer h-12 w-full border-b-2 border-gray-300 text-white bg-transparent placeholder-transparent focus:outline-none focus:border-purple-500 text-lg"
+                                required
+                            />
+                            <label
+                                htmlFor="TenDN"
+                                className="absolute left-0 -top-4 text-gray-500 text-base transition-all peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-4 peer-focus:text-purple-500 peer-focus:text-base"
+                            >
+                                Tên đăng nhập
+                            </label>
                         </div>
-
+                        <div className="relative">
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="email@example.com"
+                                className="peer h-12 w-full border-b-2 border-gray-300 text-white bg-transparent placeholder-transparent focus:outline-none focus:border-purple-500 text-lg"
+                                required
+                            />
+                            <label
+                                htmlFor="email"
+                                className="absolute left-0 -top-4 text-gray-500 text-base transition-all peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-4 peer-focus:text-purple-500 peer-focus:text-base"
+                            >
+                                Địa chỉ Email
+                            </label>
+                        </div>
+                        <div className="relative">
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                placeholder="Mật khẩu"
+                                className="peer h-12 w-full border-b-2 border-gray-300 text-white bg-transparent placeholder-transparent focus:outline-none focus:border-purple-500 text-lg"
+                                required
+                            />
+                            <label
+                                htmlFor="password"
+                                className="absolute left-0 -top-4 text-gray-500 text-base transition-all peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-4 peer-focus:text-purple-500 peer-focus:text-base"
+                            >
+                                Mật khẩu
+                            </label>
+                        </div>
+                        <div className="relative">
+                            <DatePicker
+                                selected={startDate}
+                                onChange={(date) => setStartDate(date)}
+                                dateFormat="dd/MM/yyyy"
+                                isClearable
+                                showYearDropdown
+                                scrollableMonthYearDropdown
+                                placeholderText="Chọn ngày sinh của bạn 🎂"
+                                className="peer h-12 w-full border-b-2 border-gray-300 text-white bg-transparent placeholder-transparent focus:outline-none focus:border-purple-500 text-lg"
+                            />
+                            <label
+                                htmlFor="date"
+                                className="absolute left-0 -top-4 text-gray-500 text-base transition-all peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-4 peer-focus:text-purple-500 peer-focus:text-base"
+                            >
+                                Ngày sinh
+                            </label>
+                        </div>
+                        <div className="relative">
+                            <input
+                                id="phone"
+                                name="phone"
+                                type="tel"
+                                maxLength={10}
+                                pattern="[0-9]{10}"
+                                placeholder="Số điện thoại"
+                                className="peer h-12 w-full border-b-2 border-gray-300 text-white bg-transparent placeholder-transparent focus:outline-none focus:border-purple-500 text-lg"
+                                required
+                            />
+                            <label
+                                htmlFor="phone"
+                                className="absolute left-0 -top-4 text-gray-500 text-base transition-all peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-4 peer-focus:text-purple-500 peer-focus:text-base"
+                            >
+                                Số điện thoại
+                            </label>
+                        </div>
+                        <div className="relative">
+                            <input
+                                id="TenKH"
+                                name="TenKH"
+                                type="text"
+                                placeholder="Họ và tên"
+                                className="peer h-12 w-full border-b-2 border-gray-300 text-white bg-transparent placeholder-transparent focus:outline-none focus:border-purple-500 text-lg"
+                                required
+                            />
+                            <label
+                                htmlFor="TenKH"
+                                className="absolute left-0 -top-4 text-gray-500 text-base transition-all peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-4 peer-focus:text-purple-500 peer-focus:text-base"
+                            >
+                                Họ và tên
+                            </label>
+                        </div>
+                        <div className="relative">
+                            <input
+                                id="CCCD"
+                                name="CCCD"
+                                type="tel"
+                                maxLength={12}
+                                pattern="[0-9]{12}"
+                                placeholder="Số Căn cước công dân"
+                                className="peer h-12 w-full border-b-2 border-gray-300 text-white bg-transparent placeholder-transparent focus:outline-none focus:border-purple-500 text-lg"
+                                required
+                            />
+                            <label
+                                htmlFor="CCCD"
+                                className="absolute left-0 -top-4 text-gray-500 text-base transition-all peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-4 peer-focus:text-purple-500 peer-focus:text-base"
+                            >
+                                Số Căn cước công dân
+                            </label>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <label className="flex items-center text-base text-gray-200">
+                                <input
+                                    id="agree"
+                                    type="checkbox"
+                                    className="form-checkbox h-5 w-5 text-purple-600 bg-gray-800 border-gray-300 rounded"
+                                />
+                                <span className="ml-2">Đồng ý với các điều khoản của Cinema</span>
+                            </label>
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full py-3 px-4 bg-purple-500 hover:bg-purple-700 rounded-md shadow-lg text-white text-lg font-semibold transition duration-200"
+                        >
+                            Đăng ký
+                        </button>
+                    </form>
+                    <div className="text-center text-gray-300 text-base">
+                        Bạn đã có tài khoản?
+                        <span
+                            onClick={handleLogin}
+                            className="text-purple-300 hover:underline cursor-pointer pl-2"
+                        >
+                            Đăng nhập
+                        </span>
                     </div>
                 </div>
             </div>
-            <footer className="2">
+            <footer className="pt-32">
                 <Bottom />
             </footer>
         </div>
     );
 }
+
 export default Register;
