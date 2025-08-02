@@ -188,19 +188,20 @@ namespace backend.Data
             );
 
             // --- Seed Data for MovieGenre ---
-            var genreId1 = "e5f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0"; // Action
-            var genreId2 = "f6a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c1"; // Comedy
-            var genreId3 = "a1a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c2"; // Horror
-            var genreId4 = "b2b7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c3"; // Sci-Fi
-            var genreId5 = "c3c7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c4"; // Romance
-            var genreId6 = "d4d7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c5"; // Animation
+            var genreId1 = "e5f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0"; // Hành động
+            var genreId2 = "f6a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c1"; // Hài hước
+            var genreId3 = "a1a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c2"; // Kinh dị
+            var genreId4 = "b2b7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c3"; // Khoa học viễn tưởng
+            
+            var genreId5 = "c3c7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c4"; // Lãng mạng
+            var genreId6 = "d4d7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c5"; // Hoạt hình
             modelBuilder.Entity<movieGenre>().HasData(
-                new movieGenre { movieGenreId = genreId1, movieGenreName = "Action" },
-                new movieGenre { movieGenreId = genreId2, movieGenreName = "Comedy" },
-                new movieGenre { movieGenreId = genreId3, movieGenreName = "Horror" },
-                new movieGenre { movieGenreId = genreId4, movieGenreName = "Sci-Fi" },
-                new movieGenre { movieGenreId = genreId5, movieGenreName = "Romance" },
-                new movieGenre { movieGenreId = genreId6, movieGenreName = "Animation" }
+                new movieGenre { movieGenreId = genreId1, movieGenreName = "Hành động" },
+                new movieGenre { movieGenreId = genreId2, movieGenreName = "Hài hước" },
+                new movieGenre { movieGenreId = genreId3, movieGenreName = "Kinh dị" },
+                new movieGenre { movieGenreId = genreId4, movieGenreName = "Khoa học viễn tưởng" },
+                new movieGenre { movieGenreId = genreId5, movieGenreName = "Lãng mạng" },
+                new movieGenre { movieGenreId = genreId6, movieGenreName = "Hoạt hình" }
             );
 
             // --- Seed Data for minimumAge ---

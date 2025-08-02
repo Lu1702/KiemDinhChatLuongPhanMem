@@ -395,6 +395,7 @@ const Info: React.FC = () => {
             console.error('Network or unexpected error:', error);
         }
     };
+
     // Handlers for dynamic list items (visualFormatList, movieGenreList)
     const handleAddListItem = (listType: 'visual' | 'genre') => {
         if (listType === 'visual') {
@@ -426,11 +427,13 @@ const Info: React.FC = () => {
         }
     };
 
+
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault(); // Prevent default form submission behavior
         setLoading(true);
         setMessage(null);
+
 
         const formData = new FormData();
         formData.append('movieDuration', movieDuration.toString());
@@ -456,6 +459,7 @@ const Info: React.FC = () => {
                 formData.append('movieGenreList', item);
             }
         });
+
 
         if (movieImageFile) {
             formData.append('movieImage', movieImageFile, movieImageFileName);
@@ -1070,93 +1074,176 @@ const Info: React.FC = () => {
                         </div>
                     )}
                     {activeTab === "nhanvien" && roles1.includes('TheaterManager') && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl ">
-                            <h2 className="text-2xl font-bold mb-6">Thêm Nhân Viên</h2>
-                            <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "16px", maxWidth: "1000px", marginTop: "25px", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "16px", minWidth: "280px" }}>
-                                    <div className="uiverse-pixel-input-wrapper"><h3 style={{ fontSize: "24px", fontWeight: "bold", fontStyle: "italic" }}>Thông tin đăng nhập</h3></div>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <label className="uiverse-pixel-label">Rạp</label>
-                                        <select value={addStaffFormData.cinemaId} onChange={(e) => handleAddStaffInputChange(e, "cinemaId")} className="uiverse-pixel-input" required>
-                                            <option value="" disabled>-- Chọn rạp --</option>
-                                            {cinemas.map((cinema) => <option key={cinema.cinemaId} value={cinema.cinemaId}>{cinema.cinemaName}</option>)}
+                        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl max-w-5xl mx-auto my-8">
+                            <h2 className="text-2xl font-bold text-white mb-6">Thêm Nhân Viên</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Thông tin đăng nhập */}
+                                <div className="space-y-4">
+                                    <h3 className="text-xl font-semibold text-white italic">Thông tin đăng nhập</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Rạp</label>
+                                        <select
+                                            value={addStaffFormData.cinemaId}
+                                            onChange={(e) => handleAddStaffInputChange(e, "cinemaId")}
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            required
+                                        >
+                                            <option value="" disabled>
+                                                -- Chọn rạp --
+                                            </option>
+                                            {cinemas.map((cinema) => (
+                                                <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                                                    {cinema.cinemaName}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <label className="uiverse-pixel-label">Email Đăng nhập</label>
-                                        <input type="email" value={addStaffFormData.loginUserEmail} onChange={(e) => handleAddStaffInputChange(e, "loginUserEmail")} className="uiverse-pixel-input" placeholder="Email Đăng nhập" required />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Email Đăng nhập</label>
+                                        <input
+                                            type="email"
+                                            value={addStaffFormData.loginUserEmail}
+                                            onChange={(e) => handleAddStaffInputChange(e, "loginUserEmail")}
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            placeholder="Email Đăng nhập"
+                                            required
+                                        />
                                     </div>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <label className="uiverse-pixel-label">Mật khẩu</label>
-                                        <input type="password" value={addStaffFormData.loginUserPassword} onChange={(e) => handleAddStaffInputChange(e, "loginUserPassword")} className="uiverse-pixel-input" placeholder="Mật khẩu" required />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Mật khẩu</label>
+                                        <input
+                                            type="password"
+                                            value={addStaffFormData.loginUserPassword}
+                                            onChange={(e) => handleAddStaffInputChange(e, "loginUserPassword")}
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            placeholder="Mật khẩu"
+                                            required
+                                        />
                                     </div>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <label className="uiverse-pixel-label">Xác nhận mật khẩu</label>
-                                        <input type="password" value={addStaffFormData.loginUserPasswordConfirm} onChange={(e) => handleAddStaffInputChange(e, "loginUserPasswordConfirm")} className="uiverse-pixel-input" placeholder="Xác nhận mật khẩu" required />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Xác nhận mật khẩu</label>
+                                        <input
+                                            type="password"
+                                            value={addStaffFormData.loginUserPasswordConfirm}
+                                            onChange={(e) => handleAddStaffInputChange(e, "loginUserPasswordConfirm")}
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            placeholder="Xác nhận mật khẩu"
+                                            required
+                                        />
                                     </div>
                                 </div>
-                                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "16px", minWidth: "280px" }}>
-                                    <div className="uiverse-pixel-input-wrapper"><h3 style={{ fontSize: "24px", fontWeight: "bold", fontStyle: "italic" }}>Thông tin cá nhân</h3></div>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <label className="uiverse-pixel-label">Tên nhân viên</label>
-                                        <input type="text" value={addStaffFormData.staffName} onChange={(e) => handleAddStaffInputChange(e, "staffName")} className="uiverse-pixel-input" placeholder="Tên nhân viên" required />
+                                {/* Thông tin cá nhân */}
+                                <div className="space-y-4">
+                                    <h3 className="text-xl font-semibold text-white italic">Thông tin cá nhân</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Tên nhân viên</label>
+                                        <input
+                                            type="text"
+                                            value={addStaffFormData.staffName}
+                                            onChange={(e) => handleAddStaffInputChange(e, "staffName")}
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            placeholder="Tên nhân viên"
+                                            required
+                                        />
                                     </div>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <label className="uiverse-pixel-label">Ngày tháng năm sinh</label>
-                                        <input type="date" value={addStaffFormData.dateOfBirth} onChange={(e) => handleAddStaffInputChange(e, "dateOfBirth")} className="uiverse-pixel-input" placeholder="Ngày tháng năm sinh" required />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Ngày tháng năm sinh</label>
+                                        <input
+                                            type="date"
+                                            value={addStaffFormData.dateOfBirth}
+                                            onChange={(e) => handleAddStaffInputChange(e, "dateOfBirth")}
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            required
+                                        />
                                     </div>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <label className="uiverse-pixel-label">SĐT</label>
-                                        <input type="tel" value={addStaffFormData.phoneNumer} onChange={(e) => handleAddStaffInputChange(e, "phoneNumer")} className="uiverse-pixel-input" placeholder="Số điện thoại" required />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">SĐT</label>
+                                        <input
+                                            type="tel"
+                                            value={addStaffFormData.phoneNumer}
+                                            onChange={(e) => handleAddStaffInputChange(e, "phoneNumer")}
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            placeholder="Số điện thoại"
+                                            required
+                                        />
                                     </div>
-                                    <div className="uiverse-pixel-input-wrapper">
-                                        <label className="uiverse-pixel-label">Role</label>
-                                        <select value={addStaffFormData.role} onChange={(e) => handleAddStaffInputChange(e, "role")} className="uiverse-pixel-input" required>
-                                            <option value="" disabled>-- Chọn quyền hạn --</option>
-                                            {roles.map((role) => <option key={role.roleid} value={role.roleid}>{role.roleName}</option>)}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Role</label>
+                                        <select
+                                            value={addStaffFormData.role}
+                                            onChange={(e) => handleAddStaffInputChange(e, "role")}
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            required
+                                        >
+                                            <option value="" disabled>
+                                                -- Chọn quyền hạn --
+                                            </option>
+                                            {roles.map((role) => (
+                                                <option key={role.roleid} value={role.roleid}>
+                                                    {role.roleName}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
                             </div>
                             <div className="mt-6 text-center">
-                                <button className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group" onClick={handleAddStaffSubmit} disabled={loading}>
-                                    <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
+                                <button
+                                    className="relative bg-yellow-950 text-yellow-400 border border-yellow-400 rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-yellow-900 hover:border-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                    onClick={handleAddStaffSubmit}
+                                    disabled={loading}
+                                >
+                                    <span className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></span>
                                     {loading ? "Đang xử lý..." : "Thêm nhân viên"}
                                 </button>
                             </div>
                             <div className="mt-8">
-                                <h2 className="text-2xl font-bold mb-4">Danh sách nhân viên</h2>
-                                {error && <p className="text-red-500 mb-4">{error}</p>}
+                                <h2 className="text-2xl font-bold text-white mb-4">Danh sách nhân viên</h2>
+                                {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
                                 {isInitialLoading ? (
-                                    <p className="text-white">Đang tải danh sách...</p>
+                                    <p className="text-white text-center">Đang tải danh sách...</p>
                                 ) : staffList.length === 0 ? (
-                                    <p className="text-white">Không có nhân viên nào.</p>
+                                    <p className="text-white text-center">Không có nhân viên nào.</p>
                                 ) : (
                                     <div className="overflow-x-auto">
-                                        <table className="w-full bg-white/50 rounded-lg shadow-md">
+                                        <table className="w-full bg-white/10 rounded-lg shadow-md">
                                             <thead>
                                                 <tr className="bg-yellow-950 text-white">
-                                                    <th className="px-4 py-2">ID</th>
-                                                    <th className="px-4 py-2">Tên</th>
-                                                    <th className="px-4 py-2">Ngày sinh</th>
-                                                    <th className="px-4 py-2">SĐT</th>
-                                                    <th className="px-4 py-2">Rạp</th>
-                                                    <th className="px-4 py-2">Vai trò</th>
-                                                    <th className="px-4 py-2">Tùy Chọn</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Tên</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Ngày sinh</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">SĐT</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Rạp</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Vai trò</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Tùy Chọn</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {staffList.map((staff) => (
-                                                    <tr key={staff.staffId} className="border-t">
-                                                        <td className="px-4 py-2">{staff.staffId}</td>
-                                                        <td className="px-4 py-2">{staff.staffName}</td>
-                                                        <td className="px-4 py-2">{staff.dayOfBirth}</td>
-                                                        <td className="px-4 py-2">{staff.staffPhoneNumber}</td>
-                                                        <td className="px-4 py-2">{staff.cinemaId}</td>
-                                                        <td className="px-4 py-2">{staff.staffRole}</td>
+                                                    <tr key={staff.staffId} className="border-t border-gray-600 hover:bg-gray-700/20 transition">
+                                                        <td className="px-4 py-2 text-white">{staff.staffId}</td>
+                                                        <td className="px-4 py-2 text-white">{staff.staffName}</td>
+                                                        <td className="px-4 py-2 text-white">{staff.dayOfBirth}</td>
+                                                        <td className="px-4 py-2 text-white">{staff.staffPhoneNumber}</td>
+                                                        <td className="px-4 py-2 text-white">
+                                                            {cinemas.find((cinema) => cinema.cinemaId === staff.cinemaId)?.cinemaName || staff.cinemaId}
+                                                        </td>
+                                                        <td className="px-4 py-2 text-white">
+                                                            {roles.find((role) => role.roleid === staff.staffRole)?.roleName || staff.staffRole}
+                                                        </td>
                                                         <td className="px-4 py-2">
-                                                            <button onClick={() => handleEdit(staff.staffId)} className="mr-2 bg-blue-500 text-white px-2 py-1 rounded mb-2.5">Sửa</button>
-                                                            <button onClick={() => handleDelete(staff.staffId)} className="bg-red-500 text-white px-2 py-1 rounded">Xóa</button>
+                                                            <button
+                                                                onClick={() => handleEdit(staff.staffId)}
+                                                                className="mr-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+                                                            >
+                                                                Sửa
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(staff.staffId)}
+                                                                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
+                                                            >
+                                                                Xóa
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -1166,39 +1253,79 @@ const Info: React.FC = () => {
                                 )}
                             </div>
                             {editingStaff && (
-                                <div className="mt-6 bg-white/50 p-4 rounded-lg shadow-xl">
-                                    <h3 className="text-xl font-bold mb-4">Chỉnh sửa nhân viên</h3>
+                                <div className="mt-6 bg-white/10 backdrop-blur-md p-6 rounded-lg shadow-xl">
+                                    <h3 className="text-xl font-bold text-white mb-4">Chỉnh sửa nhân viên</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block mb-2 font-semibold">Tên nhân viên</label>
-                                            <input type="text" value={editingStaff.staffName} onChange={(e) => handleEditInputChange(e, "staffName")} className="w-full border rounded-md px-4 py-2" />
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Tên nhân viên</label>
+                                            <input
+                                                type="text"
+                                                value={editingStaff.staffName}
+                                                onChange={(e) => handleEditInputChange(e, "staffName")}
+                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block mb-2 font-semibold">Ngày sinh</label>
-                                            <input type="date" value={editingStaff.dateOfBirth} onChange={(e) => handleEditInputChange(e, "dateOfBirth")} className="w-full border rounded-md px-4 py-2" />
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Ngày sinh</label>
+                                            <input
+                                                type="date"
+                                                value={editingStaff.dateOfBirth}
+                                                onChange={(e) => handleEditInputChange(e, "dateOfBirth")}
+                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block mb-2 font-semibold">SĐT</label>
-                                            <input type="tel" value={editingStaff.phoneNumer} onChange={(e) => handleEditInputChange(e, "phoneNumer")} className="w-full border rounded-md px-4 py-2" />
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">SĐT</label>
+                                            <input
+                                                type="tel"
+                                                value={editingStaff.phoneNumer}
+                                                onChange={(e) => handleEditInputChange(e, "phoneNumer")}
+                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block mb-2 font-semibold">Rạp</label>
-                                            <select value={editingStaff.cinemaId} onChange={(e) => handleEditInputChange(e, "cinemaId")} className="w-full border rounded-md px-4 py-2">
-                                                {cinemas.map((cinema) => <option key={cinema.cinemaId} value={cinema.cinemaId}>{cinema.cinemaName}</option>)}
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Rạp</label>
+                                            <select
+                                                value={editingStaff.cinemaId}
+                                                onChange={(e) => handleEditInputChange(e, "cinemaId")}
+                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            >
+                                                {cinemas.map((cinema) => (
+                                                    <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                                                        {cinema.cinemaName}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block mb-2 font-semibold">Vai trò</label>
-                                            <select value={editingStaff.staffRole} onChange={(e) => handleEditInputChange(e, "staffRole")} className="w-full border rounded-md px-4 py-2">
-                                                {roles.map((role) => <option key={role.roleid} value={role.roleid}>{role.roleName}</option>)}
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Vai trò</label>
+                                            <select
+                                                value={editingStaff.staffRole}
+                                                onChange={(e) => handleEditInputChange(e, "staffRole")}
+                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            >
+                                                {roles.map((role) => (
+                                                    <option key={role.roleid} value={role.roleid}>
+                                                        {role.roleName}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
-                                    <div className="mt-4 text-center">
-                                        <button onClick={handleSaveEdit} className="bg-green-500 text-white px-4 py-2 rounded" disabled={loading}>
+                                    <div className="mt-4 text-center space-x-4">
+                                        <button
+                                            onClick={handleSaveEdit}
+                                            className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={loading}
+                                        >
                                             {loading ? "Đang lưu..." : "Lưu"}
                                         </button>
-                                        <button onClick={() => setEditingStaff(null)} className="ml-2 bg-gray-500 text-white px-4 py-2 rounded">Hủy</button>
+                                        <button
+                                            onClick={() => setEditingStaff(null)}
+                                            className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition"
+                                        >
+                                            Hủy
+                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -1773,6 +1900,38 @@ const Info: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Modal Đăng xuất */}
+                            {showLogoutModal && (
+                                <div style={modalOverlayStyle}>
+                                    <div style={{ background: '#4c65a8', padding: '24px', borderRadius: '8px', textAlign: 'center', color: 'white', width: '300px' }}>
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                                                <img src="/images/warning.png" alt="!" style={{ width: '40px' }} />
+                                            </div>
+                                        </div>
+                                        <p>Bạn chắc chắn muốn đăng xuất không?</p>
+                                        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px' }}>
+                                            <button
+                                                onClick={() => {
+                                                    alert('Đã đăng xuất');
+                                                    setShowLogoutModal(false);
+                                                    navigate('/');
+                                                }}
+                                                style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: 'lightgreen', color: 'black' }}
+                                            >
+                                                Có
+                                            </button>
+                                            <button
+                                                onClick={() => setShowLogoutModal(false)}
+                                                style={{ padding: '6px 12px', border: 'none', borderRadius: '4px', background: '#cc3380', color: 'white' }}
+                                            >
+                                                Không
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
