@@ -24,10 +24,9 @@ import Booking from './Bookig/Booking';
 import BookingHistory from './Account/BookingHistory';
 import Addmovie from './QL_Add_movie/Addmovie';
 
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/login" element={<Login />} />
@@ -37,7 +36,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/comingmovies" element={<Comingmovies />} />
         <Route path="/introduce" element={<Introduce />} />
         <Route path="/showtimes" element={<Showtimes />} />
-        <Route path="/cinezone/:cinemaId" element={<Cinezone />} />
+        <Route path="/cinezone" element={<Cinezone />} /> {/* Static route for cinezone */}
+        <Route path="/cinezone/:cinemaId" element={<Cinezone />} /> {/* Dynamic route for specific cinema */}
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/info" element={<Info />} />
         <Route path="/HomeAdmin" element={<QLNV />} />
@@ -49,7 +49,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/booking" element={<Booking />} />
         <Route path="/bookinghistory" element={<BookingHistory />} />
         <Route path="/addmovie" element={<Addmovie />} />
-
+        <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} /> {/* Fallback for unmatched routes */}
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
