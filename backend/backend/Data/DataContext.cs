@@ -221,6 +221,7 @@ namespace backend.Data
             var movieId3 = "2f3a4b5c-6d7e-8f9a-0b1c2d3e4f5a6b7c"; // The Conjuring
             var movieId4 = "3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d"; // Interstellar
             var movieId5 = "4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e"; // Spirited Away
+            
             modelBuilder.Entity<movieInformation>().HasData(
                 new movieInformation
                 {
@@ -458,6 +459,29 @@ namespace backend.Data
                 new foodInformation { foodInformationId = foodId3, foodInformationName = "Nachos", foodPrice = 65000 },
                 new foodInformation { foodInformationId = foodId4, foodInformationName = "Hot Dog", foodPrice = 45000 }
             );
+            
+            var newDirectorStaffId = "d8d11645-73f0-4c54-a68e-88e8afe4c7e9";
+            var newCinemaStaffId = "f1eb0376-dfda-4570-85f9-021469e5593b";
+            DateTime StaffDateTime = new DateTime(1997 , 01 , 01);
+            modelBuilder.Entity<Staff>().HasData(
+                new Staff()
+                {
+                    userID = UserDirectorId ,
+                    Id = newDirectorStaffId ,
+                    dateOfBirth = StaffDateTime ,
+                    cinemaID = "2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c" ,
+                    Name = "Director Staff" ,
+                    phoneNumber = "0123456789"
+                    
+                } , new Staff()
+                {
+                    userID  = UserTheaterManagerId ,
+                    Id = newCinemaStaffId ,
+                    dateOfBirth = StaffDateTime ,
+                    cinemaID = "2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c" ,
+                    Name = "Theater Manager Staff",
+                    phoneNumber = "0123456789"
+                });
         }
     }
 }
