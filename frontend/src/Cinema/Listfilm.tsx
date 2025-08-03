@@ -23,7 +23,8 @@ function Listfilm() {
             let allMovies: Movie[] = [];
             let page = 1;
             let hasMore = true;
-
+            localStorage.removeItem('VSID');
+            localStorage.removeItem('movieID');
             try {
                 while (hasMore) {
                     const response = await fetch(`http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`);
@@ -46,12 +47,13 @@ function Listfilm() {
                 setMovies([]);
             }
         };
-
         fetchAllMovies();
     }, []);
 
-    const handleShowtimes = () => {
-        navigate("/showtimes");
+    const handleShowtimes = (id: string) => {
+        let idphim = id ;
+        localStorage.setItem('movieId',id)
+        navigate("/test");
     };
 
     const handleOpenTrailer = (url: string) => {
@@ -63,7 +65,6 @@ function Listfilm() {
             const videoId = url.split("youtu.be/")[1];
             embedUrl = `https://www.youtube.com/embed/${videoId}`;
         }
-
         setTrailerUrl(embedUrl);
         setShowTrailer(true);
     };
@@ -116,7 +117,7 @@ function Listfilm() {
                                         </button>
 
                                         <button
-                                            onClick={handleShowtimes}
+                                            onClick={() => handleShowtimes(movie.movieID)}
                                             className="relative w-[160px] h-12 px-4 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group overflow-hidden flex items-center justify-center">
                                             🎟 Đặt vé ngay
                                             <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>

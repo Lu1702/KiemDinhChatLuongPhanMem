@@ -87,32 +87,35 @@ const RevenueList: React.FC = () => {
   };
 
   const fetchRevenueDetail = async (cinemaId: string) => {
-    try {
-      const response = await fetch(`http://localhost:5229/api/Revenue/GetRevenueByCinemaId?cinemaId=${cinemaId}`, {
-        method: 'GET',
-        headers: {
-          'Accept': '*/*',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
+  try {
+    localStorage.setItem('RAPID', cinemaId);
+    console.log('Fetching revenue for cinemaId:', cinemaId);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    const response = await fetch(`http://localhost:5229/api/Revenue/GetRevenueByCinemaId?cinemaId=${localStorage.getItem('RAPID')}`, {
+      method: 'GET',
+      headers: {
+        'Accept': '*/*',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
 
-      const data = await response.json();
-      console.log('API Response (Detail):', data);
-
-      if (data.data) {
-        const detail = data.data;
-        alert(`Chi tiết doanh thu cho rạp ${detail.cinemaName}:\n- Mã rạp: ${detail.cinemaId}\n- Doanh thu: ${detail.totalRevenue}`);
-      } else {
-        throw new Error('Dữ liệu chi tiết không hợp lệ');
-      }
-    } catch (err) {
-      setError('Lỗi khi lấy chi tiết doanh thu: ' + (err as Error).message);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+    console.log('API Response (Detail):', data);
+
+    if (data.data && data.data.baseCinemaInfoRevenue) {
+      const detail = data.data.baseCinemaInfoRevenue;
+      alert(`Chi tiết doanh thu cho rạp ${detail.cinemaName}:\n- Mã rạp: ${detail.cinemaId}\n- Doanh thu: N/A`); // Use N/A since totalRevenue is missing
+    } else {
+      throw new Error('Dữ liệu chi tiết không hợp lệ');
+    }
+  } catch (err) {
+    setError('Lỗi khi lấy chi tiết doanh thu: ' + (err as Error).message);
+  }
+};
 
   useEffect(() => {
     fetchRevenue();

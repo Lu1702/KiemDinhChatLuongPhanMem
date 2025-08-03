@@ -30,6 +30,7 @@ function Nav() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Thêm trạng thái để kiểm soát dropdown
     const [cinemas, setCinemas] = useState<Cinema[]>([]);
     const [allMovies, setAllMovies] = useState<Movie[]>([]);
     const [searchResults, setSearchResults] = useState<Movie[]>([]);
@@ -79,14 +80,14 @@ function Nav() {
         if (cachedResults) {
             setAllMovies(cachedResults);
             setSearchResults(cachedResults);
-            setFilteredCinemas(cinemas); // Hiển thị tất cả rạp
+            setFilteredCinemas(cinemas);
             setIsLoading(false);
             return;
         }
 
         let retries = 0;
         const maxRetries = 3;
-        const retryDelay = 2000; // 2 giây giữa các lần thử lại
+        const retryDelay = 2000;
 
         const fetchData = () => {
             const url = 'http://localhost:5229/api/movie/getAllMoviesPagniation/1';
@@ -112,7 +113,7 @@ function Nav() {
                         cache.set('allMovies', results);
                         setAllMovies(results);
                         setSearchResults(results);
-                        setFilteredCinemas(cinemas); // Hiển thị tất cả rạp
+                        setFilteredCinemas(cinemas);
                     } else {
                         setAllMovies([]);
                         setSearchResults([]);
@@ -130,7 +131,7 @@ function Nav() {
                         setError('Không thể kết nối đến server. Sử dụng dữ liệu mẫu.');
                         setAllMovies(fallbackMovies);
                         setSearchResults(fallbackMovies);
-                        setFilteredCinemas(cinemas); // Hiển thị tất cả rạp làm fallback
+                        setFilteredCinemas(cinemas);
                     }
                 })
                 .finally(() => setIsLoading(false));
@@ -153,12 +154,10 @@ function Nav() {
             return;
         }
 
-        // Lọc phim theo movieName
         const filteredMovies = allMovies.filter((movie) =>
             movie.movieName.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-        // Lọc rạp theo cinemaName hoặc cinemaLocation
         const filtered = cinemas.filter(
             (cinema) =>
                 cinema.cinemaName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -173,6 +172,7 @@ function Nav() {
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false); // Đóng dropdown
                 setSearchResults([]);
                 setFilteredCinemas([]);
                 setSearchTerm('');
@@ -243,7 +243,10 @@ function Nav() {
                                 className="w-full bg-transparent outline-none text-sm"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                onClick={fetchAllMovies} // Gọi API lấy tất cả phim và hiển thị tất cả rạp
+                                onClick={() => {
+                                    fetchAllMovies(); // Gọi API lấy tất cả phim
+                                    setIsDropdownOpen(true); // Hiển thị dropdown khi nhấp vào input
+                                }}
                             />
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -261,13 +264,12 @@ function Nav() {
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                         </form>
-                        {isLoading && (
+                        {isLoading && isDropdownOpen && (
                             <div className="absolute top-full mt-2 bg-gray-800 text-white rounded shadow-md w-[300px] z-50 p-2 text-center">
                                 Đang tải...
                             </div>
                         )}
-
-                        {(searchResults.length > 0 || filteredCinemas.length > 0) && !isLoading && !error && (
+                        {(searchResults.length > 0 || filteredCinemas.length > 0) && !isLoading && !error && isDropdownOpen && (
                             <div className="absolute top-full mt-2 bg-white text-black rounded shadow-md w-[300px] z-50 max-h-48 overflow-y-auto">
                                 {searchResults.length > 0 && (
                                     <div>
@@ -280,6 +282,7 @@ function Nav() {
                                                     setSearchTerm('');
                                                     setSearchResults([]);
                                                     setFilteredCinemas([]);
+                                                    setIsDropdownOpen(false); // Đóng dropdown khi chọn
                                                     navigate(`/movie/${movie.movieID}`);
                                                 }}
                                             >
@@ -299,6 +302,7 @@ function Nav() {
                                                     setSearchTerm('');
                                                     setSearchResults([]);
                                                     setFilteredCinemas([]);
+                                                    setIsDropdownOpen(false); // Đóng dropdown khi chọn
                                                     navigate(`/cinezone/${cinema.cinemaId}`);
                                                 }}
                                             >
@@ -309,7 +313,7 @@ function Nav() {
                                 )}
                             </div>
                         )}
-                        {error && !isLoading && (
+                        {error && !isLoading && isDropdownOpen && (
                             <div className="absolute top-full mt-2 bg-gray-800 text-white rounded shadow-md w-[300px] z-50 p-2 text-center">
                                 {error}
                             </div>
