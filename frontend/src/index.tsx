@@ -46,7 +46,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/QTVHThong/chinhsuaphongrap" element={<DV />} />
         <Route path="/comment" element={<Comment />} />
         <Route path="/booking" element={<Booking />} />
-        <Route path="/bookinghistory" element={<BookingHistory />} />
+        <Route path="/bookinghistory/:userId" element={<BookingHistory />} />
         <Route path="/addmovie" element={<Addmovie />} />
         <Route path="/moviedetail/:movieId" element={<MovieDetail />} />
         <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} />
