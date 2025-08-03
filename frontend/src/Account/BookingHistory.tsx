@@ -31,9 +31,9 @@ const BookingHistory = () => {
 
     return (
         <div className=" py-16 px-4 flex flex-col items-center">
-            <h2 className="text-black uppercase text-3xl font-bold mb-8">Lịch sử đặt vé</h2>
+            <h2 className="text-white uppercase text-3xl font-bold mb-8">Lịch sử đặt vé</h2>
 
-            <div className="bg-[#F2E6F8] p-8 rounded-2xl w-full shadow-lg">
+            <div className="bg-white p-8 rounded-2xl w-full shadow-lg">
                 <div className="mb-6 text-lg text-black font-medium">
                     Tên khách hàng: {userEmail}
                 </div>

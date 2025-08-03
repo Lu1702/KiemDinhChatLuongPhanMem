@@ -1,61 +1,62 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
-import { useNavigate } from "react-router-dom";
 import BookingHistory from "./BookingHistory";
 
 const Info: React.FC = () => {
     const userEmail = localStorage.getItem("userEmail");
     const navigate = useNavigate();
 
+    const [userName, setUserName] = useState('');
+    const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [message1, setMessage1] = useState('');
+    const [activeTab, setActiveTab] = useState<"info" | "history" | "password">("info");
+    const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+
     const handleLogout = () => {
         localStorage.removeItem("userEmail");
         navigate("/login");
     };
-    const handleaddmovie = () => {
-        navigate('/Addmovie')
-    }
 
-    const [userName, setUserName] = useState('');
-    const [dateOfBirth, setDateOfBirth] = useState(''); // Định dạng YYYY-MM-DD từ input type="date"
-    const [phoneNumber, setPhoneNumber] = useState('');
+    const handleCloseModal = () => {
+        setShowModal(false);
+    };
 
-    // 2. Hàm xử lý khi người dùng click nút "Lưu thông tin"
     const handleChangeAccountInfo = async () => {
-        setMessage1(''); // Xóa thông báo cũ
+        setMessage1('');
+        setShowModal(false);
+        setLoading(true);
 
-        // Kiểm tra cơ bản các trường không rỗng (có thể thêm validation phức tạp hơn)
+        // Validate inputs
         if (!userName || !dateOfBirth || !phoneNumber) {
-            setMessage1('Vui lòng điền đầy đủ tất cả các trường thông tin.');
+            setMessage1("Vui lòng nhập đầy đủ tất cả các trường!");
+            setShowModal(true);
+            setLoading(false);
             return;
         }
 
-        // Chuyển đổi dateOfBirth sang định dạng ISO 8601 (ví dụ: "2025-07-23T00:00:00.000Z")
-        // Nếu dateOfBirth là chuỗi rỗng hoặc không hợp lệ, new Date() sẽ trả về Invalid Date
-        // Nên cần kiểm tra trước khi gọi toISOString()
-        let formattedDateOfBirth = null;
-        try {
-            const dateObj = new Date(dateOfBirth);
-            if (!isNaN(dateObj.getTime())) { // Kiểm tra xem ngày có hợp lệ không
-                formattedDateOfBirth = dateObj.toISOString();
-            } else {
-                setMessage1('Ngày sinh không hợp lệ. Vui lòng kiểm tra lại.');
-                return;
-            }
-        } catch (error) {
-            setMessage1('Lỗi định dạng ngày sinh. Vui lòng kiểm tra lại.');
-            console.error('Date parsing error:', error);
+        // Validate phone number (10 digits)
+        if (!/^[0-9]{10}$/.test(phoneNumber)) {
+            setMessage1("Số điện thoại phải có đúng 10 chữ số!");
+            setShowModal(true);
+            setLoading(false);
             return;
         }
 
-        // Tạo payload dữ liệu theo định dạng API yêu cầu
         const payload = {
-            userName: userName,
-            dateOfBirth: formattedDateOfBirth,
-            phoneNumber: phoneNumber,
+            userName,
+            dateOfBirth: dateOfBirth.toISOString(),
+            phoneNumber,
         };
 
-        // URL API của bạn, sử dụng userID được truyền vào và Userid (chữ U viết hoa)
         const apiUrl = `http://localhost:5229/api/Account/ChangeAccountInformation?Userid=${localStorage.getItem('IDND')}`;
 
         try {
@@ -65,38 +66,29 @@ const Info: React.FC = () => {
                     'accept': '*/*',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload), // Chuyển đổi payload thành chuỗi JSON
+                body: JSON.stringify(payload),
             });
 
-            if (response.ok) {
-                // API trả về thành công (status 2xx)
-                // Có thể không cần đọc response.json() nếu API không trả về dữ liệu cụ thể
-                setMessage1('Thông tin cá nhân đã được cập nhật thành công!');
-                console.log('API Response: Thông tin đã được cập nhật.');
-                // Giữ lại giá trị trong form hoặc reset tùy ý
+            const data = await response.json();
+
+            if (data.status === "Success") {
+                setMessage1(data.message || "Cập nhật thông tin thành công!");
+                setShowModal(true);
             } else {
-                // API trả về lỗi (status 4xx, 5xx)
-                const errorData = await response.json(); // Thử đọc lỗi dưới dạng JSON
-                setMessage1(`Lỗi: ${errorData.message || 'Có lỗi xảy ra khi cập nhật thông tin.'}`);
-                console.error('API Error:', response.status, errorData);
+                setMessage1(data.message || "Cập nhật thông tin thất bại. Vui lòng kiểm tra lại thông tin.");
+                setShowModal(true);
             }
         } catch (error) {
-            // Lỗi mạng hoặc lỗi không xác định
-            setMessage1('Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.');
-            console.error('Network or unexpected error:', error);
+            console.error("Lỗi cập nhật thông tin:", error);
+            setMessage1("Đã xảy ra lỗi khi kết nối đến máy chủ. Vui lòng thử lại sau.");
+            setShowModal(true);
+        } finally {
+            setLoading(false);
         }
     };
-    const [activeTab, setActiveTab] = useState<"info" | "history" | "password">("info");
-
-    const [oldPassword, setOldPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-
-    // Đã đổi tên biến trạng thái và hàm cập nhật
-    const [message1, setMessage1] = useState(''); 
 
     const handleChangePassword = async () => {
-        setMessage1(''); // Xóa thông báo cũ
+        setMessage1('');
 
         if (newPassword !== confirmPassword) {
             setMessage1('Mật khẩu mới và xác nhận mật khẩu không khớp!');
@@ -104,9 +96,9 @@ const Info: React.FC = () => {
         }
 
         const payload = {
-            oldPassword: oldPassword,
-            newPassword: newPassword,
-            confirmPassword: confirmPassword,
+            oldPassword,
+            newPassword,
+            confirmPassword,
         };
 
         const apiUrl = `http://localhost:5229/api/Account/changePassword?userID=${localStorage.getItem('IDND')}`;
@@ -138,6 +130,7 @@ const Info: React.FC = () => {
             console.error('Network or unexpected error:', error);
         }
     };
+
     return (
         <div
             className="min-h-screen bg-fixed bg-cover bg-center"
@@ -151,7 +144,6 @@ const Info: React.FC = () => {
                 </div>
             </div>
             <div className="max-w-6xl mx-auto py-10 px-4 md:flex gap-8">
-                {/* Sidebar */}
                 <div className="sticky top-32 h-fit self-start bg-white/20 backdrop-blur-md p-4 rounded-xl w-full md:w-1/4 space-y-4 shadow-lg">
                     <button
                         className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "info"
@@ -177,130 +169,197 @@ const Info: React.FC = () => {
                         onClick={() => setActiveTab("password")}>
                         Đổi mật khẩu
                     </button>
-                    <button
-                        className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "history"
-                            ? "bg-yellow-300 text-black"
-                            : "hover:bg-white/30 text-white"
-                            }`}
-                        onClick={handleaddmovie}>
-                        Lịch sử đặt vé
-                    </button>
                 </div>
                 <div className="flex-1 space-y-8 mt-8 md:mt-0">
                     <h1 className="text-white text-3xl font-bold text-center uppercase">
                         Cinema xin chào! {userEmail}
                     </h1>
                     {activeTab === "info" && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                <h2 className="text-2xl font-bold mb-6">Thông tin cá nhân</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Input Họ và tên (userName) */}
-                    <div>
-                        <label className="block mb-2 font-semibold">Họ và tên:</label>
-                        <input
-                            type="text"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                        />
-                    </div>
-                    {/* Input Ngày sinh (dateOfBirth) */}
-                    <div>
-                        <label className="block mb-2 font-semibold">Ngày sinh:</label>
-                        <input
-                            type="date"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={dateOfBirth}
-                            onChange={(e) => setDateOfBirth(e.target.value)}
-                        />
-                    </div>
-                    {/* Input Số điện thoại (phoneNumber) - Đã thêm mới */}
-                    <div>
-                        <label className="block mb-2 font-semibold">Số điện thoại:</label>
-                        <input
-                            type="tel" // Sử dụng type="tel" cho số điện thoại
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                        />
-                    </div>
-                    {/* Các input Email, Địa chỉ, CCCD đã được xóa bỏ */}
-                </div>
-                {/* Hiển thị thông báo */}
-                {message1 && (
-                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
-                        {message1}
-                    </p>
-                )}
-                <div className="mt-6 text-center">
-                    <button
-                        className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
-                        onClick={handleChangeAccountInfo} // Gắn hàm xử lý vào đây
-                    >
-                        <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>
-                        Lưu thông tin
-                    </button>
-                </div>
-            </div>
+                        <div className="max-w-4xl mx-auto bg-white/10 rounded-xl shadow-2xl overflow-hidden p-8 animate-[slideInFromLeft_1s_ease-out]">
+                            <div className="bg-white/10 backdrop-blur-md p-6 rounded-lg">
+                                <h2 className="text-center text-3xl font-bold text-white mb-6 animate-[appear_2s_ease-out]">
+                                    Cập nhật thông tin cá nhân
+                                </h2>
+                                <p className="text-center text-gray-200 mb-8 animate-[appear_3s_ease-out]">
+                                    Thay đổi thông tin tài khoản của bạn
+                                </p>
+                                <form onSubmit={(e) => { e.preventDefault(); handleChangeAccountInfo(); }} className="space-y-36">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="relative">
+                                            <input
+                                                id="userName"
+                                                name="userName"
+                                                type="text"
+                                                placeholder=""
+                                                value={userName}
+                                                onChange={(e) => setUserName(e.target.value)}
+                                                disabled={loading}
+                                                className="peer w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-white placeholder-white focus:outline-none focus:border-purple-500 rounded-md text-lg transition-all duration-200"
+                                                required
+                                            />
+                                            <label
+                                                htmlFor="userName"
+                                                className="absolute left-4 -top-2 text-white text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-white peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-purple-300">
+                                                Họ và tên
+                                            </label>
+                                        </div>
+                                        <div className="relative ">
+                                            <DatePicker
+                                                selected={dateOfBirth}
+                                                onChange={(date: Date | null) => setDateOfBirth(date)}
+                                                dateFormat="dd/MM/yyyy"
+                                                isClearable
+                                                showYearDropdown
+                                                scrollableMonthYearDropdown
+                                                placeholderText="Chọn ngày sinh"
+                                                className="peer w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-white placeholder-white focus:outline-none focus:border-purple-500 rounded-md text-lg transition-all duration-200"
+                                                disabled={loading}
+                                            />
+                                            <label
+                                                htmlFor="date"
+                                                className="absolute left-4 -top-2 text-white text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-white peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-purple-300"
+                                            >
+                                            </label>
+                                        </div>
+                                        <div className="relative md:col-span-2">
+                                            <input
+                                                id="phoneNumber"
+                                                name="phoneNumber"
+                                                type="tel"
+                                                maxLength={10}
+                                                pattern="[0-9]{10}"
+                                                placeholder=""
+                                                value={phoneNumber}
+                                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                                disabled={loading}
+                                                className="peer w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-white placeholder-white focus:outline-none focus:border-purple-500 rounded-md text-lg transition-all duration-200"
+                                                required
+                                            />
+                                            <label
+                                                htmlFor="phoneNumber"
+                                                className="absolute left-4 -top-2 text-white text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-white peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-purple-300"
+                                            >
+                                                Số điện thoại
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-center items-center">
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="relative cursor-pointer py-4 px-8 text-center font-barlow inline-flex justify-center text-base uppercase text-white rounded-lg border-solid transition-transform duration-300 ease-in-out group outline-offset-4 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-4 overflow-hidden">
+                                            {loading ?
+                                                <div className="flex flex-row gap-2">
+                                                    <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce"></div>
+                                                    <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.3s]"></div>
+                                                    <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.5s]"></div>
+                                                </div> : 'Cập nhật thông tin'}
+
+                                            <span
+                                                className="absolute left-[-75%] top-0 h-full w-[50%] bg-white/20 rotate-12 z-10 blur-lg group-hover:left-[125%] transition-all duration-1000 ease-in-out"
+                                            ></span>
+
+                                            <span
+                                                className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[20%] rounded-tl-lg border-l-2 border-t-2 top-0 left-0"
+                                            ></span>
+                                            <span
+                                                className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute group-hover:h-[90%] h-[60%] rounded-tr-lg border-r-2 border-t-2 top-0 right-0"
+                                            ></span>
+                                            <span
+                                                className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[60%] group-hover:h-[90%] rounded-bl-lg border-l-2 border-b-2 left-0 bottom-0"
+                                            ></span>
+                                            <span
+                                                className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[20%] rounded-br-lg border-r-2 border-b-2 right-0 bottom-0"
+                                            ></span>
+                                        </button>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
                     )}
                     {activeTab === "history" && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
+                        <div className=" p-6 rounded-2xl shadow-xl">
                             <BookingHistory />
                         </div>
                     )}
                     {activeTab === "password" && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={oldPassword}
-                            onChange={(e) => setOldPassword(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-2 font-semibold">Mật khẩu mới</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
-                        <input
-                            type="password"
-                            className="w-full border rounded-md px-4 py-2 bg-white/50"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                    </div>
-                </div>
-                {/* Đã sử dụng biến mới message1 để hiển thị */}
-                {message1 && (
-                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
-                        {message1}
-                    </p>
-                )}
-                <div className="mt-6 text-center">
-                    <button
-                        className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
-                        onClick={handleChangePassword}
-                    >
-                        <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>Cập nhật mật khẩu
-                    </button>
-                </div>
-            </div>
+                        <div className="max-w-4xl mx-auto bg-white/10 rounded-xl shadow-2xl overflow-hidden p-8 animate-[slideInFromLeft_1s_ease-out]">
+                            <div className="bg-white/10 p-6 rounded-2xl shadow-xl text-white">
+                                <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block mb-3 font-semibold">Mật khẩu cũ</label>
+                                        <input
+                                            type="password"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            value={oldPassword}
+                                            onChange={(e) => setOldPassword(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block mb-2 font-semibold">Mật khẩu mới</label>
+                                        <input
+                                            type="password"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
+                                        <input
+                                            type="password"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                {message1 && (
+                                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
+                                        {message1}
+                                    </p>
+                                )}
+
+                                <div className="mt-6 text-center">
+                                    <button
+                                        onClick={handleChangePassword}
+                                        type="submit"
+                                        disabled={loading}
+                                        className="relative cursor-pointer py-4 px-8 text-center font-barlow inline-flex justify-center text-base uppercase text-white rounded-lg border-solid transition-transform duration-300 ease-in-out group outline-offset-4 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-4 overflow-hidden">
+                                        {loading ?
+                                            'Đang cập nhật mật khẩu...' : 'Cập nhật mật khẩu'}
+
+                                        <span
+                                            className="absolute left-[-75%] top-0 h-full w-[50%] bg-white/20 rotate-12 z-10 blur-lg group-hover:left-[125%] transition-all duration-1000 ease-in-out"
+                                        ></span>
+
+                                        <span
+                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[20%] rounded-tl-lg border-l-2 border-t-2 top-0 left-0"
+                                        ></span>
+                                        <span
+                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute group-hover:h-[90%] h-[60%] rounded-tr-lg border-r-2 border-t-2 top-0 right-0"
+                                        ></span>
+                                        <span
+                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[60%] group-hover:h-[90%] rounded-bl-lg border-l-2 border-b-2 left-0 bottom-0"
+                                        ></span>
+                                        <span
+                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[20%] rounded-br-lg border-r-2 border-b-2 right-0 bottom-0"
+                                        ></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                     )}
                 </div>
             </div>
             <div className="flex justify-center mt-10">
                 <button
-                    className="group flex items-center justify-start w-11 h-11 bg-red-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-200 shadow-lg hover:w-32 hover:rounded-lg active:translate-x-1 active:translate-y-1">
+                    className="group flex items-center justify-start w-11 h-11 bg-red-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-200 shadow-lg hover:w-32 hover:rounded-lg active:translate-x-1 active:translate-y-1"
+                    onClick={handleLogout}
+                >
                     <div
                         className="flex items-center justify-center w-full transition-all duration-300 group-hover:justify-start group-hover:px-3">
                         <svg className="w-4 h-4" viewBox="0 0 512 512" fill="white">
@@ -310,20 +369,31 @@ const Info: React.FC = () => {
                         </svg>
                     </div>
                     <div
-                        onClick={handleLogout}
-                        className=" absolute right-3 transform translate-x-full opacity-0 text-white text-lg font-semibold transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                        className="absolute right-3 transform translate-x-full opacity-0 text-white text-lg font-semibold transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
                         Đăng xuất
                     </div>
                 </button>
             </div>
             <button
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointers">
+                className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border cursor-pointer">
                 ↑
             </button>
             <div className="sticky mx-auto mt-28">
                 <Bottom />
             </div>
+            {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="max-w-lg w-full bg-gradient-to-r from-blue-800 to-purple-600 rounded-xl shadow-2xl overflow-hidden p-10 space-y-8">
+                        <p className="text-xl font-semibold text-white text-center">{message1}</p>
+                        <button
+                            onClick={handleCloseModal}
+                            className="w-full py-3 px-4 bg-purple-500 hover:bg-purple-700 rounded-md shadow-lg text-white text-lg font-semibold transition duration-200">
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
