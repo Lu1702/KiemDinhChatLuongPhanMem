@@ -19,52 +19,55 @@ function Listfilm() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  //Gọi api cho trang phân trang film
-  useEffect(() => {
-    const fetchAllMovies = async () => {
-      let allMovies: Movie[] = [];
-      let page = 1;
-      let hasMore = true;
+    // Fetch all movies from paginated API
+    useEffect(() => {
+        const fetchAllMovies = async () => {
+            let allMovies: Movie[] = [];
+            let page = 1;
+            let hasMore = true;
+            try {
+                while (hasMore) {
+                    const response = await fetch(`http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    const moviesData = data.movieRespondDTOs || data;
 
-      try {
-        while (hasMore) {
-          const response = await fetch(`http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          const moviesData = data.movieRespondDTOs || data.data || data;
-          if (!Array.isArray(moviesData) || moviesData.length === 0) {
-            hasMore = false;
-          } else {
-            const formattedMovies = moviesData
-              .filter((item: any) => item.isRelease === true) // Filter movies with isRelease: true
-              .map((item: any) => ({
-                movieId: item.movieID || item.movieId || '',
-                movieName: item.movieName || '',
-                movieImage: item.movieImage || '',
-                trailerUrl: item.movieTrailerUrl || item.trailerURL || '',
-                isRelease: item.isRelease || false,
-              }));
-            allMovies = [...allMovies, ...formattedMovies];
-            page++;
-          }
-        }
-        setMovies(allMovies);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách phim:", error);
-        setMovies([]);
-      } finally {
-        setIsLoading(false);
-      }
+                    if (!Array.isArray(moviesData) || moviesData.length === 0) {
+                        hasMore = false;
+                    } else {
+                        allMovies = [...allMovies, ...moviesData];
+                        page++;
+                    }
+                }
+                setMovies(allMovies);
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách phim:", error);
+                setMovies([]);
+            }
+        };
+        fetchAllMovies();
+    }, []);
+
+    const handleShowtimes = (id: string) => {
+        let idphim = id ;
+        localStorage.setItem('movieId',id)
+        navigate("/test");
     };
 
     fetchAllMovies();
   }, []);
 
-  const handleShowtimes = () => {
-    navigate("/showtimes");
-  };
+        if (url.includes("watch?v=")) {
+            embedUrl = url.replace("watch?v=", "embed/");
+        } else if (url.includes("youtu.be/")) {
+            const videoId = url.split("youtu.be/")[1];
+            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        }
+        setTrailerUrl(embedUrl);
+        setShowTrailer(true);
+    };
 
   const handleOpenTrailer = (url: string) => {
     let embedUrl = url;
@@ -78,6 +81,43 @@ function Listfilm() {
     setShowTrailer(true);
   };
 
+                                      <button
+                                          onClick={() => handleShowtimes(movie.movieID)}
+                                          className="relative w-[160px] h-12 px-4 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group overflow-hidden flex items-center justify-center">
+                                          🎟 Đặt vé ngay
+                                          <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
+                                          <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-400 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-700 duration-700 origin-left"></span>
+                                          <span className="absolute w-60 h-40 -top-12 -left-10 bg-orange-600 rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-1000 duration-500 origin-left"></span>
+                                          <span className="flex flex-row items-center justify-center group-hover:opacity-100 group-hover:duration-1000 duration-100 opacity-0 absolute z-10 inset-0">
+                                              🎟 Đặt vé ngay
+                                          </span>
+                                      </button>
+                                  </div>
+                              </div>
+                          ))
+                      ) : (
+                          <p className="text-white text-center col-span-4">Không có phim nào để hiển thị.</p>
+                      )}
+                  </div>
+              </main>
+              {/* Trailer Popup */}
+              {showTrailer && (
+                  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+                      <div className="bg-black rounded-lg p-4 relative w-[90%] md:w-[60%] aspect-video">
+                          <button
+                              onClick={() => setShowTrailer(false)}
+                              className="absolute top-2 right-2 text-white text-2xl font-bold">
+                              ✕
+                          </button>
+                          <iframe
+                              src={trailerUrl}
+                              title="Trailer"
+                              className="w-full h-full rounded-md"
+                              allowFullScreen
+                          />
+                      </div>
+                  </div>
+              )}
   return (
     <div
       className="App bg-fixed w-full min-h-screen bg-cover bg-center"
