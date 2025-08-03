@@ -1,11 +1,12 @@
 using backend.Enum;
 using backend.ModelDTO.GenericRespond;
+using backend.ModelDTO.PDFDTO;
 
 namespace backend.Interface.EmailInterface;
 
 public interface IEmailService
 {
     Task<GenericRespondDTOs> SendOtp(string to);
-    
-    GenericRespondDTOs SendPdf(string to, string subject, string body , string pdfPath , byte[] data);
+
+    Task<GenericRespondDTOs> SendPdf(string to, PDFRespondDTO pdf);
 }
