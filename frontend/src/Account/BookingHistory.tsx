@@ -38,6 +38,11 @@ const BookingHistory: React.FC = () => {
     fetchData();
   }, [userId]);
 
+  const handleButtonClick = (index: number) => {
+    alert(`Button clicked for row ${index + 1}`);
+    // Add your button click logic here
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Booking History</h1>
@@ -50,6 +55,7 @@ const BookingHistory: React.FC = () => {
             <th className="border p-2">Ngày chiếu</th>
             <th className="border p-2">Giờ chiếu</th>
             <th className="border p-2">Trạng thái</th>
+            <th className="border p-2">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -61,6 +67,14 @@ const BookingHistory: React.FC = () => {
               <td className="border p-2">{item.NgayChieu}</td>
               <td className="border p-2">{item.GioChieu}</td>
               <td className="border p-2">{item.TrangThai}</td>
+              <td className="border p-2">
+                <button
+                  className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                  onClick={() => handleButtonClick(index)}
+                >
+                  Click
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
