@@ -160,13 +160,11 @@ const MovieDetails: React.FC = () => {
   const [roomInfo, setRoomInfo] = useState<RoomData | null>(null);
   const [roomLoading, setRoomLoading] = useState<boolean>(false);
   const [roomError, setRoomError] = useState<string | null>(null);
-
   // States for price selection
   const [priceInfo, setPriceInfo] = useState<PriceItem[] | null>(null);
   const [selectedTickets, setSelectedTickets] = useState<{[key: string]: number}>({});
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  
   // States for food selection
   const [foodInfo, setFoodInfo] = useState<FoodItem[] | null>(null);
   const [selectedFoods, setSelectedFoods] = useState<{[key: string]: number}>({});
@@ -175,27 +173,19 @@ const MovieDetails: React.FC = () => {
   // States for booking process
   const [bookingLoading, setBookingLoading] = useState<boolean>(false);
   const [bookingProcessingError, setBookingProcessingError] = useState<string | null>(null);
-  console.log('idphim là',localStorage.getItem('movieID'))
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      localStorage.removeItem('movieID');
-      localStorage.removeItem('VSID');
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      localStorage.removeItem('movieID');
-      localStorage.removeItem('VSID');
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
+  console.log('idphim là',localStorage.getItem('movieId'))
   
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
-        const movieId = 'd86d811e-07d6-4dfd-b537-4304ce8a7829';
-        localStorage.setItem('movieID', movieId);
+        
+        const movieId = localStorage.getItem('movieId');
+        if (!movieId) {
+          setError('Missing movie ID.');
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(
           `http://localhost:5229/api/movie/getMovieDetail/${movieId}`,
           {
@@ -223,6 +213,7 @@ const MovieDetails: React.FC = () => {
           {
             method: 'GET',
             headers: {
+ 
               accept: '*/*',
             },
           }
@@ -272,8 +263,6 @@ const MovieDetails: React.FC = () => {
       setTotalFoodPrice(total);
     }
   }, [selectedFoods, foodInfo]);
-
-
   const handleVisualFormatChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedDetail = e.target.value;
     setSelectedFormat(selectedDetail);
@@ -285,9 +274,8 @@ const MovieDetails: React.FC = () => {
       localStorage.setItem('VSID', selectedFormatObj.movieVisualId);
     }
   };
-
   const handleGetBookingInfo = async () => {
-    const movieId = localStorage.getItem('movieID');
+    const movieId = localStorage.getItem('movieId');
     const visualId = localStorage.getItem('VSID');
     if (!movieId || !visualId) {
       setError('Missing movie ID or visual format ID.');
@@ -305,7 +293,6 @@ const MovieDetails: React.FC = () => {
           },
         }
       );
-
       if (!response.ok) {
         if (response.status === 400) {
           setBookingError('Lỗi định dạng không phù hợp với phim');
@@ -341,9 +328,8 @@ const MovieDetails: React.FC = () => {
     setRoomLoading(true);
     setRoomError(null);
     try {
-      const movieId = localStorage.getItem('movieID');
+      const movieId = localStorage.getItem('movieId');
       const visualId = localStorage.getItem('VSID');
-      
       if (!movieId || !selectedDate || !selectedShowTime || !visualId) {
         setRoomError('Missing required booking information.');
         setRoomLoading(false);
@@ -359,7 +345,6 @@ const MovieDetails: React.FC = () => {
           },
         }
       );
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -376,7 +361,6 @@ const MovieDetails: React.FC = () => {
       setRoomLoading(false);
     }
   };
-  
   const fetchPriceInfo = async () => {
     const visualId = localStorage.getItem('VSID');
     if (!visualId) {
@@ -394,7 +378,6 @@ const MovieDetails: React.FC = () => {
           },
         }
       );
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -418,7 +401,6 @@ const MovieDetails: React.FC = () => {
           },
         }
       );
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -465,6 +447,7 @@ const MovieDetails: React.FC = () => {
       const totalSeats = roomInfo?.seats.filter(seat => !seat.isTaken).length || 0;
       
       if (increment > 0 && totalTickets + 1 > totalSeats) {
+   
         alert('Số lượng vé không được vượt quá số ghế còn trống.');
         return prev;
       }
@@ -505,7 +488,6 @@ const MovieDetails: React.FC = () => {
   };
   
   const totalTickets = Object.values(selectedTickets).reduce((sum, count) => sum + count, 0);
-
   const handleBooking = async () => {
     if (selectedSeats.length !== totalTickets || totalTickets === 0) {
       setBookingProcessingError('Vui lòng chọn đủ số lượng ghế đã đặt.');
@@ -515,7 +497,7 @@ const MovieDetails: React.FC = () => {
     setBookingLoading(true);
     setBookingProcessingError(null);
     
-    const movieId = localStorage.getItem('movieID');
+    const movieId = localStorage.getItem('movieId');
     const visualId = localStorage.getItem('VSID');
     const userId = localStorage.getItem('IDND');
     const authToken = localStorage.getItem('authToken');
@@ -527,7 +509,6 @@ const MovieDetails: React.FC = () => {
     }
     
     let movieScheduleId = '';
-
     try {
       // Bước 1: Lấy movieScheduleId từ API
       const scheduleResponse = await fetch(
@@ -539,7 +520,6 @@ const MovieDetails: React.FC = () => {
           },
         }
       );
-
       if (!scheduleResponse.ok) {
         const errorResult = await scheduleResponse.json();
         setBookingProcessingError(errorResult.message || 'Lỗi khi lấy ID lịch chiếu.');
@@ -549,7 +529,6 @@ const MovieDetails: React.FC = () => {
       
       const scheduleData = await scheduleResponse.json();
       movieScheduleId = scheduleData.data;
-
       if (!movieScheduleId) {
         setBookingProcessingError('Không tìm thấy ID lịch chiếu.');
         setBookingLoading(false);
@@ -558,14 +537,12 @@ const MovieDetails: React.FC = () => {
 
       // Bước 2: Chuẩn bị payload và gọi API Booking
       const seatsToBook = [...selectedSeats];
-      
       const foodRequestDTOs: FoodRequestDTO[] = Object.keys(selectedFoods)
         .filter(foodId => selectedFoods[foodId] > 0)
         .map(foodId => ({
           foodID: foodId,
           quantity: selectedFoods[foodId]
         }));
-      
       const userTypeRequestDTOs: UserTypeRequestDTO[] = [];
       const sortedUserTypeIds = Object.keys(selectedTickets).sort();
 
@@ -593,7 +570,6 @@ const MovieDetails: React.FC = () => {
         foodRequestDTOs: foodRequestDTOs,
         userTypeRequestDTO: userTypeRequestDTOs,
       };
-      
       console.log('Payload gửi đi:', payload);
       
       const bookingResponse = await fetch('http://localhost:5229/api/Booking/Booking', {
@@ -605,12 +581,11 @@ const MovieDetails: React.FC = () => {
         },
         body: JSON.stringify(payload),
       });
-
       const bookingResult = await bookingResponse.json();
 
       if (bookingResponse.ok && bookingResult.status === 'Success') {
         alert('Đặt vé thành công!');
-        localStorage.removeItem('movieID')
+        localStorage.removeItem('movieId')
         localStorage.removeItem('VSID')
         closeModal();
         navigate('/listfilm')
@@ -624,7 +599,6 @@ const MovieDetails: React.FC = () => {
       setBookingLoading(false);
     }
   };
-
   const finalTotalPrice = totalPrice + totalFoodPrice;
 
   return (
@@ -639,6 +613,7 @@ const MovieDetails: React.FC = () => {
         <header>
           <div className="max-w-7xl mx-auto px-8">
             <Nav />
+ 
           </div>
         </header>
       </div>
@@ -647,6 +622,7 @@ const MovieDetails: React.FC = () => {
           <h2 className="text-center text-4xl font-extrabold text-white animate-[appear_2s_ease-out]">
             Chi tiết phim
           </h2>
+     
           {loading && (
             <p className="text-center text-gray-200 animate-[appear_3s_ease-out]">
               Đang tải...
@@ -662,158 +638,189 @@ const MovieDetails: React.FC = () => {
               <img
                 src={movie.movieImage}
                 alt={movie.movieName}
+       
                 className="w-full h-64 object-cover rounded-md"
               />
               <div className="relative">
                 <p className="text-white text-lg">{movie.movieName}</p>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
                   Tên phim
+ 
                 </label>
               </div>
               <div className="relative">
                 <p className="text-white text-lg break-words">{movie.movieDescription}</p>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
+                
                   Mô tả
                 </label>
               </div>
               <div className="relative">
                 <p className="text-white text-lg break-words">{movie.movieDirector}</p>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
+            
                   Đạo diễn
                 </label>
               </div>
               <div className="relative">
                 <p className="text-white text-lg break-words">{movie.movieActor}</p>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
+        
                   Diễn viên
                 </label>
               </div>
               <div className="relative">
                 <p className="text-white text-lg">{movie.movieDuration} phút</p>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
+    
                   Thời lượng
                 </label>
               </div>
               <div className="relative">
                 <p className="text-white text-lg">
                   {new Date(movie.releaseDate).toLocaleDateString('vi-VN')}
+   
                 </p>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
                   Ngày phát hành
                 </label>
               </div>
               <div className="relative">
+ 
                 <p className="text-white text-lg">
                   {Object.values(movie.movieLanguage)[0]}
                 </p>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
                   Ngôn ngữ
+         
                 </label>
               </div>
               <div className="relative">
                 <p className="text-white text-lg">
                   {Object.values(movie.movieMinimumAge)[0]}
                 </p>
+            
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
                   Độ tuổi tối thiểu
                 </label>
               </div>
               <div className="relative">
                 <p className="text-white text-lg">
+       
                   {movie.movieGenre.map((genre) => genre.movieGenreName).join(', ')}
                 </p>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
                   Thể loại
                 </label>
+              
               </div>
               <div className="relative">
                 <a
                   href={movie.movieTrailerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+              
                   className="text-purple-300 hover:underline text-lg"
                 >
                   Xem Trailer
                 </a>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base">
                   Trailer
+    
                 </label>
               </div>
               <div className="relative">
                 <select
                   value={selectedFormat}
                   onChange={handleVisualFormatChange}
+       
                   className="peer h-12 w-full border-b-2 border-gray-300 text-white bg-transparent focus:outline-none focus:border-purple-500 text-lg"
                 >
                   {visualFormats.map((format) => (
                     <option
                       key={format.movieVisualId}
+  
                       value={format.movieVisualFormatDetail}
                       className="text-black"
                     >
                       {format.movieVisualFormatDetail}
+                
                     </option>
                   ))}
                 </select>
                 <label className="absolute left-0 -top-4 text-gray-500 text-base transition-all peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-4 peer-focus:text-purple-500 peer-focus:text-base">
                   Định dạng hình ảnh
+             
                 </label>
               </div>
               <button
                 onClick={handleGetBookingInfo}
                 className="w-full py-3 px-4 bg-purple-500 hover:bg-purple-700 rounded-md shadow-lg text-white text-lg font-semibold transition duration-200"
               >
+            
                 Xem xuất chiếu khả dụng
               </button>
               {bookingError && (
                 <div className="text-center text-red-300 mt-4">
                   {bookingError}
                 </div>
+         
               )}
               {bookingInfo && (
                 <>
                   <div className="relative">
                     <div className="text-white text-lg bg-gray-800 p-4 rounded-md space-y-4">
+                  
                       {bookingInfo.data.map((schedule, index) => (
                         <div key={index} className="border-b border-gray-600 pb-2">
                           <p className="font-semibold">
                             Ngày: {new Date(schedule.scheduleDate).toLocaleDateString('vi-VN')}
+        
                           </p>
                           {schedule.cinemaBookings.map((cinema) => (
                             <div key={cinema.cinemaID} className="ml-4 mt-2">
+                       
                               <p className="font-medium">{cinema.cinemaName}</p>
                               <p className="text-sm text-gray-300">Địa điểm: {cinema.cinemaLocation}</p>
                               <div className="flex flex-wrap gap-2 mt-2">
+                        
                                 {cinema.scheduleShowTimeWithCinemaDtos.map((show) => (
                                   <button
                                     key={show.hourScheduleID}
+                    
                                     onClick={() => handleShowTimeClick(show.hourScheduleID, cinema.cinemaID, schedule.scheduleDate)}
                                     className={`px-4 py-2 rounded-md transition-colors duration-200 
                                       ${selectedShowTime === show.hourScheduleID
                                         ? 'bg-purple-500 text-white shadow-md'
                                         : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                                       }`}
+                 
                                   >
                                     {show.hourScheduleDetail}
                                   </button>
+             
                                 ))}
                               </div>
                             </div>
+                       
                           ))}
                         </div>
                       ))}
                     </div>
                   </div>
+             
                   <button
                     onClick={handlePayment}
                     disabled={!selectedShowTime}
                     className={`w-full py-3 px-4 rounded-md text-white text-lg font-semibold transition duration-200 mt-4
                       ${selectedShowTime
+    
                         ? 'bg-green-600 hover:bg-green-700 shadow-lg'
                         : 'bg-gray-500 cursor-not-allowed'
                       }`}
                   >
                     Thanh toán
+           
                   </button>
                 </>
               )}
@@ -824,8 +831,8 @@ const MovieDetails: React.FC = () => {
       <footer className="pt-32">
         <Bottom />
       </footer>
+     
       
-      {/* The Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
           <div className="relative p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white text-black">
@@ -839,30 +846,36 @@ const MovieDetails: React.FC = () => {
                   {priceInfo.map((item) => (
                     <div key={item.userTypeId} className="flex justify-between items-center bg-gray-100 p-3 rounded-md">
                       <div className="flex-1">
+             
                         <p className="font-medium">{item.userTypeWithPriceDTO.userTypeName}</p>
                         <p className="text-sm text-gray-600">Giá: {item.userTypeWithPriceDTO.price.toLocaleString('vi-VN')} VNĐ</p>
                       </div>
                       <div className="flex items-center space-x-2">
+             
                         <button
                           onClick={() => handleTicketCountChange(item.userTypeId, -1)}
                           className="bg-gray-300 hover:bg-gray-400 p-2 rounded-full w-8 h-8 flex items-center justify-center"
                         >
+  
                           -
                         </button>
                         <span className="w-8 text-center">{selectedTickets[item.userTypeId] || 0}</span>
                         <button
                           onClick={() => handleTicketCountChange(item.userTypeId, 1)}
                           className="bg-gray-300 hover:bg-gray-400 p-2 rounded-full w-8 h-8 flex items-center justify-center"
+             
                         >
                           +
                         </button>
                       </div>
+                 
                     </div>
                   ))}
                 </div>
               ) : (
                 <p>Đang tải giá vé...</p>
               )}
+              
               <div className="mt-4 p-3 bg-gray-200 rounded-md font-bold text-lg">
                 Tổng số vé đã chọn: {totalTickets}
               </div>
@@ -876,29 +889,35 @@ const MovieDetails: React.FC = () => {
                   {foodInfo.map((food) => (
                     <div key={food.foodId} className="border p-3 rounded-md flex flex-col items-center">
                       <img src={food.foodImageURL} alt={food.foodName} className="w-20 h-20 object-cover rounded-md mb-2" />
+    
                       <p className="font-medium text-center">{food.foodName}</p>
                       <p className="text-sm text-gray-600 mb-2">{food.foodPrice.toLocaleString('vi-VN')} VNĐ</p>
                       <div className="flex items-center space-x-2">
                         <button
+     
                           onClick={() => handleFoodCountChange(food.foodId, -1)}
                           className="bg-gray-300 hover:bg-gray-400 p-1 rounded-full w-6 h-6 flex items-center justify-center"
                         >
+                  
                           -
                         </button>
                         <span className="w-6 text-center">{selectedFoods[food.foodId] || 0}</span>
                         <button
                           onClick={() => handleFoodCountChange(food.foodId, 1)}
                           className="bg-gray-300 hover:bg-gray-400 p-1 rounded-full w-6 h-6 flex items-center justify-center"
+             
                         >
                           +
                         </button>
                       </div>
+                 
                     </div>
                   ))}
                 </div>
               ) : (
                 <p>Đang tải danh sách đồ ăn...</p>
               )}
+            
             </div>
 
             {/* Seat Selection Section */}
@@ -906,15 +925,18 @@ const MovieDetails: React.FC = () => {
               <h4 className="font-semibold text-lg mb-2">Sơ đồ ghế</h4>
               {(roomLoading || !roomInfo) && <p className="text-center">Đang tải thông tin phòng chiếu...</p>}
               {roomError && <p className="text-center text-red-500">{roomError}</p>}
+           
               {roomInfo && (
                 <div className="mt-4">
                   <p>Phòng chiếu: {roomInfo.cinemaRoomNumber}</p>
                   <div className="grid grid-cols-8 gap-2 mt-4">
                     {roomInfo.seats.map((seat) => (
+              
                       <button
                         key={seat.seatsId}
                         onClick={() => handleSeatClick(seat.seatsId)}
                         className={`py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200
+            
                           ${seat.isTaken 
                             ? 'bg-red-500 text-white cursor-not-allowed' 
                             : selectedSeats.includes(seat.seatsId)
@@ -928,6 +950,7 @@ const MovieDetails: React.FC = () => {
                         {seat.seatsNumber}
                       </button>
                     ))}
+          
                   </div>
                 </div>
               )}
@@ -941,12 +964,14 @@ const MovieDetails: React.FC = () => {
                 {bookingProcessingError && (
                   <p className="text-red-500 text-sm mb-2">{bookingProcessingError}</p>
                 )}
+                
                 <button
                   onClick={closeModal}
                   className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
                 >
                   Đóng
                 </button>
+       
                 <button
                   onClick={handleBooking}
                   disabled={selectedSeats.length !== totalTickets || totalTickets === 0 || bookingLoading}

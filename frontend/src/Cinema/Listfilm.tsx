@@ -23,8 +23,6 @@ function Listfilm() {
             let allMovies: Movie[] = [];
             let page = 1;
             let hasMore = true;
-            localStorage.removeItem('VSID');
-            localStorage.removeItem('movieID');
             try {
                 while (hasMore) {
                     const response = await fetch(`http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`);
