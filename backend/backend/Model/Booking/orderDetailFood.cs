@@ -22,6 +22,9 @@ namespace backend.Model.Booking
         public string foodInformationId { get; set; } = "";
 
         public int quanlity { get; set; }
+        
+        public decimal PriceEach { get; set; }
+        
         public Order Order { get; set; } = null!;
 
         public foodInformation foodInformation { get; set; } = null!;

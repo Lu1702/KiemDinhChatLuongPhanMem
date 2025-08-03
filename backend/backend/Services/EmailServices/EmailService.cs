@@ -7,6 +7,7 @@ using backend.Helper;
 using backend.Interface.EmailInterface;
 using backend.Model.Email;
 using backend.ModelDTO.GenericRespond;
+using backend.ModelDTO.PDFDTO;
 
 namespace backend.Services.EmailServices;
 
@@ -116,9 +117,33 @@ public class EmailService : IEmailService
     }
     
     // 
-    
-    public GenericRespondDTOs SendPdf(string to, string subject, string body , string pdfPath , byte[] data)
+
+    public async Task<GenericRespondDTOs> SendPdf(string to, PDFRespondDTO pdf)
     {
-        return null!;
+        string subject = "Đây là thông tin đặt vé của bạn";
+
+        using (var message = new MailMessage())
+        {
+            message.From = new MailAddress("duc19092005k@gmail.com");
+            message.To.Add(to);
+            message.Subject = subject;
+            message.Attachments.Add
+                (new Attachment(new MemoryStream(pdf.data) , pdf.FileName));
+
+            using (var smtp = new SmtpClient("smtp.gmail.com", 587))
+            {
+                smtp.EnableSsl = true;
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials =
+                    new NetworkCredential("duc19092005k@gmail.com", _configuration["Google:AppPassword"]);
+                await smtp.SendMailAsync(message);
+
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Email Đã gửi thành công"
+                };
+            }
+        }
     }
 }
