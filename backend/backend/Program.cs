@@ -26,6 +26,7 @@ using backend.Interface.CloudinaryInterface;
 using backend.Interface.EmailInterface;
 using backend.Interface.FoodInterface;
 using backend.Interface.MovieGenreInterface;
+using backend.Interface.PDFInterface;
 using backend.Interface.PriceInterfaces;
 using backend.Interface.RevenueInterface;
 using backend.Interface.RoomInferface;
@@ -37,6 +38,7 @@ using backend.Services.VnpayServices;
 using Microsoft.Extensions.Logging;
 using backend.ModelDTO.BookingHistoryDTO.OrderDetailRespond;
 using backend.ModelDTO.BookingHistoryDTO.OrderRespond;
+using backend.ModelDTO.PDFDTO;
 using backend.Services.AccountServices;
 using backend.Services.BookingHistoryServices;
 using backend.Services.CinemaServices;
@@ -44,6 +46,7 @@ using backend.Services.EmailServices;
 using backend.Services.FoodServices;
 using backend.Services.MovieGenreServices;
 using backend.Services.MovieVisualServices;
+using backend.Services.PDFServices;
 using backend.Services.PriceServices;
 using backend.Services.RevenueServices;
 using backend.Services.RoomServices;
@@ -209,6 +212,7 @@ builder.Services.AddScoped<IMovieVisualFormatService, MovieVisualService>();
 
 builder.Services.AddScoped<IMovieGenreService, MovieGenreService>();
 
+builder.Services.AddSingleton<IPDFService<GenerateCustomerBookingDTO, GenerateStaffBookingDTO>, PDFService>();
 
 Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection"));
 
