@@ -5,7 +5,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Web; // For HttpUtility.UrlDecode
+using System.Web;
+using backend.Interface.EmailInterface;
+using backend.Interface.PDFInterface;
+using backend.ModelDTO.PDFDTO;
+using backend.Services.PDFServices;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc.Formatters; // For HttpUtility.UrlDecode
 using VNPAY.NET.Enums;
 using VNPAY.NET.Models;
 using VNPAY.NET.Utilities;
@@ -18,12 +24,18 @@ namespace backend.Controllers
     {
         private readonly DataContext _dataContext;
 
-        public VnpayController(DataContext dataContext) 
+        private readonly IPDFService<GenerateCustomerBookingDTO, GenerateStaffBookingDTO> IPDF;
+        
+        private readonly IEmailService _emailService;
+
+        public VnpayController(DataContext dataContext, IPDFService<GenerateCustomerBookingDTO, GenerateStaffBookingDTO> IPDF , IEmailService _emailService) 
         {
             this._dataContext = dataContext;
+            this.IPDF = IPDF;
+            this._emailService = _emailService;
         }
         [HttpGet("IPN")]
-        public IActionResult IPN()
+        public async Task<IActionResult> IPN()
         {
             var queryParams = HttpContext.Request.Query;
 
@@ -128,7 +140,109 @@ namespace backend.Controllers
                     getOrderID.message = responseMessage;
                     
                     _dataContext.Order.Update(getOrderID);
-                    _dataContext.SaveChanges();
+                    await _dataContext.SaveChangesAsync();
+
+                    if (vnpResponseCode == "00")
+                    {
+                        // Tiếp tục làm các Services
+                        var getCustomerOrderInfo = _dataContext.Order
+                            .FirstOrDefault(x => x.orderId.Equals(getOrderID.orderId));
+                        var getStaffOrderInfo = _dataContext.StaffOrder
+                            .FirstOrDefault(x => x.orderId.Equals(getOrderID.orderId));
+                        if (getCustomerOrderInfo != null)
+                        {
+                            var getCustomerOrderTicketInfo
+                                = _dataContext.TicketOrderDetail.Where(
+                                    x => x.orderId.Equals(getCustomerOrderInfo.orderId));
+                            var getCustomerOrderProductInfo =
+                                _dataContext.FoodOrderDetail.Where(
+                                    x => x.orderId.Equals(getCustomerOrderInfo.orderId));
+                            var getCustomerInfo = _dataContext.Customers
+                                .FirstOrDefault(x => x.Id.Equals(getCustomerOrderInfo
+                                    .customerID));
+                            var getMovieScheduleInfo = _dataContext
+                                .movieSchedule.Include(movieSchedule => movieSchedule.cinemaRoom)
+                                .ThenInclude(cinemaRoom => cinemaRoom.Cinema)
+                                .Include(movieSchedule => movieSchedule.movieVisualFormat).FirstOrDefault(x =>
+                                    getCustomerOrderTicketInfo
+                                        .Select(x => x.movieScheduleID).Contains(x.movieScheduleId));
+                            if (getCustomerInfo != null && getMovieScheduleInfo != null)
+                            {
+                                var getUserInfo =
+                                    _dataContext.userInformation
+                                        .FirstOrDefault(x => x.userId
+                                            .Equals(getCustomerInfo.userID));
+                                if (getUserInfo != null)
+                                {
+                                    var getMovieInfo =
+                                        _dataContext.movieInformation
+                                            .FirstOrDefault(x => x.movieId.Equals(getMovieScheduleInfo
+                                                .movieId));
+                                    if (getMovieInfo != null  && getCustomerOrderProductInfo.Any())
+                                    {
+                                        var groupBySelectionTickets =
+                                            getCustomerOrderTicketInfo.GroupBy(x => x.PriceEach).FirstOrDefault();
+                                        var generateCustomerBookingTicketSeatsInfo =
+                                            new GenerateCustomerBookingTicketSeatsInfo
+                                            {
+                                                PriceEachSeat = groupBySelectionTickets!.Key,
+                                                SeatsNumber = String.Join("," ,
+                                                    groupBySelectionTickets.Select
+                                                        (x => x.Seats.seatsNumber))
+                                            };
+                                        var generateCustomerBookingProductsInfos = getCustomerOrderProductInfo.Select(x =>
+                                            new GenerateCustomerBookingProductsInfo()
+                                            {
+                                                ProductName = x.foodInformation.foodInformationName,
+                                                Quality = x.quanlity,
+                                                PriceEachProduct = x.PriceEach
+                                            }).ToList();
+                                        var generateCustomerBookingTicketInfo =
+                                            new GenerateCustomerBookingTicketInfo()
+                                            {
+                                                MovieName = getMovieInfo.movieName,
+                                                CinemaLocation = getMovieScheduleInfo.cinemaRoom.Cinema.cinemaName,
+                                                RoomNumber = getMovieScheduleInfo.cinemaRoom.cinemaRoomNumber,
+                                                VisualFormat = getMovieScheduleInfo.movieVisualFormat.movieVisualFormatName,
+                                                ShowedDate = getMovieScheduleInfo.ScheduleDate,
+                                                Seats = generateCustomerBookingTicketSeatsInfo
+                                            };
+                                        if (generateCustomerBookingProductsInfos.Any())
+                                        {
+                                            // Tiếp tục thêm data vào Model để gửi EMail
+                                            generateCustomerBookingTicketInfo.Products = generateCustomerBookingProductsInfos;
+                                        }
+
+                                        var newCustomerInfo =
+                                            new GenerateCustomerBookingDTO()
+                                            {
+                                                CustomerEmail = getUserInfo.loginUserEmail,
+                                                BookingDate = getCustomerOrderInfo.paymentRequestCreatedDate,
+                                                BookingInfo = generateCustomerBookingTicketInfo
+                                            };
+
+                                        var generatePDF =
+                                            IPDF.GeneratePdfUserOrder(newCustomerInfo);
+                                        if (generatePDF.Status.Equals(GenericStatusEnum.Success.ToString()))
+                                        {
+                                            
+                                           var getStatus =  await _emailService
+                                               .SendPdf(newCustomerInfo.CustomerEmail , generatePDF.data!);
+                                           if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+                                           {
+                                               Console.WriteLine("Looix");
+                                           }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            
+                        }else if (getStaffOrderInfo != null)
+                        {
+                            
+                        }
+                    }
 
                     return Ok("Cập nhật thành công");
                 }

@@ -39,8 +39,6 @@ namespace backend.ModelDTO.Customer.OrderRespond
         public string SeatsNumber { get; set; } = string.Empty;
 
         public double PriceTicket { get; set; }
-
-
     }
 
     public class OrderRespondUserTypeWithPrices

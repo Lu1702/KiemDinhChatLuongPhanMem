@@ -4,6 +4,7 @@ using backend.Interface.BookingInterface;
 using backend.Interface.VnpayInterface;
 using backend.Model.Booking;
 using backend.Model.Price;
+using backend.Model.Product;
 using backend.ModelDTO.Customer.OrderRequest;
 using backend.ModelDTO.Customer.OrderRespond;
 using backend.ModelDTO.GenericRespond;
@@ -259,7 +260,10 @@ namespace backend.Services.BookingServices
                         {
                             orderId = generateOrderId,
                             foodInformationId = foodItems.foodID,
-                            quanlity = foodItems.quantity
+                            quanlity = foodItems.quantity,
+                            PriceEach = _dataContext.foodInformation
+                                .FirstOrDefault(x => x.foodInformationId.Equals(
+                                    foodItems.foodID))!.foodPrice
                         });
                     }
                 }
@@ -276,6 +280,10 @@ namespace backend.Services.BookingServices
                             seatsId = getSeats.seatID,
                             orderId = generateOrderId,
                             movieScheduleID = orderRequestDTO.movieScheduleId,
+                            PriceEach = 
+                                _dataContext.priceInformationForEachUserFilmType.FirstOrDefault
+                                    (x => x.userTypeId.Equals(getUserType.userTypeID) &&
+                                          x.movieVisualFormatId.Equals(Schedules.movieVisualFormatID)).PriceInformation.priceAmount
                         });
                         SeatsLists.Add(getSeats.seatID);
                     }
