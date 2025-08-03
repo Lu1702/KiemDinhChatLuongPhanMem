@@ -503,5 +503,30 @@ namespace backend.Services.Schedule
             };
         }
 
+        public GenericRespondWithObjectDTO<string> getScheduleId(string cinemaRoomId, DateTime ShowDate, string HourId, string movieId)
+        {
+            var findMovieScheduleId =
+                _dataContext.movieSchedule
+                .FirstOrDefault
+                (x => x.cinemaRoomId.Equals(cinemaRoomId)
+                && x.ScheduleDate == ShowDate && x.HourScheduleID.Equals(HourId)
+                && x.movieId.Equals(movieId) && !x.IsDelete);
+            if (findMovieScheduleId != null) 
+            {
+                return new GenericRespondWithObjectDTO<string>
+                {
+                    Status = GenericStatusEnum.Success.ToString(),
+                    message = "Lấy data thành công",
+                    data = findMovieScheduleId.movieScheduleId
+                };
+            }
+            return new GenericRespondWithObjectDTO<string>
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Lấy data thất bại ko có lịch chiếu nào hết",
+            };
+        }
+
+
     }
 }

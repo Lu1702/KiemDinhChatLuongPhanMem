@@ -93,5 +93,17 @@ namespace backend.Controllers
                 });
             return Ok(getAllTimes);
         }
+
+        [HttpGet("getMovieScheduleId")]
+        public IActionResult GetMovieScheduleId(string movieId , string HourId , string cinemaRooomId , DateTime showDate)
+        {
+            var getStatus = scheduleServices.getScheduleId
+                (cinemaRooomId, showDate, HourId, movieId);
+            if (getStatus.Status.Equals(GenericStatusEnum.Success.ToString()))
+            {
+                return Ok(getStatus);
+            }
+            return NotFound(getStatus);
+        }
     }
 }

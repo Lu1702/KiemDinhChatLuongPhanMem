@@ -12,6 +12,8 @@ namespace backend.Interface.Schedule
 
         Task<GenericRespondDTOs> delete(string id);
 
+        GenericRespondWithObjectDTO<string> getScheduleId(string cinemaRoomId , DateTime ShowDate , string HourId , string movieId);
+
         GenericRespondWithObjectDTO<List<GetListScheduleDTO>> getAlSchedulesByMovieName(string movieName);
         
         GenericRespondWithObjectDTO<GetVisualFormatListByMovieIdDTO> getVisualFormatListByMovieId(string movieId);

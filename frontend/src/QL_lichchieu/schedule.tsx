@@ -39,7 +39,7 @@ interface MovieVisualFormat {
 interface NewScheduleData {
   movieId: string;
   cinemaRoomId: string;
-  showTime: string; // Lưu hourScheduleID
+  showTime: string;
   showDate: string;
   movieVisualId: string;
 }
@@ -100,6 +100,7 @@ const ScheduleSearch: React.FC = () => {
   const [schedules, setSchedules] = useState<SearchResult[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
@@ -205,7 +206,7 @@ const ScheduleSearch: React.FC = () => {
       const response = await fetch(
         `${API_BASE_URL}/CinemaRoom/GetRoomByCinemaIdAndVisualId?cinemaId=${cinemaId}&visualId=${visualId}`
       );
-      if (!response.ok) throw new Error('Lỗi khi lấy danh sách phòng chiếu.');
+      if (!response.ok) throw new Error('Không có phòng chiếu phù hợp.');
       const data = await response.json();
 
       const roomsList = data.data && data.data.length > 0 ? data.data[0].roomList : [];
@@ -214,18 +215,30 @@ const ScheduleSearch: React.FC = () => {
       if (roomsList.length > 0) {
         if (showAddModal) {
           setNewSchedule((prev) => ({ ...prev, cinemaRoomId: roomsList[0].roomId }));
+          setModalError(null);
         } else if (showEditModal) {
           setEditSchedule((prev) => ({ ...prev, cinemaRoomId: roomsList[0].roomId }));
         }
       } else {
         if (showAddModal) {
           setNewSchedule((prev) => ({ ...prev, cinemaRoomId: '' }));
+          setModalError('Không có phòng chiếu phù hợp.');
         } else if (showEditModal) {
           setEditSchedule((prev) => ({ ...prev, cinemaRoomId: '' }));
         }
       }
     } catch (err: any) {
-      setError(err.message);
+      if (showAddModal) {
+        setModalError('Không có phòng chiếu phù hợp.');
+        setCinemaRooms([]);
+        setNewSchedule((prev) => ({ ...prev, cinemaRoomId: '' }));
+      } else {
+        setError(err.message);
+        setCinemaRooms([]);
+        if (showEditModal) {
+          setEditSchedule((prev) => ({ ...prev, cinemaRoomId: '' }));
+        }
+      }
     }
   };
 
@@ -379,8 +392,6 @@ const ScheduleSearch: React.FC = () => {
         ],
       };
 
-      console.log('Request body:', requestBody);
-
       const response = await fetch(`${API_BASE_URL}/Schedule/addSchedule?cinemaId=${selectedCinemaId}`, {
         method: 'POST',
         headers: {
@@ -395,14 +406,13 @@ const ScheduleSearch: React.FC = () => {
         alert('Thêm lịch chiếu thành công!');
         setShowAddModal(false);
         setMovieDetail(null);
+        setModalError(null);
         handleSearch();
       } else {
         const errorData = await response.json();
-        console.log('API error:', errorData);
         alert(`Lỗi khi thêm lịch chiếu: ${errorData.message || 'Không xác định'}`);
       }
     } catch (err: any) {
-      console.error('Error:', err);
       alert(`Lỗi: ${err.message}`);
     } finally {
       setLoading(false);
@@ -451,14 +461,12 @@ const ScheduleSearch: React.FC = () => {
         scheduleDate: new Date(editSchedule.showDate + 'T00:00:00+07:00').toISOString(),
       };
 
-      console.log('Edit request body:', requestBody);
-
       const response = await fetch(`${API_BASE_URL}/Schedule/editSchedule/${selectedScheduleId}`, {
         method: 'PATCH',
         headers: {
           accept: '*/*',
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(requestBody),
       });
@@ -470,11 +478,9 @@ const ScheduleSearch: React.FC = () => {
         handleSearch();
       } else {
         const errorData = await response.json();
-        console.log('API error:', errorData);
         alert(`Lỗi khi sửa lịch chiếu: ${errorData.message || 'Không xác định'}`);
       }
     } catch (err: any) {
-      console.error('Error:', err);
       alert(`Lỗi: ${err.message}`);
     } finally {
       setLoading(false);
@@ -487,7 +493,6 @@ const ScheduleSearch: React.FC = () => {
       return;
     }
 
-    // Tìm SearchResult chứa lịch chiếu được chọn
     const selectedResult = schedules?.find((movieSchedule) =>
       movieSchedule.getListSchedule.some((schedule) => schedule.scheduleId === selectedScheduleId)
     );
@@ -509,9 +514,9 @@ const ScheduleSearch: React.FC = () => {
 
     setEditSchedule({
       movieId: selectedMovie?.movieID || '',
-      cinemaRoomId: '', // Sẽ được cập nhật sau khi lấy danh sách phòng
+      cinemaRoomId: '',
       showTime: selectedTime?.hourScheduleID || '',
-      showDate: selectedSchedule.showDate.split('T')[0], // Lấy phần ngày
+      showDate: selectedSchedule.showDate.split('T')[0],
       movieVisualId: selectedVisualFormat?.movieVisualId || '',
     });
     setEditCinemaId(selectedCinema?.cinemaId || '');
@@ -522,6 +527,7 @@ const ScheduleSearch: React.FC = () => {
   const handleCinemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCinemaId = e.target.value;
     setSelectedCinemaId(newCinemaId);
+    setModalError(null); // Clear modal error when cinema changes
   };
 
   const handleEditCinemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -532,6 +538,7 @@ const ScheduleSearch: React.FC = () => {
   const handleMovieChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newMovieId = e.target.value;
     setNewSchedule({ ...newSchedule, movieId: newMovieId });
+    setModalError(null); // Clear modal error when movie changes
     fetchMovieDetail(newMovieId);
   };
 
@@ -539,6 +546,13 @@ const ScheduleSearch: React.FC = () => {
     const newMovieId = e.target.value;
     setEditSchedule({ ...editSchedule, movieId: newMovieId });
     fetchMovieDetail(newMovieId);
+  };
+
+  const isVisualFormatCompatible = (visualFormatId: string): boolean => {
+    if (!movieDetail || !movieDetail.movieVisualFormat) return false;
+    return movieDetail.movieVisualFormat.some(
+      (format) => format.movieVisualFormatId === visualFormatId
+    );
   };
 
   return (
@@ -644,6 +658,7 @@ const ScheduleSearch: React.FC = () => {
                 onClick={() => {
                   setShowAddModal(false);
                   setMovieDetail(null);
+                  setModalError(null);
                 }}
                 className="close-button"
               >
@@ -651,6 +666,7 @@ const ScheduleSearch: React.FC = () => {
               </button>
             </div>
             <div className="modal-body">
+              {modalError && <p className="error-message">{modalError}</p>}
               <div className="form-group">
                 <label>Phim:</label>
                 <select value={newSchedule.movieId} onChange={handleMovieChange}>
@@ -696,7 +712,11 @@ const ScheduleSearch: React.FC = () => {
                   onChange={(e) => setNewSchedule({ ...newSchedule, movieVisualId: e.target.value })}
                 >
                   {movieVisualFormats.map((format) => (
-                    <option key={format.movieVisualId} value={format.movieVisualId}>
+                    <option
+                      key={format.movieVisualId}
+                      value={format.movieVisualId}
+                      disabled={!isVisualFormatCompatible(format.movieVisualId)}
+                    >
                       {format.movieVisualFormatDetail}
                     </option>
                   ))}
@@ -708,11 +728,15 @@ const ScheduleSearch: React.FC = () => {
                   value={newSchedule.cinemaRoomId}
                   onChange={(e) => setNewSchedule({ ...newSchedule, cinemaRoomId: e.target.value })}
                 >
-                  {cinemaRooms.map((room) => (
-                    <option key={room.roomId} value={room.roomId}>
-                      Phòng: {room.roomNumber}
-                    </option>
-                  ))}
+                  {cinemaRooms.length === 0 ? (
+                    <option value="">Không có phòng chiếu phù hợp</option>
+                  ) : (
+                    cinemaRooms.map((room) => (
+                      <option key={room.roomId} value={room.roomId}>
+                        Phòng: {room.roomNumber}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
               <div className="form-group">
@@ -746,6 +770,7 @@ const ScheduleSearch: React.FC = () => {
                 onClick={() => {
                   setShowAddModal(false);
                   setMovieDetail(null);
+                  setModalError(null);
                 }}
               >
                 Hủy
@@ -817,7 +842,11 @@ const ScheduleSearch: React.FC = () => {
                   onChange={(e) => setEditSchedule({ ...editSchedule, movieVisualId: e.target.value })}
                 >
                   {movieVisualFormats.map((format) => (
-                    <option key={format.movieVisualId} value={format.movieVisualId}>
+                    <option
+                      key={format.movieVisualId}
+                      value={format.movieVisualId}
+                      disabled={!isVisualFormatCompatible(format.movieVisualId)}
+                    >
                       {format.movieVisualFormatDetail}
                     </option>
                   ))}
@@ -829,11 +858,15 @@ const ScheduleSearch: React.FC = () => {
                   value={editSchedule.cinemaRoomId}
                   onChange={(e) => setEditSchedule({ ...editSchedule, cinemaRoomId: e.target.value })}
                 >
-                  {cinemaRooms.map((room) => (
-                    <option key={room.roomId} value={room.roomId}>
-                      Phòng: {room.roomNumber}
-                    </option>
-                  ))}
+                  {cinemaRooms.length === 0 ? (
+                    <option value="">Không có phòng chiếu phù hợp</option>
+                  ) : (
+                    cinemaRooms.map((room) => (
+                      <option key={room.roomId} value={room.roomId}>
+                        Phòng: {room.roomNumber}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
               <div className="form-group">

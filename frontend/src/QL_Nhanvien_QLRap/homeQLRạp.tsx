@@ -5,6 +5,7 @@ import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import SCHEDULE from '../QL_lichchieu/schedule';
+import RevenueList from "../QL_Doanhthu_GiamDoc/Doanhthu";
 interface FoodItem {
     foodId: string;
     foodName: string;
@@ -1011,7 +1012,7 @@ const Info: React.FC = () => {
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "xacdinhdichvu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("xacdinhdichvu")}>Xác nhận dịch vụ</button>
                         </div>
                     )}
-                    {userRole === "Director" && (
+                    {userRole?.includes('Director') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Giám đốc</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("doanhthu")}>Doanh thu</button>
@@ -1019,8 +1020,8 @@ const Info: React.FC = () => {
                     )}
                     {roles1.includes('FacilitiesManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Quản trị viên hệ thống</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
+                            <h3 className="text-lg font-bold text-DarkRed mb-4">Quản trị viên hệ thống</h3>
+                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "csphongrap" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
                         </div>
                     )}
                 </div>
@@ -1368,9 +1369,8 @@ const Info: React.FC = () => {
                         </div>
                     )}
                     {activeTab === "doanhthu" && roles1.includes('Director') && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                            <h2 className="text-2xl font-bold mb-6">Doanh Thu</h2>
-                            <p className="text-white">Đây là trang hiển thị thông tin doanh thu. Bạn có thể thêm biểu đồ hoặc bảng dữ liệu ở đây.</p>
+                        <div>
+                            <RevenueList/>
                         </div>
                     )}
                     {activeTab === "xacdinhdichvu" && roles1.includes('Cashier') && (
