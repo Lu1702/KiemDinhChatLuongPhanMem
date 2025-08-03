@@ -12,7 +12,7 @@ function Bottom() {
                         alt="Cinema Logo"
                         className="w-48 h-20 animate-pulse hover:scale-110 transition-transform duration-700 ease-in-out"
                     />
-                    <ul className="flex flex-col items-center gap-4 font-cinzel text-lg tracking-wide ">
+                    <ul className="flex flex-col items-center gap-4 font-cinzel text-sm tracking-wide ">
                         <li>
                             <a
                                 className="relative underline hover:text-amber-300 transition-colors duration-300 before:content-[''] before:absolute before:bottom-0 before:left-0 before:w-0 before:h-[2px] before:bg-amber-300 before:transition-all before:duration-300 hover:before:w-full"
@@ -38,24 +38,25 @@ function Bottom() {
                             </a>
                         </li>
                     </ul>
+                    <ul className="space-y-4 font-cinzel text-sm tracking-wide pl-36">
+                        <li>
+                            <span className="text-amber-200 font-bold text-xl">CÔNG TY TNHH CINEMA VIỆT NAM</span>
+                        </li>
+                        <li>
+                            <span className="text-gray-300">Giấy CNĐKDN: 9999999999, đăng ký lần đầu ngày 20/02/2002, cấp bởi Sở KHĐT Thành phố Hồ Chí Minh</span>
+                        </li>
+                        <li>
+                            <span className="text-gray-300">Địa chỉ: Tầng 6, 828 Sư Vạn Hạnh, Phường Hòa Hưng, Thành phố Hồ Chí Minh, Việt Nam</span>
+                        </li>
+                        <li>
+                            <span className="text-gray-300">Hotline: (028) 7777 8888</span>
+                        </li>
+                        <li>
+                            <span className="text-gray-400 text-sm tracking-tight">COPYRIGHT © CINEMA.COM - ALL RIGHTS RESERVED.</span>
+                        </li>
+                    </ul>
                 </div>
-                <ul className="space-y-4 font-cinzel text-lg tracking-wide">
-                    <li>
-                        <span className="text-amber-200 font-bold text-xl">CÔNG TY TNHH CINEMA VIỆT NAM</span>
-                    </li>
-                    <li>
-                        <span className="text-gray-300">Giấy CNĐKDN: 9999999999, đăng ký lần đầu ngày 20/02/2002, cấp bởi Sở KHĐT Thành phố Hồ Chí Minh</span>
-                    </li>
-                    <li>
-                        <span className="text-gray-300">Địa chỉ: Tầng 6, 828 Sư Vạn Hạnh, Phường Hòa Hưng, Thành phố Hồ Chí Minh, Việt Nam</span>
-                    </li>
-                    <li>
-                        <span className="text-gray-300">Hotline: (028) 7777 8888</span>
-                    </li>
-                    <li>
-                        <span className="text-gray-400 text-sm tracking-tight">COPYRIGHT © CINEMA.COM - ALL RIGHTS RESERVED.</span>
-                    </li>
-                </ul>
+
             </div>
         </footer>
     );

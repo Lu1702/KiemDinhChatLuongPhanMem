@@ -19,10 +19,10 @@ import DT from './QL_Doanhthu_GiamDoc/Doanhthu';
 import RapPhongChieu from './QL_Rap_PhongChieu_QtrivienHT/Quantrivienhethong_QuanlyRapPhongChieu';
 import DV from './QLDichVu_ThuNgan/QLDichVu';
 import Comment from './Cinema/Comment';
-import FutureFilm from './Bookig/FutureFilm';
 import Booking from './Bookig/Booking';
 import BookingHistory from './Account/BookingHistory';
 import Addmovie from './QL_Add_movie/Addmovie';
+import MovieDetail from './Bookig/MovieDetail';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -36,8 +36,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/comingmovies" element={<Comingmovies />} />
         <Route path="/introduce" element={<Introduce />} />
         <Route path="/showtimes" element={<Showtimes />} />
-        <Route path="/cinezone" element={<Cinezone />} /> {/* Static route for cinezone */}
-        <Route path="/cinezone/:cinemaId" element={<Cinezone />} /> {/* Dynamic route for specific cinema */}
+        <Route path="/cinezone" element={<Cinezone />} />
+        <Route path="/cinezone/:cinemaId" element={<Cinezone />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/info" element={<Info />} />
         <Route path="/HomeAdmin" element={<QLNV />} />
@@ -45,11 +45,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/Quantrivienhethong/QLRapPhongChieu" element={<RapPhongChieu />} />
         <Route path="/QTVHThong/chinhsuaphongrap" element={<DV />} />
         <Route path="/comment" element={<Comment />} />
-        <Route path="/futurefilm" element={<FutureFilm />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/bookinghistory" element={<BookingHistory />} />
         <Route path="/addmovie" element={<Addmovie />} />
-        <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} /> {/* Fallback for unmatched routes */}
+        <Route path="/moviedetail/:movieId" element={<MovieDetail />} />
+        <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

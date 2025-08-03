@@ -15,6 +15,7 @@ interface Movie {
   movieName: string;
   movieImage: string;
   trailerUrl: string;
+  isRelease: boolean;
 }
 
 function Home() {
@@ -25,7 +26,7 @@ function Home() {
   const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch currently showing movies
+  // Fetch currently showing movies with isRelease: true
   useEffect(() => {
     const fetchAllMovies = async () => {
       let allMovies: Movie[] = [];
@@ -43,12 +44,15 @@ function Home() {
           if (!Array.isArray(moviesData) || moviesData.length === 0) {
             hasMore = false;
           } else {
-            const formattedMovies = moviesData.map((item: any) => ({
-              movieId: item.movieID || item.movieId || '',
-              movieName: item.movieName || '',
-              movieImage: item.movieImage || '',
-              trailerUrl: item.movieTrailerUrl || item.trailerURL || '',
-            }));
+            const formattedMovies = moviesData
+              .filter((item: any) => item.isRelease === true) // Filter movies with isRelease: true
+              .map((item: any) => ({
+                movieId: item.movieID || item.movieId || '',
+                movieName: item.movieName || '',
+                movieImage: item.movieImage || '',
+                trailerUrl: item.movieTrailerUrl || item.trailerURL || '',
+                isRelease: item.isRelease || false,
+              }));
             allMovies = [...allMovies, ...formattedMovies];
             page++;
           }
@@ -78,6 +82,7 @@ function Home() {
             movieName: item.movieName || '',
             movieImage: item.movieImage || '',
             trailerUrl: item.movieTrailerUrl || item.trailerURL || '',
+            isRelease: item.isRelease || false,
           }));
           setUpcomingMovies(formattedMovies);
         } else {
@@ -105,9 +110,10 @@ function Home() {
     navigate('/showtimes');
   };
 
-  const handleFutureFilm = () => {
-    navigate('/futurefilm');
+  const handleMoviedetail = (movieId: string) => {
+    navigate(`/moviedetail/${movieId}`);
   };
+
 
   const handleOpenTrailer = (url: string) => {
     let embedUrl = url;
@@ -191,7 +197,7 @@ function Home() {
             </div>
           </button>
           <button
-            onClick={handleFutureFilm}
+            onClick={() => handleMoviedetail(movie.movieId)}
             className="overflow-hidden relative w-50 p-2 h-12 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group"
           >
             🎟 Tìm hiểu thêm
@@ -265,6 +271,8 @@ function Home() {
                 >
                   <path
                     d="M7 18C7 18.5523 7.44772 19 8 19C8.55228 19 9 18.5523 9 18H7ZM8.70711 0.292893C8.31658 -0.0976311 7.68342 -0.0976311 7.29289 0.292893L0.928932 6.65685C0.538408 7.04738 0.538408 7.68054 0.928932 8.07107C1.31946 8.46159 1.95262 8.46159 2.34315 8.07107L8 2.41421L13.6569 8.07107C14.0474 8.46159 14.6805 8.46159 15.0711 8.07107C15.4616 7.68054 15.4616 7.04738 15.0711 6.65685L8.70711 0.292893ZM9 18L9 1H7L7 18H9Z"
+
+
                     className="fill-gray-800 group-hover:fill-gray-800"
                   ></path>
                 </svg>

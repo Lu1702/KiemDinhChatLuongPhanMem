@@ -295,10 +295,6 @@ function Nav() {
                             ))}
                         </div>
                     )}
-                    <span onClick={() => navigate('/cinezone')} className="cursor-pointer flex items-center gap-1 hover:text-purple-300">
-                        <MapPinIcon className="w-5 h-5 text-purple-400" />
-                        Chọn rạp hahaha
-                    </span>
                     <span onClick={() => navigate('/listfilm')} className="cursor-pointer flex items-center gap-1 hover:text-purple-300">
                         <MapPinIcon className="w-5 h-5 text-purple-400" />
                         Chọn phim đang chiếu
