@@ -34,9 +34,9 @@ namespace backend.Services.MovieServices
                     {
                         CommentId = item.commentID,
                         commentDetail = item.userCommentDetail,
-                        customerEmail = _dataContext.userInformation.FirstOrDefault
-                        (x => x.userId.Equals
-                        (_dataContext.Customers.FirstOrDefault(x => x.Id.Equals(item.customerID)).userID)) ? .loginUserEmail ?? "UnknownUser"
+                        customerEmail = _dataContext.userInformation
+                        .FirstOrDefault(x => x.userId.Equals(_dataContext.Customers.FirstOrDefault(y => y.Id.Equals(item.customerID)).userID)).loginUserEmail,
+                        commentDate = item.createdCommentTime
                     };
                     newListCommentRespond.Add(newComment);
                 }
@@ -57,23 +57,40 @@ namespace backend.Services.MovieServices
 
         // Đăng comment lên
 
-        public async Task<GenericRespondDTOs> uploadComment(string customerID, string movieID, CommentRequestDTO commentRequestDTO)
+        public async Task<GenericRespondDTOs> uploadComment(string customerID, string movieID, string commentDetail)
         {
-            if (String.IsNullOrEmpty(customerID) && String.IsNullOrEmpty(movieID))
+            if (String.IsNullOrEmpty(customerID))
             {
                 return new GenericRespondDTOs()
                 {
-                    message = "Lỗi không tìm thấy ID người dùng hoặc ID của bộ phim" ,
+                    message = "Lỗi không tìm thấy ID người dùng" ,
                     Status = GenericStatusEnum.Failure.ToString(),
                 };
             }
 
+            if(String.IsNullOrEmpty(movieID))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString() ,
+                    message = "Thiếu MovieID"
+                };
+            }
             // Đăng comment lên
-
+            var getCustomerId =  await _dataContext.Customers
+                .FirstOrDefaultAsync(x => x.userID.Equals(customerID));
+            if(getCustomerId == null)
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Không tìm thấy thông tin khách hàng"
+                };
+            }
             // Tìm kiếm Order nếu đã mua và thanh toán thì mới được comment
 
             var getOrder = _dataContext.Order
-                .Where(x => x.customerID.Equals(customerID)
+                .Where(x => x.customerID.Equals(getCustomerId.Id)
                 && x.PaymentStatus == PaymentStatus.PaymentSuccess.ToString());
 
             // Lấy danh sách vé Order
@@ -94,10 +111,10 @@ namespace backend.Services.MovieServices
                     string commentIDGenerate = Guid.NewGuid().ToString();
                     await _dataContext.movieCommentDetail.AddAsync(new Model.Movie.movieCommentDetail()
                     {
-                        customerID = customerID,
+                        customerID = getCustomerId.Id,
                         createdCommentTime = DateTime.Now,
                         movieId = movieID,
-                        userCommentDetail = commentRequestDTO.commentDetail,
+                        userCommentDetail = commentDetail,
                         commentID = commentIDGenerate,
                     });
                     await _dataContext.SaveChangesAsync();
@@ -171,7 +188,7 @@ namespace backend.Services.MovieServices
             };
         }
 
-        public async Task<GenericRespondDTOs> editComment(string commentID, CommentRequestDTO commentRequestDTO)
+        public async Task<GenericRespondDTOs> editComment(string commentID, string commentDetail)
         {
             var getComment = _dataContext.movieCommentDetail.FirstOrDefault(x => x.commentID.Equals((commentID)));
             if (getComment != null)
@@ -179,7 +196,7 @@ namespace backend.Services.MovieServices
                 try
                 {
                     getComment.createdCommentTime = DateTime.Now;
-                    getComment.userCommentDetail = commentRequestDTO.commentDetail;
+                    getComment.userCommentDetail = commentDetail;
 
                     _dataContext.movieCommentDetail.Update(getComment);
                     await _dataContext.SaveChangesAsync();

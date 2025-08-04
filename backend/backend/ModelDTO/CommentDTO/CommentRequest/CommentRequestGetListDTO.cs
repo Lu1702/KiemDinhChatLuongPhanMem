@@ -6,5 +6,7 @@
         public string customerEmail { get; set; } = string.Empty;
         public string commentDetail { get; set; } = string.Empty;
 
+        public DateTime commentDate { get; set; }
+
     }
 }
