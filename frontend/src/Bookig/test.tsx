@@ -582,7 +582,7 @@ const MovieDetails: React.FC = () => {
         body: JSON.stringify(payload),
       });
       const bookingResult = await bookingResponse.json();
-
+      console.log(bookingResult)
       if (bookingResponse.ok && bookingResult.status === 'Success') {
         alert('Đặt vé thành công!');
         localStorage.removeItem('movieId')
