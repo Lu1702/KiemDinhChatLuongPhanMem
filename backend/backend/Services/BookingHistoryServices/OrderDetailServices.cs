@@ -70,9 +70,7 @@ namespace backend.Services.BookingHistoryServices
                     HourSchedule = getTicketItems.movieSchedule.HourSchedule.HourScheduleShowTime,
                     movieName = getTicketItems.movieSchedule.movieInformation.movieName,
                     TrangThai = 
-                    getTicketItems.movieSchedule.ScheduleDate > DateTime.Now 
-                    &&
-                    convertToDateTime > DateTime.Now ? "Đã chiếu" : TrangThai ,
+                    convertToDateTime > DateTime.Now ? "Chưa chiếu" : "Đã chiếu" ,
                     NgayChieu = getTicketItems.movieSchedule.ScheduleDate.ToString("yyy/MM/dd"),
                 };
                 bookingHistoryRespondLists
@@ -185,32 +183,42 @@ namespace backend.Services.BookingHistoryServices
                     //Lấy ra danh sách sản phẩm người dùng Order
 
                     var getProductLists = _dataContext.FoodOrderDetail
-                        .Include(x => x.foodInformation);
+                        .Include(x => x.foodInformation)
+                        .Where(x => x.orderId.Equals(orderID));
 
                     // Chuyển thành dạng Dictionary
-                    var selectQuanlity = getProductLists.ToDictionary(x => x.foodInformation.foodInformationName, x => x.quanlity);
+                    if (getProductLists.Any())
+                    {
+                        var selectQuanlity = 
+                            getProductLists.ToDictionary
+                                (x => x.foodInformation.foodInformationName, x => x.quanlity);
 
-                    productLists = selectQuanlity;
+                        productLists = selectQuanlity;
+                    }
+                    
+                    // Tạo object mới
+
+                    var newOrderDetailRespondDTO = new OrderDetailRespond()
+                    {
+                        cinemaName = cinemaName,
+                        cinemaRoomNumber = cinemaRoom,
+                        customerName = customerName,
+                        movieName = movieName,
+                        movieScheduleDate = scheduleDate,
+                        phoneNumber = phoneNumber,
+                        ProductList = productLists,
+                        scheduleShowTIme = scheduleShowTime,
+                        SeatsNumber = seatList ,
+                        ShowStatus = Status ?  ScheduleEnum.screened.ToString() : ScheduleEnum.notScreened.ToString(),
+                    };
+
+                    return newOrderDetailRespondDTO;
                 }
             }
-
-            // Tạo object mới
-
-            var newOrderDetailRespondDTO = new OrderDetailRespond()
+            return new OrderDetailRespond()
             {
-                cinemaName = cinemaName,
-                cinemaRoomNumber = cinemaRoom,
-                customerName = customerName,
-                movieName = movieName,
-                movieScheduleDate = scheduleDate,
-                phoneNumber = phoneNumber,
-                ProductList = productLists,
-                scheduleShowTIme = scheduleShowTime,
-                SeatsNumber = seatList ,
-                ShowStatus = Status ? ScheduleEnum.screened.ToString() : ScheduleEnum.notScreened.ToString(),
-            };
 
-            return newOrderDetailRespondDTO;
+            };
         }
     }
 }

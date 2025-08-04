@@ -5,6 +5,7 @@ import Bottom from "../Footer/bottom";
 import bg from "../image/bg.png";
 import { Navigate, useNavigate } from "react-router";
 
+// Interfaces (Không thay đổi)
 interface Genre {
     genreId: string;
     genreName: string;
@@ -232,7 +233,7 @@ const AddMovie: React.FC = () => {
         setThanhCong("");
         setIsSubmitting(true);
 
-        // Xác thực
+        // Validation logic (Không thay đổi)
         if (!form.name) {
             setLoi("Vui lòng nhập tên phim");
             setIsSubmitting(false);
@@ -315,15 +316,7 @@ const AddMovie: React.FC = () => {
             setIsSubmitting(false);
             return;
         }
-
-        const language = languageOptions.find((lang) => lang.languageId === form.languageId);
-        if (!language) {
-            setLoi("Ngôn ngữ không hợp lệ");
-            setIsSubmitting(false);
-            return;
-        }
-
-        // Tạo FormData
+        
         const formData = new FormData();
         formData.append("movieName", form.name);
         formData.append("movieDescription", form.description);
@@ -340,19 +333,11 @@ const AddMovie: React.FC = () => {
             formData.append("movieImage", selectedFile);
         }
 
-        // Ghi log nội dung FormData để gỡ lỗi
-        const formDataEntries: [string, FormDataEntryValue][] = [];
-        formData.forEach((value, key) => formDataEntries.push([key, value]));
-        formDataEntries.forEach(([key, value]) => {
-            console.log(`${key}: ${value}`);
-        });
-
         try {
             const url = editIndex !== null
                 ? `http://localhost:5229/api/movie/editMovie?movieID=${movies[editIndex].movieId}`
                 : "http://localhost:5229/api/movie/createMovie";
             const method = editIndex !== null ? "patch" : "post";
-
             const res = await axios.request<CreateMovieResponse>({
                 method,
                 url,
@@ -363,7 +348,7 @@ const AddMovie: React.FC = () => {
                 data: formData as any,
                 timeout: 30000,
             });
-
+            
             console.log("Phản hồi từ API (create/update):", res.data);
 
             if (res.status === 200 || res.status === 201 || res.status === 204) {
@@ -404,32 +389,70 @@ const AddMovie: React.FC = () => {
             setIsSubmitting(false);
         }
     };
-
-    const handleEdit = (index: number) => {
+    
+    // =================================================================
+    // ================== HÀM HANDLEEDIT ĐÃ CẬP NHẬT ==================
+    // =================================================================
+    const handleEdit = async (index: number) => {
         const movie = movies[index];
-        const languageId = languageOptions.find((lang) => lang.languageDetail === movie.language)?.languageId || "";
-        const genres = movie.genres
-            .map((name) => theloaiOptions.find((g) => g.genreName === name)?.genreId)
-            .filter((id): id is string => id !== undefined);
-        const dinhdang = movie.dinhdang
-            .map((detail) => dinhDangOptions.find((d) => d.movieVisualFormatDetail === detail)?.movieVisualId)
-            .filter((id): id is string => id !== undefined);
+        if (!movie.movieId) {
+            setLoi("Không tìm thấy ID phim để chỉnh sửa.");
+            return;
+        }
 
-        setForm({
-            name: movie.name,
-            description: movie.description || "",
-            duration: movie.duration.toString(),
-            actor: movie.cast || "",
-            director: movie.director || "",
-            trailer: movie.trailer,
-            releaseDate: movie.releaseDate,
-            languageId,
-            ageId: movie.ageLimit || "",
-        });
-        setSelectedGenres(genres);
-        setSelectedDinhdang(dinhdang);
-        setSelectedFile(null);
-        setEditIndex(index);
+        setLoi("");
+        setThanhCong("");
+        setLoading(true);
+        window.scrollTo(0, 0); // Cuộn lên đầu trang để xem biểu mẫu
+
+        try {
+            const res = await fetch(`http://localhost:5229/api/movie/getMovieDetail/${movie.movieId}`, {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(`Không thể tải chi tiết phim: ${errorData.message || `HTTP ${res.status}`}`);
+            }
+
+            const result = await res.json();
+            if (result.status !== "Success") {
+                 throw new Error(`Lỗi từ API: ${result.message}`);
+            }
+
+            const movieDetails = result.data;
+
+            // Trích xuất ID từ phản hồi chi tiết
+            const languageId = movieDetails.movieLanguage ? Object.keys(movieDetails.movieLanguage)[0] : "";
+            const ageId = movieDetails.movieMinimumAge ? Object.keys(movieDetails.movieMinimumAge)[0] : "";
+            const genreIds = movieDetails.movieGenre.map((g: any) => g.movieGenreId);
+            const formatIds = movieDetails.movieVisualFormat.map((f: any) => f.movieVisualFormatId);
+
+            setForm({
+                name: movieDetails.movieName || "",
+                description: movieDetails.movieDescription || "",
+                duration: movieDetails.movieDuration?.toString() || "",
+                actor: movieDetails.movieActor || "",
+                director: movieDetails.movieDirector || "",
+                trailer: movieDetails.movieTrailerUrl || "",
+                // Định dạng ngày thành YYYY-MM-DD cho <input type="date">
+                releaseDate: movieDetails.releaseDate ? new Date(movieDetails.releaseDate).toISOString().split('T')[0] : "",
+                languageId: languageId,
+                ageId: ageId,
+            });
+
+            setSelectedGenres(genreIds);
+            setSelectedDinhdang(formatIds);
+            setSelectedFile(null); // Xóa lựa chọn tệp trước đó
+            setEditIndex(index); // Theo dõi chỉ mục để gửi đi
+            
+        } catch (err: any) {
+            setLoi(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDelete = (index: number) => {
@@ -740,9 +763,9 @@ const AddMovie: React.FC = () => {
 
                 <div className="mt-10 px-4 sm:px-10">
                     <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4 text-center sm:text-left">Danh sách phim</h3>
-                    {loading ? (
+                    {loading && editIndex === null ? ( // Chỉ hiển thị loading chính khi không ở chế độ edit
                         <p className="text-white text-center">Đang tải...</p>
-                    ) : loi ? (
+                    ) : loi && movies.length === 0 ? (
                         <p className="text-red-500 text-center">{loi}</p>
                     ) : movies.length === 0 ? (
                         <p className="text-white text-center">Chưa có phim nào</p>
@@ -771,7 +794,7 @@ const AddMovie: React.FC = () => {
                                     <tbody>
                                         {movies.map((m, i) => (
                                             <tr key={m.movieId || m.name + i} className="text-center border-b text-sm sm:text-base">
-                                                <td className="text-white px-2 sm:px-4 py-2">{i + 1}</td>
+                                                <td className="text-white px-2 sm:px-4 py-2">{i + 1 + (page - 1) * 1}</td>
                                                 <td className="text-white px-2 sm:px-4 py-2">
                                                     {m.image ? (
                                                         <img
@@ -806,7 +829,7 @@ const AddMovie: React.FC = () => {
                                                 <td className="text-white px-2 sm:px-4 py-2">
                                                     {m.dinhdang?.length > 0 ? m.dinhdang.join(", ") : "Không có định dạng"}
                                                 </td>
-                                                <td className="text-white px-2 sm:px-4 py-2 flex flex-row gap-2 justify-center">
+                                                <td className="text-white px-2 sm:px-4 py-2 flex flex-row gap-2 justify-center items-center h-24">
                                                     <button
                                                         onClick={() => handleEdit(i)}
                                                         className="inline-flex items-center justify-center px-2 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-md hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-200"
@@ -935,8 +958,7 @@ const AddMovie: React.FC = () => {
                                 <h2 className="text-xl font-bold py-4 text-gray-200">Bạn chắc chắn chứ?</h2>
                                 <p className="text-xl font-bold py-4 text-gray-200">Suy nghĩ kĩ nha bro ☺️</p>
                                 <p className="font-bold text-sm text-gray-500 px-2">
-                                    Bạn có chắc chắn muốn xóa phim này?
-                                </p>
+                                    Bạn có chắc chắn muốn xóa phim này? </p>
                             </div>
                             <div className="p-2 mt-2 text-center space-x-1 md:block">
                                 <button
