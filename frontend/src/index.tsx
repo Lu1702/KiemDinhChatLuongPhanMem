@@ -18,11 +18,11 @@ import QLNV from './QL_Nhanvien_QLRap/homeQLRạp';
 import DT from './QL_Doanhthu_GiamDoc/Doanhthu';
 import RapPhongChieu from './QL_Rap_PhongChieu_QtrivienHT/Quantrivienhethong_QuanlyRapPhongChieu';
 import DV from './QLDichVu_ThuNgan/QLDichVu';
-import Comment from './Cinema/Comment';
+import Comments from './Cinema/Comments';
 import Booking from './Bookig/Booking';
 import BookingHistory from './Account/BookingHistory';
 import Addmovie from './QL_Add_movie/Addmovie';
-import MovieDetails from './Bookig/test'
+import MovieDetails from './Bookig/Movies'
 import MovieDetail from './Bookig/MovieDetail';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -45,12 +45,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/Giamdoc/doanhthu" element={<DT />} />
         <Route path="/Quantrivienhethong/QLRapPhongChieu" element={<RapPhongChieu />} />
         <Route path="/QTVHThong/chinhsuaphongrap" element={<DV />} />
-        <Route path="/comment" element={<Comment />} />
+        <Route path="/comments" element={<Comments />} />
         <Route path="/booking" element={<Booking />} />
-        <Route path="/bookinghistory" element={<BookingHistory />} />
+        <Route path="/bookinghistory/:userId" element={<BookingHistory />} />
         <Route path="/addmovie" element={<Addmovie />} />
-        <Route path="/test" element={<MovieDetails />} />
-        <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} /> {/* Fallback for unmatched routes */}
+        <Route path="/movies" element={<MovieDetails />} />
+        <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} />
         <Route path="/moviedetail/:movieId" element={<MovieDetail />} />
         <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} />
       </Routes>
