@@ -35,6 +35,21 @@ namespace backend.Services.MovieServices
 
         public async Task<GenericRespondDTOs> add([FromForm] MovieRequestDTO movieRequestDTO)
         {
+            if (_dataContext.movieInformation.Any(x => x.movieName == movieRequestDTO.movieName))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Tên phim đã tồn tại"
+                };
+            }else if (_dataContext.movieInformation.Any(x => x.movieTrailerUrl.Equals(movieRequestDTO.movieTrailerUrl)))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Trailer đã tồn tại"
+                };
+            }
             if (movieRequestDTO != null)
             {
                 // Generate New GUID 
@@ -100,15 +115,33 @@ namespace backend.Services.MovieServices
                 catch (DbException db)
                 {
                     await transaction.RollbackAsync();
+                    if (db.Message.ToLower().Trim().Replace(" " , "").Contains("movieimage"))
+                    {
+                        return new GenericRespondDTOs()
+                        {
+                            Status = GenericStatusEnum.Failure.ToString(),
+                            message = "Lỗi ảnh đã tồn tại"
+                        };
+                    }
+
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Failure.ToString(),
-                        message = "Lỗi Database"
+                        message = "Lỗi  DB"
                     };
                 }
                 catch (Exception e)
                 {
                     await transaction.RollbackAsync();
+                    if (e.Message.ToLower().Trim().Replace(" " , "").Contains("movieimage"))
+                    {
+                        return new GenericRespondDTOs()
+                        {
+                            Status = GenericStatusEnum.Failure.ToString(),
+                            message = "Lỗi ảnh đã tồn tại"
+                        };
+                    }
+
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Failure.ToString(),
@@ -382,10 +415,26 @@ namespace backend.Services.MovieServices
 
         public async Task<GenericRespondDTOs> edit(string movieID, MovieEditRequestDTO dtos)
         {
-
+            if (_dataContext.movieInformation.Any(x =>
+                    !x.movieId.Equals(movieID) && x.movieName.Equals(dtos.movieName)))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Tên Phim đã tồn tại"
+                };
+            }else if (_dataContext.movieInformation.Any(x =>
+                          !x.movieId.Equals(movieID) && x.movieTrailerUrl.Equals(dtos.movieTrailerUrl)))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Trailer Phim đã tồn tại"
+                };
+            }
             // Tìm kiếm các trường dữ liệu liên quan
             var findLanguageAndMiniumAgeAndMovieInfo = _dataContext.movieInformation.Where
-                    (x => x.movieId.Equals(movieID))
+                    (x => x.movieId.Equals(movieID) && !x.isDelete)
                 .Include(x => x.Language)
                 .Include(x => x.minimumAge)
                 .FirstOrDefault();

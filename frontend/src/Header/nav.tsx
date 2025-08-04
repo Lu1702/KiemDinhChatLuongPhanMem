@@ -55,22 +55,6 @@ function Nav() {
     // Cache kết quả tìm kiếm
     const cache = useMemo(() => new Map<string, Movie[]>(), []);
 
-    // Dữ liệu mẫu fallback (ổn định tham chiếu)
-    const fallbackMovies = useMemo<Movie[]>(() => [
-        {
-            movieID: "6956fbf4-6d8e-4523-b03b-3de42ef84200",
-            movieName: "TOÀN TRÍ ĐỘC GIẢ",
-            movieImage: "",
-            movieTrailerUrl: "https://youtu.be/gvmtoe9zpWM",
-            movieDuration: 116,
-            isRelease: false,
-            releaseDate: "2025-08-01T00:00:00",
-            listLanguageName: "Korean",
-            movieVisualFormat: ["2D"],
-            movieGenres: ["Hành động"],
-        },
-    ], []);
-
     // Hàm gọi API lấy tất cả phim khi click vào input tìm kiếm
     const fetchAllMovies = () => {
         setIsLoading(true);
@@ -129,8 +113,6 @@ function Nav() {
                         setTimeout(fetchData, retryDelay);
                     } else {
                         setError('Không thể kết nối đến server. Sử dụng dữ liệu mẫu.');
-                        setAllMovies(fallbackMovies);
-                        setSearchResults(fallbackMovies);
                         setFilteredCinemas(cinemas);
                     }
                 })

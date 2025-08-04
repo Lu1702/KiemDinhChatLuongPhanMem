@@ -2,6 +2,7 @@ using System.Data.Common;
 using backend.Data;
 using backend.Enum;
 using backend.Interface.CinemaInterface;
+using backend.Migrations;
 using backend.Model.Cinemas;
 using backend.ModelDTO.CinemaDTOs;
 using backend.ModelDTO.GenericRespond;
@@ -71,6 +72,7 @@ public class CinemaService : ICinemaService
 
     public async Task<GenericRespondDTOs> AddCinema(CreateCinemaDTO cinema)
     {
+        
         if (String.IsNullOrEmpty(cinema.CinemaName) || 
             String.IsNullOrEmpty(cinema.CinemaLocation)
             || String.IsNullOrEmpty(cinema.CinemaDescription) ||
@@ -83,45 +85,51 @@ public class CinemaService : ICinemaService
                 message = "Nhap Thieu Thong Tin"
             };
         }
-        var checkIfExits = _context.Cinema.FirstOrDefault(x => 
-            x.cinemaName.Equals(cinema.CinemaName) && x.cinemaLocation.Equals(cinema.CinemaLocation));
-        if (checkIfExits == null)
+        if (_context.Cinema.Any(x => 
+                                     cinema.CinemaLocation.Equals(x.cinemaLocation)))
         {
-           // Tiến hành lưu thông tin rạp
-           try
-           {
-               var newCinemaId = Guid.NewGuid().ToString();
-               await _context.AddAsync(new Cinema()
-               {
-                   cinemaName = cinema.CinemaName,
-                   cinemaLocation = cinema.CinemaLocation,
-                   cinemaDescription = cinema.CinemaDescription,
-                   cinemaId = newCinemaId,
-                   cinemaContactHotlineNumber = cinema.CinemaContactNumber
-               });
-               await _context.SaveChangesAsync();
-               
-               return new GenericRespondDTOs()
-               {
-                   Status = GenericStatusEnum.Success.ToString(),
-                   message = "Thêm Thành Công"
-               };
-           }
-           catch (Exception e)
-           {
-               return new GenericRespondDTOs()
-               {
-                   Status = GenericStatusEnum.Failure.ToString(),
-                   message = "Lỗi DataBase"
-               };
-           }
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Địa chỉ đã tồn tại trong Database"
+            };
+        }else if (_context.Cinema.Any(x =>  
+                                           cinema.CinemaName.Equals(x.cinemaName)))
+        {
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Tên rạp đã tồn tại trong Database"
+            };
         }
-
-        return new GenericRespondDTOs()
+        
+        try
         {
-            Status = GenericStatusEnum.Failure.ToString(),
-            message = "Rạp đã tồn tại"
-        };
+            var newCinemaId = Guid.NewGuid().ToString();
+            await _context.AddAsync(new Cinema()
+            {
+                cinemaName = cinema.CinemaName,
+                cinemaLocation = cinema.CinemaLocation,
+                cinemaDescription = cinema.CinemaDescription,
+                cinemaId = newCinemaId,
+                cinemaContactHotlineNumber = cinema.CinemaContactNumber
+            });
+            await _context.SaveChangesAsync();
+           
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Success.ToString(),
+                message = "Thêm Thành Công"
+            };
+        }
+        catch (Exception e)
+        {
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Lỗi DataBase"
+            };
+        }
     }
 
     public async Task<GenericRespondDTOs> EditCinema(string cinemaId, EditCinemaDTO cinema)
@@ -130,6 +138,24 @@ public class CinemaService : ICinemaService
         {
             // Chỉ được sửa thông tin rạp khi chưa có ai đặt vé 
             // Kiểm tra xem có lịch chua
+
+            if (_context.Cinema.Any(x => !x.cinemaId.Equals(cinemaId) &&
+                                         cinema.CinemaLocation.Equals(x.cinemaLocation)))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Địa chỉ đã tồn tại trong Database"
+                };
+            }else if (_context.Cinema.Any(x => !x.cinemaId.Equals(cinemaId) &&
+                                               cinema.CinemaName.Equals(x.cinemaName)))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Tên rạp đã tồn tại trong Database"
+                };
+            }
             var movieSchedule =
                 _context.movieSchedule.Where(x => x.cinemaRoom.cinemaId == cinemaId && !x.IsDelete);
     
@@ -143,7 +169,7 @@ public class CinemaService : ICinemaService
                 return new GenericRespondDTOs()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Lỗi Đã có người Order"
+                    message = "Lỗi Đang có lịch chiếu hiện đang chiếu và đã có người đặt"
                 };
             }
             

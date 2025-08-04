@@ -136,6 +136,11 @@ function Cinezone() {
         setShowTrailer(true);
     };
 
+    const handleShowtimes = (movieId: string) => {
+        localStorage.setItem('movieId', movieId);
+        navigate("/movies");
+    };
+
     const renderMovie = (movie: Movie) => (
         <div key={movie.movieID} className="bg-transparent rounded-xl shadow-lg p-4 flex flex-col min-h-[450px] sm:min-h-[550px]">
             <img
@@ -158,7 +163,7 @@ function Cinezone() {
                     </div>
                 </button>
                 <button
-                    onClick={activeTab === "tab1" ? () => navigate("/showtimes") : () => navigate("/futurefilm")}
+                    onClick={() => activeTab === "tab1" ? handleShowtimes(movie.movieID) : navigate(`/moviedetail/${movie.movieID}`)}
                     className="w-32 sm:w-40 h-10 sm:h-12 bg-purple-600 text-white border-none rounded-md text-xs sm:text-base font-bold cursor-pointer z-10 group relative overflow-hidden flex items-center justify-center"
                 >
                     <span className="absolute w-60 h-40 -top-12 -left-10 bg-white rotate-12 transform scale-x-0 group-hover:scale-x-100 transition-transform group-hover:duration-500 duration-1000 origin-left"></span>
