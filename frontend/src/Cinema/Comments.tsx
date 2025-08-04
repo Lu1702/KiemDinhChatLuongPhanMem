@@ -6,11 +6,9 @@ import { useNavigate } from 'react-router-dom';
 // Định nghĩa interface cho bình luận
 interface Comment {
     commentId: string;
-    userId: string;
-    userEmail: string;
-    movieId: string;
+    customerEmail: string;
     commentDetail: string;
-    createdAt: string;
+    commentDate: Date;
 }
 
 interface CommentsApiResponse {
@@ -53,8 +51,8 @@ interface MovieApiResponse {
 }
 
 interface PostCommentPayload {
-    movieName: string;
-    userEmail: string;
+    userID: string;
+    movieID: string;
     commentDetail: string;
 }
 
@@ -69,6 +67,21 @@ const Comments: React.FC = () => {
     const [trailerUrl, setTrailerUrl] = useState<string>('');
     const navigate = useNavigate();
 
+    // Các state để xử lý chỉnh sửa
+    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+    const [editingCommentDetail, setEditingCommentDetail] = useState<string>('');
+    
+    // Các state mới để xử lý modal xác nhận
+    const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
+    const [commentToPost, setCommentToPost] = useState<string>('');
+
+
+    // Lấy email và ID người dùng từ localStorage
+    const userEmail = localStorage.getItem('Email');
+    const userId = localStorage.getItem('IDND');
+    const authToken = localStorage.getItem('authToken');
+
     // Lấy chi tiết phim và bình luận khi component được mount
     useEffect(() => {
         const fetchMovieDetails = async () => {
@@ -79,6 +92,14 @@ const Comments: React.FC = () => {
                     setLoading(false);
                     return;
                 }
+
+                // DEBUG LOGS
+                console.log('--- Bắt đầu Debug ---');
+                console.log('Giá trị userEmail trong localStorage:', userEmail);
+                console.log('Giá trị userId trong localStorage:', userId);
+                console.log('Giá trị movieId trong localStorage:', movieId);
+                console.log('---------------------');
+                // END DEBUG LOGS
 
                 // Lấy chi tiết phim
                 const movieResponse = await fetch(
@@ -117,7 +138,12 @@ const Comments: React.FC = () => {
                 const commentsResult: CommentsApiResponse = await commentsResponse.json();
                 if (commentsResult.status === 'Success') {
                     setComments(commentsResult.data);
-                    localStorage.setItem('commentCount', commentsResult.data.length.toString());
+                    
+                    // DEBUG LOGS
+                    console.log('Dữ liệu bình luận từ API:', commentsResult.data);
+                    console.log('---------------------');
+                    // END DEBUG LOGS
+
                 } else {
                     setError(commentsResult.message || 'Không thể tải danh sách bình luận.');
                 }
@@ -130,43 +156,36 @@ const Comments: React.FC = () => {
         };
 
         fetchMovieDetails();
-    }, []);
+    }, [userEmail, userId]);
 
-    // Xử lý gửi bình luận
-    const handleSubmitComment = async (e: React.FormEvent) => {
+    // Xử lý gửi bình luận mới
+    const handleSubmitComment = (e: React.FormEvent) => {
         e.preventDefault();
         if (!newComment.trim()) {
             setError('Bình luận không được để trống.');
             return;
         }
-
-        setPosting(true);
+        
         setError(null);
+        setCommentToPost(newComment);
+        setShowConfirmModal(true);
+    };
+
+    // Hàm gọi API khi người dùng xác nhận đăng bình luận
+    const handleConfirmPost = async () => {
+        setPosting(true);
+        setShowConfirmModal(false);
 
         const movieId = localStorage.getItem('movieId');
-        const userId = localStorage.getItem('IDND');
-        const userEmail = localStorage.getItem('userEmail');
-        const movieName = localStorage.getItem('movieName');
-        const authToken = localStorage.getItem('authToken');
-
-        if (!movieId || !userId || !userEmail || !movieName || !authToken) {
+        if (!movieId || !userId || !userEmail || !authToken) {
             setError('Vui lòng đăng nhập và chọn phim để gửi bình luận.');
             setPosting(false);
             return;
         }
 
-        const payload: PostCommentPayload = {
-            movieName,
-            userEmail,
-            commentDetail: newComment,
-        };
-
-        console.log('Payload gửi đi:', payload);
-        console.log('movieId:', movieId, 'userId:', userId, 'authToken:', authToken);
-
         try {
             const response = await fetch(
-                `http://localhost:5229/api/Comment/uploadComment/${movieId}/${userId}`,
+                `http://localhost:5229/api/Comment/uploadComment/${userId}/${movieId}?commentDetail=${encodeURIComponent(commentToPost)}`,
                 {
                     method: 'POST',
                     headers: {
@@ -174,11 +193,8 @@ const Comments: React.FC = () => {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${authToken}`,
                     },
-                    body: JSON.stringify(payload),
                 }
             );
-
-            console.log('Phản hồi từ API:', response);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -188,18 +204,14 @@ const Comments: React.FC = () => {
             }
 
             const result = await response.json();
+            
+            // DEBUG LOGS
+            console.log('Dữ liệu phản hồi từ API khi gửi bình luận:', result);
+            // END DEBUG LOGS
+
             if (result.status === 'Success') {
-                const newCommentData: Comment = {
-                    commentId: result.data?.commentId || Date.now().toString(),
-                    userId,
-                    userEmail,
-                    movieId,
-                    commentDetail: newComment,
-                    createdAt: new Date().toISOString(),
-                };
-                setComments([newCommentData, ...comments]);
-                localStorage.setItem('commentCount', (comments.length + 1).toString());
-                setNewComment('');
+                // Tải lại trang để cập nhật danh sách bình luận
+                window.location.reload();
             } else {
                 setError(result.message || 'Gửi bình luận thất bại. Vui lòng thử lại.');
             }
@@ -208,19 +220,139 @@ const Comments: React.FC = () => {
             console.error('Lỗi chi tiết:', err);
         } finally {
             setPosting(false);
+            setNewComment('');
+            setCommentToPost('');
         }
     };
 
+    // Xử lý chỉnh sửa bình luận
+    const handleEditComment = (commentId: string, currentDetail: string) => {
+        setIsEditing(true);
+        setEditingCommentId(commentId);
+        setEditingCommentDetail(currentDetail);
+    };
+
+    // Xử lý lưu bình luận đã chỉnh sửa
+    const handleSaveEdit = async () => {
+        if (!editingCommentDetail.trim()) {
+            setError('Bình luận không được để trống.');
+            return;
+        }
+
+        if (!editingCommentId || !authToken) {
+            setError('Lỗi không tìm thấy thông tin bình luận hoặc token.');
+            return;
+        }
+        
+        setError(null);
+        setPosting(true);
+
+        const encodedCommentDetail = encodeURIComponent(editingCommentDetail);
+
+        try {
+            const response = await fetch(
+                `http://localhost:5229/api/Comment/editComment/${editingCommentId}?commentDetail=${encodedCommentDetail}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        accept: '*/*',
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${authToken}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                    errorData.message || `Lỗi HTTP khi sửa bình luận! trạng thái: ${response.status}`
+                );
+            }
+
+            // Tải lại trang để cập nhật danh sách bình luận
+            window.location.reload();
+
+        } catch (err: any) {
+            setError(err.message || 'Lỗi kết nối khi sửa bình luận. Vui lòng thử lại.');
+            console.error('Lỗi chi tiết:', err);
+        } finally {
+            setPosting(false);
+        }
+    };
+
+    // Xử lý xóa bình luận
+    const handleDeleteComment = async (commentId: string) => {
+        if (!authToken) {
+            setError('Bạn cần đăng nhập để thực hiện hành động này.');
+            return;
+        }
+        
+        const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa bình luận này không?');
+        if (!confirmDelete) {
+            return;
+        }
+
+        setError(null);
+        setPosting(true);
+
+        try {
+            const response = await fetch(
+                `http://localhost:5229/api/Comment/deleteComment/${commentId}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        accept: '*/*',
+                        Authorization: `Bearer ${authToken}`,
+                    },
+                }
+            );
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                    errorData.message || `Lỗi HTTP khi xóa bình luận! trạng thái: ${response.status}`
+                );
+            }
+            
+            // Tải lại trang để cập nhật danh sách bình luận
+            window.location.reload();
+
+        } catch (err: any) {
+            setError(err.message || 'Lỗi kết nối khi xóa bình luận. Vui lòng thử lại.');
+            console.error('Lỗi chi tiết:', err);
+        } finally {
+            setPosting(false);
+        }
+    };
+
+
     // Xử lý hiển thị trailer
     const handleOpenTrailer = (url: string) => {
-        const embedUrl = url.includes('watch?v=')
-            ? url.replace('watch?v=', 'embed/')
-            : url.includes('youtu.be/')
-                ? `https://www.youtube.com/embed/${url.split('youtu.be/')[1].split('?')[0]}`
-                : url;
-        setTrailerUrl(embedUrl);
-        setShowTrailer(true);
+        const getVideoId = (inputUrl: string) => {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/;
+            const match = inputUrl.match(regex);
+            return match ? match[1] : null;
+        };
+
+        const videoId = getVideoId(url);
+        if (videoId) {
+            const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            setTrailerUrl(embedUrl);
+            setShowTrailer(true);
+        } else {
+            console.error('Không thể trích xuất video ID từ URL trailer.');
+            alert('Đã xảy ra lỗi khi mở trailer.');
+        }
     };
+
+    // Tách bình luận của người dùng và bình luận khác để hiển thị bình luận của mình lên đầu
+    const userComments = comments.filter(comment =>
+        comment.customerEmail?.trim().toLowerCase() === userEmail?.trim().toLowerCase()
+    );
+    const otherComments = comments.filter(comment =>
+        comment.customerEmail?.trim().toLowerCase() !== userEmail?.trim().toLowerCase()
+    );
+    const sortedComments = [...userComments, ...otherComments];
 
     return (
         <div
@@ -234,7 +366,6 @@ const Comments: React.FC = () => {
             </div>
             <main className="flex-grow flex flex-col items-center">
                 <div className="pt-3 w-full max-w-screen-xl mx-auto px-4 sm:px-8 py-12">
-                    {/* Hiển thị chi tiết phim */}
                     {movie && (
                         <div className="p-4 text-white">
                             <div className="flex flex-col md:flex-row gap-6 mb-6 justify-center items-start">
@@ -305,12 +436,8 @@ const Comments: React.FC = () => {
                         <h1 className="text-3xl font-bold text-yellow-400 mb-6 uppercase">Bình luận</h1>
                         {loading && (
                             <div className="flex-col gap-4 w-full flex items-center justify-center">
-                                <div
-                                    className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full"
-                                >
-                                    <div
-                                        className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"
-                                    ></div>
+                                <div className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full">
+                                    <div className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"></div>
                                 </div>
                             </div>
                         )}
@@ -318,43 +445,109 @@ const Comments: React.FC = () => {
                         {error && (
                             <div className="text-red-500 text-center p-4">{error}</div>
                         )}
+
                         {/* Form gửi bình luận */}
-                        <div className="mb-8 w-full max-w-screen-lg">
-                            <form onSubmit={handleSubmitComment} className="bg-white/10 p-6 rounded-md shadow-lg">
-                                <h3 className="text-xl font-semibold text-white mb-4">Thêm bình luận</h3>
-                                <textarea
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    placeholder="Viết bình luận của bạn..."
-                                    className="w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-yellow-400"
-                                    rows={4}
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={posting || !newComment.trim()}
-                                    className={`mt-4 px-6 py-2 rounded-md font-semibold text-white transition-colors duration-200 ${posting || !newComment.trim()
-                                        ? 'bg-gray-600 cursor-not-allowed'
-                                        : 'bg-green-600 hover:bg-green-700'
-                                        }`}
-                                >
-                                    {posting ? 'Đang gửi...' : 'Gửi bình luận'}
-                                </button>
-                            </form>
-                        </div>
+                        {!isEditing && (
+                            <div className="mb-8 w-full max-w-screen-lg">
+                                <form onSubmit={handleSubmitComment} className="bg-white/10 p-6 rounded-md shadow-lg">
+                                    <h3 className="text-xl font-semibold text-white mb-4">Thêm bình luận</h3>
+                                    <textarea
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Viết bình luận của bạn..."
+                                        className="w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-yellow-400"
+                                        rows={4}
+                                        disabled={posting}
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={posting || !newComment.trim()}
+                                        className={`mt-4 px-6 py-2 rounded-md font-semibold text-white transition-colors duration-200 ${posting || !newComment.trim()
+                                            ? 'bg-gray-600 cursor-not-allowed'
+                                            : 'bg-green-600 hover:bg-green-700'
+                                            }`}
+                                    >
+                                        {posting ? 'Đang gửi...' : 'Gửi bình luận'}
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+                        
+                        {/* Form chỉnh sửa bình luận */}
+                        {isEditing && (
+                            <div className="mb-8 w-full max-w-screen-lg">
+                                <div className="bg-white/10 p-6 rounded-md shadow-lg">
+                                    <h3 className="text-xl font-semibold text-white mb-4">Chỉnh sửa bình luận</h3>
+                                    <textarea
+                                        value={editingCommentDetail}
+                                        onChange={(e) => setEditingCommentDetail(e.target.value)}
+                                        className="w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-yellow-400"
+                                        rows={4}
+                                    />
+                                    <div className="mt-4 flex space-x-2">
+                                        <button
+                                            onClick={handleSaveEdit}
+                                            disabled={posting || !editingCommentDetail.trim()}
+                                            className={`px-6 py-2 rounded-md font-semibold text-white transition-colors duration-200 ${posting || !editingCommentDetail.trim()
+                                                ? 'bg-gray-600 cursor-not-allowed'
+                                                : 'bg-blue-600 hover:bg-blue-700'
+                                                }`}
+                                        >
+                                            {posting ? 'Đang lưu...' : 'Lưu'}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsEditing(false);
+                                                setEditingCommentId(null);
+                                                setEditingCommentDetail('');
+                                            }}
+                                            className="px-6 py-2 rounded-md font-semibold text-gray-800 bg-gray-300 hover:bg-gray-400 transition-colors duration-200"
+                                        >
+                                            Hủy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Danh sách bình luận */}
                         <div className="w-full max-w-screen-md">
-                            {comments.length > 0 ? (
-                                comments.map((comment) => (
+                            {sortedComments.length > 0 ? (
+                                sortedComments.map((comment) => (
                                     <div
                                         key={comment.commentId}
                                         className="bg-white/10 p-4 rounded-md mb-4 shadow-md"
                                     >
                                         <div className="flex justify-between items-center">
-                                            <p className="font-semibold text-yellow-400">{comment.userEmail}</p>
-                                            <p className="text-sm text-gray-400">
-                                                {new Date(comment.createdAt).toLocaleDateString('vi-VN')} {' '}
-                                                {new Date(comment.createdAt).toLocaleTimeString('vi-VN')}
+                                            <p className="font-semibold text-yellow-400">
+                                                {comment.customerEmail}
+                                                {comment.customerEmail?.trim().toLowerCase() === userEmail?.trim().toLowerCase() && (
+                                                    <span className="ml-2 text-green-400 text-sm">(Bạn)</span>
+                                                )}
                                             </p>
+                                            <div className="flex items-center space-x-2">
+                                                <p className="text-sm text-gray-400">
+                                                    {comment.commentDate && !isNaN(new Date(comment.commentDate).getTime())
+                                                        ? `${new Date(comment.commentDate).toLocaleDateString('vi-VN')} ${new Date(comment.commentDate).toLocaleTimeString('vi-VN')}`
+                                                        : 'Ngày không hợp lệ'}
+                                                </p>
+                                                {comment.customerEmail?.trim().toLowerCase() === userEmail?.trim().toLowerCase() && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleEditComment(comment.commentId, comment.commentDetail)}
+                                                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                                                        >
+                                                            Sửa
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteComment(comment.commentId)}
+                                                            className="text-red-400 hover:text-red-300 transition-colors"
+                                                        >
+                                                            Xóa
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                         <p className="text-white mt-2">{comment.commentDetail}</p>
                                     </div>
@@ -364,16 +557,40 @@ const Comments: React.FC = () => {
                             )}
                         </div>
                     </div>
-
-
-
-
                     <button
                         onClick={() => navigate(-1)}
                         className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-md shadow-lg hover:bg-blue-700 transition-all"
                     >
                         Quay lại
                     </button>
+
+                    {/* Modal xác nhận đăng bình luận */}
+                    {showConfirmModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white p-6 rounded-lg shadow-xl w-80">
+                                <h3 className="text-xl font-bold mb-4">Xác nhận đăng bình luận</h3>
+                                <p className="mb-4">Bạn có chắc chắn muốn đăng bình luận này không?</p>
+                                <div className="text-gray-600 italic border-l-4 border-gray-300 pl-2 mb-4">
+                                    "{commentToPost}"
+                                </div>
+                                <div className="flex justify-end space-x-4">
+                                    <button
+                                        onClick={() => setShowConfirmModal(false)}
+                                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                                    >
+                                        Không
+                                    </button>
+                                    <button
+                                        onClick={handleConfirmPost}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                                    >
+                                        Có
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
 
                     {showTrailer && (
                         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
