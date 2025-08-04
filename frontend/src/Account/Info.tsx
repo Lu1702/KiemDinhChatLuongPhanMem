@@ -292,7 +292,8 @@ const Info: React.FC = () => {
                                         <label className="block mb-3 font-semibold">Mật khẩu cũ</label>
                                         <input
                                             type="password"
-                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10 placeholder:text-slate-100"
+                                            placeholder="Nhập mật khẩu cũ của bạn"
                                             value={oldPassword}
                                             onChange={(e) => setOldPassword(e.target.value)}
                                         />
@@ -301,7 +302,8 @@ const Info: React.FC = () => {
                                         <label className="block mb-2 font-semibold">Mật khẩu mới</label>
                                         <input
                                             type="password"
-                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10 placeholder:text-slate-100"
+                                            placeholder="Nhập mật khẩu mới của bạn "
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                         />
@@ -310,7 +312,8 @@ const Info: React.FC = () => {
                                         <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
                                         <input
                                             type="password"
-                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10 placeholder:text-slate-100"
+                                            placeholder="Hãy xác nhận lại mật khẩu của bạn "
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                         />

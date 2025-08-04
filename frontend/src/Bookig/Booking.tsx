@@ -5,27 +5,25 @@ import { useNavigate } from "react-router-dom";
 
 // Define the Movie interface for TypeScript
 interface Movie {
-  movieId: string;
+  movieID: string;
   movieName: string;
   movieImage: string;
-  trailerUrl: string;
-  isRelease: boolean;
+  movieTrailerUrl: string;
+  isRelease: boolean; // Added isRelease to the interface
 }
 
 function Booking() {
   const [showTrailer, setShowTrailer] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState("");
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Fetch all movies with isRelease: true from paginated API
+  // Fetch all movies from paginated API
   useEffect(() => {
     const fetchAllMovies = async () => {
       let allMovies: Movie[] = [];
       let page = 1;
       let hasMore = true;
-
       try {
         while (hasMore) {
           const response = await fetch(`http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`);
@@ -33,20 +31,14 @@ function Booking() {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           const data = await response.json();
-          const moviesData = data.movieRespondDTOs || data.data || data;
+          const moviesData = data.movieRespondDTOs || data;
+
           if (!Array.isArray(moviesData) || moviesData.length === 0) {
             hasMore = false;
           } else {
-            const formattedMovies = moviesData
-              .filter((item: any) => item.isRelease === true) // Filter movies with isRelease: true
-              .map((item: any) => ({
-                movieId: item.movieID || item.movieId || '',
-                movieName: item.movieName || '',
-                movieImage: item.movieImage || '',
-                trailerUrl: item.movieTrailerUrl || item.trailerURL || '',
-                isRelease: item.isRelease || false,
-              }));
-            allMovies = [...allMovies, ...formattedMovies];
+            // Filter movies where isRelease is true
+            const releasedMovies = moviesData.filter((item: Movie) => item.isRelease === true);
+            allMovies = [...allMovies, ...releasedMovies];
             page++;
           }
         }
@@ -54,24 +46,24 @@ function Booking() {
       } catch (error) {
         console.error("Lỗi khi lấy danh sách phim:", error);
         setMovies([]);
-      } finally {
-        setIsLoading(false);
       }
     };
-
     fetchAllMovies();
   }, []);
 
-  const handleShowtimes = () => {
-    navigate("/showtimes");
+  const handleShowtimes = (id: string) => {
+    let idphim = id;
+    localStorage.setItem('movieId', id)
+    navigate("/movies");
   };
 
   const handleOpenTrailer = (url: string) => {
     let embedUrl = url;
+
     if (url.includes("watch?v=")) {
       embedUrl = url.replace("watch?v=", "embed/");
     } else if (url.includes("youtu.be/")) {
-      const videoId = url.split("youtu.be/")[1].split('?')[0];
+      const videoId = url.split("youtu.be/")[1];
       embedUrl = `https://www.youtube.com/embed/${videoId}`;
     }
     setTrailerUrl(embedUrl);
@@ -90,7 +82,6 @@ function Booking() {
       className="App bg-fixed w-full min-h-screen bg-cover bg-center"
       style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}
     >
-      {/* Header */}
       <div className="sticky top-0 z-50 bg-slate-900 shadow-md">
         <header>
           <div className="max-w-screen-xl mx-auto px-8">
@@ -99,23 +90,20 @@ function Booking() {
         </header>
       </div>
       <div>
-        {/* Main Content */}
         <main className="max-w-screen-xl mx-auto px-8 py-12">
           <h2 className="text-3xl text-white font-bold mb-8 uppercase text-center">-- Phim đang chiếu --</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[200px]">
-            {isLoading ? (
-              <p className="text-white text-center col-span-4">Đang tải...</p>
-            ) : movies.length > 0 ? (
+            {movies.length > 0 ? (
               movies.map((movie, index) => (
                 <div
-                  key={movie.movieId}
+                  key={movie.movieID}
                   className={`relative bg-slate-800/80 rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 border border-slate-700 ${getCardSize(index)}`}
                 >
                   <img
                     src={movie.movieImage}
                     alt={movie.movieName}
                     className="w-full h-full object-cover cursor-pointer"
-                    onClick={() => handleOpenTrailer(movie.trailerUrl)}
+                    onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-black/50 flex flex-col justify-end p-4">
@@ -124,7 +112,7 @@ function Booking() {
                     </h3>
                     <div className="flex gap-3 justify-center items-center">
                       <button
-                        onClick={() => handleOpenTrailer(movie.trailerUrl)}
+                        onClick={() => handleOpenTrailer(movie.movieTrailerUrl)}
                         className="w-10 h-10 p-2 flex items-center justify-center rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
@@ -134,12 +122,14 @@ function Booking() {
                             viewBox="0 0 576 512"
                             xmlns="http://www.w3.org/2000/svg"
                           >
-                            <path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"></path>
+                            <path
+                              d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"
+                            ></path>
                           </svg>
                         </div>
                       </button>
                       <button
-                        onClick={handleShowtimes}
+                        onClick={() => handleShowtimes(movie.movieID)}
                         className="relative w-[120px] h-10 bg-purple-600 text-white border-none rounded-md text-sm font-bold cursor-pointer z-10 group overflow-hidden flex items-center justify-center"
                       >
                         🎟 Đặt vé ngay

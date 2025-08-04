@@ -45,7 +45,7 @@ const BookingHistory: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Booking History</h1>
+      <h1 className="text-2xl font-bold mb-4 text-white">Lịch sử đặt vé </h1>
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-gray-200">
