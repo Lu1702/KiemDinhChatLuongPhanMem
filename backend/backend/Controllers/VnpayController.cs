@@ -354,7 +354,6 @@ namespace backend.Controllers
             // ---
             if (string.IsNullOrEmpty(vnpAmount) ||
                 string.IsNullOrEmpty(vnpBankCode) ||
-                string.IsNullOrEmpty(vnpBankTranNo) ||
                 string.IsNullOrEmpty(vnpCardType) ||
                 string.IsNullOrEmpty(vnpOrderInfo) ||
                 string.IsNullOrEmpty(vnpPayDate) ||
@@ -365,8 +364,7 @@ namespace backend.Controllers
             {
                 Console.WriteLine("Null rồi");
                 return BadRequest("Missing one or more required VNPAY callback parameters. Please check the URL.");
-            }
-
+            }   
             // ---
             // Process the VNPAY response code to get a human-readable message
             // ---
@@ -375,6 +373,9 @@ namespace backend.Controllers
             {
                 case "00":
                     responseMessage = "Giao dịch thành công";
+                    break;
+                case "02":
+                    responseMessage = "Bạn đã hủy giao dịch";
                     break;
                 case "07":
                     responseMessage = "Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường)";
@@ -422,28 +423,15 @@ namespace backend.Controllers
                 return BadRequest("Invalid amount received from VNPAY.");
             }
 
-            var callbackData = new VnpayCallbackRespond
-            (
-                vnp_Amount: amountParsed,
-                vnp_BankCode: vnpBankCode,
-                vnp_BankTranNo: vnpBankTranNo,
-                vnp_CardType: vnpCardType,
-                vnp_OrderInfo: HttpUtility.UrlDecode(vnpOrderInfo),
-                vnp_PayDate: vnpPayDate,
-                vnp_ResponseCode: vnpResponseCode,
-                vnp_TmnCode: vnpTmnCode,
-                vnp_TransactionNo: vnpTransactionNo,
-                vnp_message: responseMessage 
-            );
-            
-            Console.WriteLine(callbackData.vnp_message);
-            return Redirect($"http://localhost:3000/VNPAY/PaymentStatus?" +
-                            $"success={ (vnpResponseCode == "00" ? "true" : "false") }" +
+            string url = "http://localhost:3000/VNPAY/PaymentStatus?" +
+                            $"success={(vnpResponseCode == "00" ? "true" : "false")}" +
                             $"&code={vnpResponseCode}" +
                             $"&message={responseMessage}" +
                             $"&transactionNo={vnpTransactionNo}" +
                             $"&orderInfo={HttpUtility.UrlDecode(vnpOrderInfo)}" +
-                            $"&bankCode={vnpBankCode}");
+                            $"&bankCode={vnpBankCode}";
+            var newUri = new Uri(url);
+            return Redirect(newUri.AbsoluteUri);
         }
     }
 }

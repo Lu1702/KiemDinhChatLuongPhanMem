@@ -7,6 +7,7 @@ using backend.ModelDTO.Customer.OrderRespond;
 using backend.ModelDTO.BookingHistoryDTO.OrderRespond;
 using System.Security.Cryptography.Xml;
 using backend.Enum;
+using backend.ModelDTO.GenericRespond;
 
 namespace backend.Services.BookingHistoryServices
 {
@@ -20,14 +21,22 @@ namespace backend.Services.BookingHistoryServices
             _dataContext = dataContext;
         }
 
-        public async Task<List<BookingHistoryRespondList>> getAll(string userID)
+        public async Task<GenericRespondWithObjectDTO<List<BookingHistoryRespondList>>> getAll(string userID)
         {
             // Lấy OrderID
             var findCustomerID = _dataContext.Customers.FirstOrDefault
                 (x => x.userID.Equals(userID));
+            if (findCustomerID == null)
+            {
+                return new GenericRespondWithObjectDTO<List<BookingHistoryRespondList>>()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Lỗi Không thấy thông tin khách hàng",
+                };
+            }
             var getOrderUserList = _dataContext.Order
                 .Where(x => x.customerID.Equals(findCustomerID.Id)
-                && x.PaymentStatus.Equals(PaymentStatus.PaymentSuccess))
+                && x.PaymentStatus.Equals(PaymentStatus.PaymentSuccess.ToString()))
                 .Select(x => x.orderId);
             var getTicketLists = await _dataContext.TicketOrderDetail
                 .Where(x => getOrderUserList.Contains(x.orderId))
@@ -38,7 +47,6 @@ namespace backend.Services.BookingHistoryServices
                     .ThenInclude(ms => ms.movieInformation) 
                 .Include(tod => tod.movieSchedule)
                     .ThenInclude(ms => ms.HourSchedule) 
-                .AsSplitQuery()
                 .ToListAsync();
 
             // Tạo List để cho vào
@@ -70,7 +78,12 @@ namespace backend.Services.BookingHistoryServices
                 bookingHistoryRespondLists
                     .Add(newBookingHistoryRespondList);
             }
-            return bookingHistoryRespondLists;
+            return new GenericRespondWithObjectDTO<List<BookingHistoryRespondList>>()
+            {
+                Status = GenericStatusEnum.Success.ToString() ,
+                message = "Thông tin" ,
+                data = bookingHistoryRespondLists
+            };
         }
 
         public async Task<OrderDetailRespond> getByID(string orderID)

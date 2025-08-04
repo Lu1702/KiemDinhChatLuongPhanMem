@@ -3,6 +3,7 @@ import axios from "axios";
 import Nav from "../Header/nav";
 import Bottom from "../Footer/bottom";
 import bg from "../image/bg.png";
+import { Navigate, useNavigate } from "react-router";
 
 interface Genre {
     genreId: string;
@@ -99,6 +100,10 @@ const AddMovie: React.FC = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const navigate = useNavigate();
+    const handleHome = () => {
+        navigate('/HomeAdmin');
+    }
     useEffect(() => {
         return () => {
             movies.forEach((movie) => {
@@ -468,11 +473,19 @@ const AddMovie: React.FC = () => {
             </header>
 
             <main className="flex-grow">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white text-center uppercase mt-8 sm:mt-14 mb-6">
+                <h2 className="text-2xl sm:text-4xl font-bold text-yellow-400 text-center uppercase mt-8 sm:mt-14 mb-6">
                     {editIndex !== null ? "Cập nhật phim" : "Thêm phim"}
                 </h2>
 
                 <form onSubmit={handleSubmit}>
+                    <div className="flex justify-start items-start ml-[440px]">
+                        <button className="cursor-pointer duration-200 hover:scale-125 active:scale-100" title="Go Back"
+                            onClick={handleHome}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="50px" height="50px" viewBox="0 0 24 24" className="stroke-blue-300">
+                                <path stroke-linejoin="round" stroke-linecap="round" stroke-width="1.5" d="M11 6L5 12M5 12L11 18M5 12H19"></path>
+                            </svg>
+                        </button>
+                    </div>
                     <div className="flex justify-center px-4 sm:px-0">
                         <div
                             className="w-full sm:w-3/4 md:w-2/3 max-w-4xl backdrop-blur-md p-4 sm:p-6 rounded-xl shadow-xl space-y-4 relative z-10"

@@ -1,4 +1,5 @@
-﻿using backend.Interface.GenericsInterface;
+﻿using backend.Enum;
+using backend.Interface.GenericsInterface;
 using backend.ModelDTO.BookingHistoryDTO.OrderDetailRespond;
 using backend.ModelDTO.BookingHistoryDTO.OrderRespond;
 using Microsoft.AspNetCore.Authorization;
@@ -25,7 +26,7 @@ namespace backend.Controllers
         {
             var getLists = await bookingHistoryList.getAll(userID);
 
-            if (getLists.Count > 0)
+            if (getLists.Status.Equals(GenericStatusEnum.Success.ToString()))
             {
                 return Ok(getLists);
             }

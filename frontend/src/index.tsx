@@ -10,7 +10,6 @@ import Listfilm from './Cinema/Listfilm';
 import Forgotpassword from './Account/Forgotpass';
 import Comingmovies from './Cinema/Comingmovies';
 import Introduce from './Cinema/Introduce';
-import Showtimes from './Bookig/Showtimes';
 import Cinezone from './Cinema/Cinezone';
 import PaymentPage from './Bookig/PaymentPage';
 import Info from './Account/Info';
@@ -22,10 +21,12 @@ import Comments from './Cinema/Comments';
 import Booking from './Bookig/Booking';
 import BookingHistory from './Account/BookingHistory';
 import Addmovie from './QL_Add_movie/Addmovie';
-import MovieDetails from './Bookig/Movies'
+import MovieDetails from './Bookig/Movies';
 import MovieDetail from './Bookig/MovieDetail';
+import Abc from './VnpayCallBack/VNPAY';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
@@ -36,7 +37,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/forgotpassword" element={<Forgotpassword />} />
         <Route path="/comingmovies" element={<Comingmovies />} />
         <Route path="/introduce" element={<Introduce />} />
-        <Route path="/showtimes" element={<Showtimes />} />
         <Route path="/cinezone" element={<Cinezone />} />
         <Route path="/cinezone/:cinemaId" element={<Cinezone />} />
         <Route path="/payment" element={<PaymentPage />} />
@@ -50,12 +50,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/bookinghistory/:userId" element={<BookingHistory />} />
         <Route path="/addmovie" element={<Addmovie />} />
         <Route path="/movies" element={<MovieDetails />} />
-        <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} />
         <Route path="/moviedetail/:movieId" element={<MovieDetail />} />
         <Route path="*" element={<div className="text-white text-center p-4">404 - Trang không tìm thấy</div>} />
+        <Route path="/VNPAY/PaymentStatus" element={<Abc/>}/>
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
 );
 
+// Theo dõi hiệu suất ứng dụng
 reportWebVitals();
