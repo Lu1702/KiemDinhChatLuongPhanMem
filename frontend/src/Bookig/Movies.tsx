@@ -877,7 +877,7 @@ const MovieDetails: React.FC = () => {
                         {roomInfo && (
                           <div className="mt-4">
                             <p className="text-white uppercase font-medium text-center">Phòng chiếu: {roomInfo.cinemaRoomNumber}</p>
-                            <div className="grid grid-cols-8 gap-2 mt-4">
+                            <div className="grid grid-cols-5 gap-2 mt-4">
                               {roomInfo.seats.map((seat) => (
                                 <button
                                   key={seat.seatsId}

@@ -16,11 +16,17 @@ interface Revenue {
   totalRevenue: number;
 }
 
-interface DetailedRevenue {
-  cinemaId: string;
-  cinemaName: string;
+// Cập nhật interface để phù hợp với cấu trúc response chi tiết
+interface DetailedRevenueData {
+  baseCinemaInfoRevenue: {
+    cinemaId: string;
+    cinemaName: string;
+  };
+  baseRevenueInfo: {
+    date: string;
+    totalAmount: number;
+  }[];
   totalRevenue: number;
-  // Thêm các trường khác nếu API trả về thêm dữ liệu
 }
 
 const RevenueList: React.FC = () => {
@@ -28,6 +34,10 @@ const RevenueList: React.FC = () => {
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [selectedCinemaId, setSelectedCinemaId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // State mới để quản lý modal chi tiết
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
+  const [detailedRevenue, setDetailedRevenue] = useState<DetailedRevenueData | null>(null);
 
   const fetchRevenue = async () => {
     try {
@@ -54,7 +64,7 @@ const RevenueList: React.FC = () => {
       }
     } catch (err) {
       setError('Lỗi khi lấy dữ liệu doanh thu: ' + (err as Error).message);
-      setRevenues([]); 
+      setRevenues([]);
     }
   };
 
@@ -87,35 +97,41 @@ const RevenueList: React.FC = () => {
   };
 
   const fetchRevenueDetail = async (cinemaId: string) => {
-  try {
-    localStorage.setItem('RAPID', cinemaId);
-    console.log('Fetching revenue for cinemaId:', cinemaId);
+    try {
+      console.log('Fetching revenue for cinemaId:', cinemaId);
 
-    const response = await fetch(`http://localhost:5229/api/Revenue/GetRevenueByCinemaId?cinemaId=${localStorage.getItem('RAPID')}`, {
-      method: 'GET',
-      headers: {
-        'Accept': '*/*',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      },
-    });
+      const response = await fetch(`http://localhost:5229/api/Revenue/GetRevenueByCinemaId?cinemaId=${cinemaId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': '*/*',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // LOG TOÀN BỘ PHẢN HỒI CỦA API
+      console.log('API Response (Detail):', data);
+
+      if (data.data) {
+        setDetailedRevenue(data.data);
+        setIsDetailModalOpen(true);
+      } else {
+        throw new Error('Dữ liệu chi tiết không hợp lệ');
+      }
+    } catch (err) {
+      setError('Lỗi khi lấy chi tiết doanh thu: ' + (err as Error).message);
     }
+  };
 
-    const data = await response.json();
-    console.log('API Response (Detail):', data);
-
-    if (data.data && data.data.baseCinemaInfoRevenue) {
-      const detail = data.data.baseCinemaInfoRevenue;
-      alert(`Chi tiết doanh thu cho rạp ${detail.cinemaName}:\n- Mã rạp: ${detail.cinemaId}\n- Doanh thu: N/A`); // Use N/A since totalRevenue is missing
-    } else {
-      throw new Error('Dữ liệu chi tiết không hợp lệ');
-    }
-  } catch (err) {
-    setError('Lỗi khi lấy chi tiết doanh thu: ' + (err as Error).message);
-  }
-};
+  const closeModal = () => {
+    setIsDetailModalOpen(false);
+    setDetailedRevenue(null);
+  };
 
   useEffect(() => {
     fetchRevenue();
@@ -131,164 +147,163 @@ const RevenueList: React.FC = () => {
       <style>
         {`
           .button2 {
-            display: inline-flex;              
-            align-items: center;              
-            justify-content: center;          
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s ease-in;
             position: relative;
             overflow: hidden;
             z-index: 1;
-            color: #090909;
-            padding: 0.7em 1.7em;             
+            color: #000;
+            padding: 0.7em 1.7em;
             cursor: pointer;
             font-size: 18px;
-            font-weight: 500;                 
+            font-weight: 500;
             border-radius: 0.5em;
-            background: #CAFF38;
-            border: 1px solid #CAFF38;
-            text-align: center;               
+            background: #CAFF38; /* Changed from #ddd to lightgreen */
+            border: 1px solid #CAFF38; /* Changed from #ddd to lightgreen for consistency */
+            text-align: center;
           }
 
           .button2:active {
             color: #666;
-            box-shadow: inset 4px 4px 12px #c5c5c5, inset -4px -4px 12px #ffffff;
+            box-shadow: inset 4px 4px 12px #c5c5c5, inset -4px -4px 12px #044119;
           }
 
           .button2:hover {
             color: #ffffff;
-            background-color: #4C28DB;
-            border: 1px solid #4C28DB;
+            background-color: #7e57c2;
+            border: 1px solid #7e57c2;
           }
 
-          /* From Uiverse.io by Tsiangana */ 
-          .dot-spinner {
-            position: relative;
+          /* Provided CSS for uiverse-pixel-input */
+          .uiverse-pixel-input-wrapper {
             display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            --uib-speed: 0.9s;
-            height: 2.8rem;
-            width: 2.8rem;
+            flex-direction: column;
+            gap: 0.5em;
+            font-family: "Courier New", monospace; /* This font applies to the input wrapper, not the label directly */
+            color: #fff;
+            font-size: 1em;
+            width: 100%; /* Adjusted for responsiveness */
+            max-width: 18em; /* Original max width */
           }
 
-          @keyframes float {
-            0% {
-              transform: rotate(0deg) translate(100px) rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg) translate(100px) rotate(-360deg);
-            }
+          .uiverse-pixel-label {
+            text-shadow: 1px 1px #000;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+            color: #333; /* Adjusted for better contrast on light background */
+            font-family: Arial, sans-serif; /* Changed to Arial */
           }
 
-          .dot-spinner__dot::before {
-            content: '';
-            height: 20%;
-            width: 20%;
-            border-radius: 50%;
-            background-color: #fff;
-            filter: drop-shadow(0 0 10px rgb(95, 150, 202));
-            box-shadow: -6px -6px 11px #c1c1c1,
-                       6px 6px 11px #ffffff;
-            transform: scale(0);
-            opacity: 0.5;
-            animation: pulse0112 calc(var(--uib-speed) * 1.111) ease-in-out infinite;
-            box-shadow: 0 0 20px rgba(18, 31, 53, 0.3);
+          .uiverse-pixel-input {
+            appearance: none;
+            border: none;
+            padding: 0.6em;
+            font-size: 1em;
+            font-family: "Courier New", monospace;
+            color: #fff;
+            background: #7e57c2;
+            image-rendering: pixelated;
+            box-shadow:
+              0 0 0 0.15em #000,
+              0 0 0 0.3em #fff,
+              0 0 0 0.45em #000,
+              0 0.3em 0 0 #5e35b1,
+              0 0.3em 0 0.15em #000;
+            outline: none;
+            transition: all 0.15s steps(1);
+            text-shadow: 1px 1px #000;
+            width: 100%; /* Ensure it takes full width of its wrapper */
+          }
+          
+          .uiverse-pixel-input::placeholder {
+            color: #fff;
+            opacity: 0.6;
           }
 
-          .dot-spinner__dot {
-            position: absolute;
-            top: 0;
+          .uiverse-pixel-input:focus {
+            background: #9575cd;
+            box-shadow:
+              0 0 0 0.15em #000,
+              0 0 0 0.3em #fff,
+              0 0 0 0.45em #000,
+              0 0.2em 0 0 #7e57c2,
+              0 0.2em 0 0.15em #000;
+          }
+
+          .uiverse-pixel-input:hover {
+            animation: uiverse-glitch-input 0.3s steps(2) infinite;
+          }
+
+          @keyframes uiverse-glitch-input {
+            0% { transform: translate(0); }
+            25% { transform: translate(-1px, 1px); }
+            50% { transform: translate(1px, -1px); }
+            75% { transform: translate(-1px, -1px); }
+            100% { transform: translate(0); }
+          }
+          
+          .modal {
+            position: fixed;
+            z-index: 1000;
             left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
-            justify-content: flex-start;
-            height: 100%;
-            width: 100%;
+            justify-content: center;
           }
 
-          .dot-spinner__dot:nth-child(2) {
-            transform: rotate(45deg);
+          .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            position: relative;
           }
 
-          .dot-spinner__dot:nth-child(2)::before {
-            animation-delay: calc(var(--uib-speed) * -0.875);
+          .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
           }
 
-          .dot-spinner__dot:nth-child(3) {
-            transform: rotate(90deg);
-          }
-
-          .dot-spinner__dot:nth-child(3)::before {
-            animation-delay: calc(var(--uib-speed) * -0.75);
-          }
-
-          .dot-spinner__dot:nth-child(4) {
-            transform: rotate(135deg);
-          }
-
-          .dot-spinner__dot:nth-child(4)::before {
-            animation-delay: calc(var(--uib-speed) * -0.625);
-          }
-
-          .dot-spinner__dot:nth-child(5) {
-            transform: rotate(180deg);
-          }
-
-          .dot-spinner__dot:nth-child(5)::before {
-            animation-delay: calc(var(--uib-speed) * -0.5);
-          }
-
-          .dot-spinner__dot:nth-child(6) {
-            transform: rotate(225deg);
-          }
-
-          .dot-spinner__dot:nth-child(6)::before {
-            animation-delay: calc(var(--uib-speed) * -0.375);
-          }
-
-          .dot-spinner__dot:nth-child(7) {
-            transform: rotate(270deg);
-          }
-
-          .dot-spinner__dot:nth-child(7)::before {
-            animation-delay: calc(var(--uib-speed) * -0.25);
-          }
-
-          .dot-spinner__dot:nth-child(8) {
-            transform: rotate(315deg);
-          }
-
-          .dot-spinner__dot:nth-child(8)::before {
-            animation-delay: calc(var(--uib-speed) * -0.125);
-          }
-
-          @keyframes pulse0112 {
-            0%,
-            100% {
-              transform: scale(0);
-              opacity: 0.5;
-            }
-            50% {
-              transform: scale(1);
-              opacity: 1;
-            }
+          .close:hover,
+          .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
           }
         `}
       </style>
       <h1>Danh sách doanh thu</h1>
       <button className="button2" onClick={fetchRevenue}>REFRESH</button>
-      <select
-        value={selectedCinemaId || ''}
-        onChange={(e) => setSelectedCinemaId(e.target.value || null)}
-        style={{ marginLeft: '10px', padding: '5px' }}
-      >
-        <option value="">Tất cả các rạp</option>
-        {Array.isArray(cinemas) && cinemas.map((cinema) => (
-          <option key={cinema.cinemaId} value={cinema.cinemaId}>
-            {cinema.cinemaName}
-          </option>
-        ))}
-      </select>
+      
+      {/* Áp dụng CSS cho dropdown */}
+      <div className="uiverse-pixel-input-wrapper" style={{ display: 'inline-block', marginLeft: '10px' }}>
+        <label>Chọn rạp:</label>
+        <select
+          className="uiverse-pixel-input"
+          value={selectedCinemaId || ''}
+          onChange={(e) => setSelectedCinemaId(e.target.value || null)}
+        >
+          <option value="">Tất cả các rạp</option>
+          {Array.isArray(cinemas) && cinemas.map((cinema) => (
+            <option key={cinema.cinemaId} value={cinema.cinemaId}>
+              {cinema.cinemaName}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {error && <div style={{ color: 'red' }}>{error}</div>}
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
         <thead>
@@ -328,6 +343,30 @@ const RevenueList: React.FC = () => {
           )}
         </tbody>
       </table>
+
+      {/* Modal hiển thị chi tiết doanh thu */}
+      {isDetailModalOpen && detailedRevenue && (
+        <div className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={closeModal}>&times;</span>
+            <h2>Chi tiết doanh thu rạp: {detailedRevenue.baseCinemaInfoRevenue.cinemaName}</h2>
+            <p><strong>Mã rạp:</strong> {detailedRevenue.baseCinemaInfoRevenue.cinemaId}</p>
+            <p><strong>Tổng doanh thu:</strong> {detailedRevenue.totalRevenue}</p>
+            <h3>Doanh thu theo ngày:</h3>
+            {detailedRevenue.baseRevenueInfo.length > 0 ? (
+              <ul>
+                {detailedRevenue.baseRevenueInfo.map((item, index) => (
+                  <li key={index}>
+                    <strong>Ngày:</strong> {new Date(item.date).toLocaleDateString()} - <strong>Doanh thu:</strong> {item.totalAmount}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Không có dữ liệu doanh thu theo ngày.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

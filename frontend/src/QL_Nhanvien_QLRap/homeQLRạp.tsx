@@ -14,7 +14,7 @@ interface FoodItem {
 
 interface OrderRequestItem {
     productId: string;
-    quantity: number;
+    quanlity: number;
 }
 
 // Define possible API response structures
@@ -45,7 +45,7 @@ interface ApiResponse<T> {
 interface Service {
     id: number;
     name: string;
-    quantity: number;
+    quanlity: number;
     orderID: string;
 }
 
@@ -107,10 +107,10 @@ const Info: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
     const [filterText, setFilterText] = useState('');
     const [services, setServices] = useState<Service[]>([
-        { id: 1, name: 'Bắp caramel', quantity: 1, orderID: 'ORD001' },
-        { id: 2, name: 'Pepsi', quantity: 2, orderID: 'ORD001' },
-        { id: 3, name: 'Coca', quantity: 1, orderID: 'ORD002' },
-        { id: 4, name: 'Không thêm dịch vụ', quantity: 1, orderID: 'ORD003' },
+        { id: 1, name: 'Bắp caramel', quanlity: 1, orderID: 'ORD001' },
+        { id: 2, name: 'Pepsi', quanlity: 2, orderID: 'ORD001' },
+        { id: 3, name: 'Coca', quanlity: 1, orderID: 'ORD002' },
+        { id: 4, name: 'Không thêm dịch vụ', quanlity: 1, orderID: 'ORD003' },
     ]);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isAddingService, setIsAddingService] = useState(false);
@@ -154,7 +154,7 @@ const Info: React.FC = () => {
     const [customerEmail, setCustomerEmail] = useState('');
     const [orderItems, setOrderItems] = useState<OrderRequestItem[]>([]);
     const [selectedFoodId, setSelectedFoodId] = useState('');
-    const [quantity, setQuantity] = useState(1);
+    const [quanlity, setquanlity] = useState(1);
     const [errorFood, setErrorFood] = useState<string | null>(null);
 
     // Fetch food items and open modal on mount
@@ -195,12 +195,12 @@ const Info: React.FC = () => {
 
     const handleAddItem = () => {
         if (selectedFoodId) {
-            setOrderItems([...orderItems, { productId: selectedFoodId, quantity }]);
+            setOrderItems([...orderItems, { productId: selectedFoodId, quanlity }]);
             setSelectedFoodId('');
-            setQuantity(1);
+            setquanlity(1);
         }
     };
-
+    
     const handleSubmitOrder = async () => {
         if (!customerEmail) {
             alert('Please enter a customer email');
@@ -288,11 +288,11 @@ const Info: React.FC = () => {
             const newService: Service = {
                 id: services.length + 1,
                 name: newServiceName,
-                quantity: newServiceQuantity,
+                quanlity: newServicequanlity,
                 orderID: selectedOrderID
             };
             setServices([...services, newService]);
-            setNewServiceQuantity(1);
+            setNewServicequanlity(1);
             setSelectedOrderID('');
             setIsAddingService(false);
         } else {
@@ -315,7 +315,7 @@ const Info: React.FC = () => {
 
     // State cho ô chọn dịch vụ và số lượng khi thêm
     const [newServiceName, setNewServiceName] = useState(''); // Default to empty string initially
-    const [newServiceQuantity, setNewServiceQuantity] = useState(1);
+    const [newServicequanlity, setNewServicequanlity] = useState(1);
     const [selectedOrderID, setSelectedOrderID] = useState('');
 
     // Lấy danh sách các OrderID duy nhất từ các dịch vụ đã có
@@ -1426,8 +1426,8 @@ const Info: React.FC = () => {
                                         </select>
                                         <select
                                             className="w-24 p-2 border rounded-md"
-                                            value={quantity}
-                                            onChange={(e) => setQuantity(Number(e.target.value))}
+                                            value={quanlity}
+                                            onChange={(e) => setquanlity(Number(e.target.value))}
                                         >
                                             {[1, 2, 3, 4].map((num) => (
                                                 <option key={num} value={num}>{num}</option>
@@ -1451,7 +1451,7 @@ const Info: React.FC = () => {
                                                 const food = foodItems.find(f => f.foodId === item.productId);
                                                 return (
                                                     <li key={index} className="flex items-center gap-2">
-                                                        {food?.foodName || 'Unknown Item'} - Quantity: {item.quantity}
+                                                        {food?.foodName || 'Unknown Item'} - quanlity: {item.quanlity}
                                                         <button
                                                             className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 ml-2"
                                                             onClick={() => handleDeleteStaffOrder(index)}
