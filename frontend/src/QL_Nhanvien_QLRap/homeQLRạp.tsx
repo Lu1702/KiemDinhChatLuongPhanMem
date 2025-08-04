@@ -1020,7 +1020,7 @@ const Info: React.FC = () => {
                     )}
                     {roles1.includes('FacilitiesManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4">Quản trị viên hệ thống</h3>
+                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Quản trị viên hệ thống</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "csphongrap" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
                         </div>
                     )}
@@ -1098,262 +1098,285 @@ const Info: React.FC = () => {
                         </div>
 
                     )}
-                    {activeTab === "nhanvien" && roles1.includes('TheaterManager') && (
-                        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl">
-                            <h2 className="text-2xl font-bold text-white mb-6">Thêm Nhân Viên</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Thông tin đăng nhập */}
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-semibold text-white italic">Thông tin đăng nhập</h3>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Rạp</label>
-                                        <select
-                                            value={addStaffFormData.cinemaId}
-                                            onChange={(e) => handleAddStaffInputChange(e, "cinemaId")}
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            required
-                                        >
-                                            <option value="" disabled>
-                                                -- Chọn rạp --
-                                            </option>
-                                            {cinemas.map((cinema) => (
-                                                <option key={cinema.cinemaId} value={cinema.cinemaId}>
-                                                    {cinema.cinemaName}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Email Đăng nhập</label>
-                                        <input
-                                            type="email"
-                                            value={addStaffFormData.loginUserEmail}
-                                            onChange={(e) => handleAddStaffInputChange(e, "loginUserEmail")}
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            placeholder="Email Đăng nhập"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Mật khẩu</label>
-                                        <input
-                                            type="password"
-                                            value={addStaffFormData.loginUserPassword}
-                                            onChange={(e) => handleAddStaffInputChange(e, "loginUserPassword")}
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            placeholder="Mật khẩu"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Xác nhận mật khẩu</label>
-                                        <input
-                                            type="password"
-                                            value={addStaffFormData.loginUserPasswordConfirm}
-                                            onChange={(e) => handleAddStaffInputChange(e, "loginUserPasswordConfirm")}
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            placeholder="Xác nhận mật khẩu"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                                {/* Thông tin cá nhân */}
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-semibold text-white italic">Thông tin cá nhân</h3>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Tên nhân viên</label>
-                                        <input
-                                            type="text"
-                                            value={addStaffFormData.staffName}
-                                            onChange={(e) => handleAddStaffInputChange(e, "staffName")}
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            placeholder="Tên nhân viên"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Ngày tháng năm sinh</label>
-                                        <input
-                                            type="date"
-                                            value={addStaffFormData.dateOfBirth}
-                                            onChange={(e) => handleAddStaffInputChange(e, "dateOfBirth")}
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">SĐT</label>
-                                        <input
-                                            type="tel"
-                                            value={addStaffFormData.phoneNumer}
-                                            onChange={(e) => handleAddStaffInputChange(e, "phoneNumer")}
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            placeholder="Số điện thoại"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Role</label>
-                                        <select
-                                            value={addStaffFormData.role}
-                                            onChange={(e) => handleAddStaffInputChange(e, "role")}
-                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            required
-                                        >
-                                            <option value="" disabled>
-                                                -- Chọn quyền hạn --
-                                            </option>
-                                            {roles.map((role) => (
-                                                <option key={role.roleid} value={role.roleid}>
-                                                    {role.roleName}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="mt-6 text-center">
-                                <button
-                                    className="relative bg-yellow-950 text-yellow-400 border border-yellow-400 rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-yellow-900 hover:border-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed group"
-                                    onClick={handleAddStaffSubmit}
-                                    disabled={loading}
-                                >
-                                    <span className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></span>
-                                    {loading ? "Đang xử lý..." : "Thêm nhân viên"}
-                                </button>
-                            </div>
-                            <div className="mt-8">
-                                <h2 className="text-2xl font-bold text-white mb-4">Danh sách nhân viên</h2>
-                                {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
-                                {isInitialLoading ? (
-                                    <p className="text-white text-center">Đang tải danh sách...</p>
-                                ) : staffList.length === 0 ? (
-                                    <p className="text-white text-center">Không có nhân viên nào.</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full bg-white/10 rounded-lg shadow-md">
-                                            <thead>
-                                                <tr className="bg-yellow-950 text-white">
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Tên</th>
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Ngày sinh</th>
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold">SĐT</th>
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Rạp</th>
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Vai trò</th>
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Tùy Chọn</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {staffList.map((staff) => (
-                                                    <tr key={staff.staffId} className="border-t border-gray-600 hover:bg-gray-700/20 transition">
-                                                        <td className="px-4 py-2 text-white">{staff.staffId}</td>
-                                                        <td className="px-4 py-2 text-white">{staff.staffName}</td>
-                                                        <td className="px-4 py-2 text-white">{staff.dayOfBirth}</td>
-                                                        <td className="px-4 py-2 text-white">{staff.staffPhoneNumber}</td>
-                                                        <td className="px-4 py-2 text-white">
-                                                            {cinemas.find((cinema) => cinema.cinemaId === staff.cinemaId)?.cinemaName || staff.cinemaId}
-                                                        </td>
-                                                        <td className="px-4 py-2 text-white">
-                                                            {roles.find((role) => role.roleid === staff.staffRole)?.roleName || staff.staffRole}
-                                                        </td>
-                                                        <td className="px-4 py-2">
-                                                            <button
-                                                                onClick={() => handleEdit(staff.staffId)}
-                                                                className="mr-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
-                                                            >
-                                                                Sửa
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(staff.staffId)}
-                                                                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
-                                                            >
-                                                                Xóa
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                            {editingStaff && (
-                                <div className="mt-6 bg-white/10 backdrop-blur-md p-6 rounded-lg shadow-xl">
-                                    <h3 className="text-xl font-bold text-white mb-4">Chỉnh sửa nhân viên</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-1">Tên nhân viên</label>
-                                            <input
-                                                type="text"
-                                                value={editingStaff.staffName}
-                                                onChange={(e) => handleEditInputChange(e, "staffName")}
-                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-1">Ngày sinh</label>
-                                            <input
-                                                type="date"
-                                                value={editingStaff.dateOfBirth}
-                                                onChange={(e) => handleEditInputChange(e, "dateOfBirth")}
-                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-1">SĐT</label>
-                                            <input
-                                                type="tel"
-                                                value={editingStaff.phoneNumer}
-                                                onChange={(e) => handleEditInputChange(e, "phoneNumer")}
-                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-1">Rạp</label>
-                                            <select
-                                                value={editingStaff.cinemaId}
-                                                onChange={(e) => handleEditInputChange(e, "cinemaId")}
-                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            >
-                                                {cinemas.map((cinema) => (
-                                                    <option key={cinema.cinemaId} value={cinema.cinemaId}>
-                                                        {cinema.cinemaName}
+                    {activeTab === 'nhanvien' && roles1.includes('TheaterManager') && (
+                        <div className="min-h-screen bg-gradient-to-b from-gray-700/70 to-gray-500/50 font-sans py-10 px-4 rounded-2xl">
+                            <div className="max-w-6xl mx-auto">
+                                <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl">
+                                    <h2 className="text-3xl font-bold text-yellow-400 mb-6 tracking-wide">Thêm Nhân Viên</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Thông tin đăng nhập */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-xl font-semibold text-white italic">Thông tin đăng nhập</h3>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Rạp</label>
+                                                <select
+                                                    value={addStaffFormData.cinemaId}
+                                                    onChange={(e) => handleAddStaffInputChange(e, 'cinemaId')}
+                                                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    required
+                                                >
+                                                    <option value="" disabled>
+                                                        -- Chọn rạp --
                                                     </option>
-                                                ))}
-                                            </select>
+                                                    {cinemas.map((cinema) => (
+                                                        <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                                                            {cinema.cinemaName}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Email Đăng nhập</label>
+                                                <input
+                                                    type="email"
+                                                    value={addStaffFormData.loginUserEmail}
+                                                    onChange={(e) => handleAddStaffInputChange(e, 'loginUserEmail')}
+                                                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    placeholder="Email Đăng nhập"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Mật khẩu</label>
+                                                <input
+                                                    type="password"
+                                                    value={addStaffFormData.loginUserPassword}
+                                                    onChange={(e) => handleAddStaffInputChange(e, 'loginUserPassword')}
+                                                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    placeholder="Mật khẩu"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Xác nhận mật khẩu</label>
+                                                <input
+                                                    type="password"
+                                                    value={addStaffFormData.loginUserPasswordConfirm}
+                                                    onChange={(e) => handleAddStaffInputChange(e, 'loginUserPasswordConfirm')}
+                                                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    placeholder="Xác nhận mật khẩu"
+                                                    required
+                                                />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-1">Vai trò</label>
-                                            <select
-                                                value={editingStaff.staffRole}
-                                                onChange={(e) => handleEditInputChange(e, "staffRole")}
-                                                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                            >
-                                                {roles.map((role) => (
-                                                    <option key={role.roleid} value={role.roleid}>
-                                                        {role.roleName}
+                                        {/* Thông tin cá nhân */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-xl font-semibold text-white italic">Thông tin cá nhân</h3>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Tên nhân viên</label>
+                                                <input
+                                                    type="text"
+                                                    value={addStaffFormData.staffName}
+                                                    onChange={(e) => handleAddStaffInputChange(e, 'staffName')}
+                                                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    placeholder="Tên nhân viên"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Ngày tháng năm sinh</label>
+                                                <input
+                                                    type="date"
+                                                    value={addStaffFormData.dateOfBirth}
+                                                    onChange={(e) => handleAddStaffInputChange(e, 'dateOfBirth')}
+                                                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">SĐT</label>
+                                                <input
+                                                    type="tel"
+                                                    value={addStaffFormData.phoneNumer}
+                                                    onChange={(e) => handleAddStaffInputChange(e, 'phoneNumer')}
+                                                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    placeholder="Số điện thoại"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Vai trò</label>
+                                                <select
+                                                    value={addStaffFormData.role}
+                                                    onChange={(e) => handleAddStaffInputChange(e, 'role')}
+                                                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    required
+                                                >
+                                                    <option value="" disabled>
+                                                        -- Chọn quyền hạn --
                                                     </option>
-                                                ))}
-                                            </select>
+                                                    {roles.map((role) => (
+                                                        <option key={role.roleid} value={role.roleid}>
+                                                            {role.roleName}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="mt-4 text-center space-x-4">
+                                    <div className="mt-6 text-center">
                                         <button
-                                            onClick={handleSaveEdit}
-                                            className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="relative bg-yellow-950 text-yellow-400 border border-yellow-400 rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-yellow-900 hover:border-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                            onClick={handleAddStaffSubmit}
                                             disabled={loading}
                                         >
-                                            {loading ? "Đang lưu..." : "Lưu"}
-                                        </button>
-                                        <button
-                                            onClick={() => setEditingStaff(null)}
-                                            className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition"
-                                        >
-                                            Hủy
+                                            <span className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></span>
+                                            {loading ? (
+                                                <div className="flex flex-row gap-2">
+                                                    <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce"></div>
+                                                    <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.3s]"></div>
+                                                    <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.5s]"></div>
+                                                </div>
+                                            ) : (
+                                                'Thêm nhân viên'
+                                            )}
                                         </button>
                                     </div>
+                                    <div className="mt-8">
+                                        <h2 className="text-3xl font-bold text-yellow-400 mb-6 tracking-wide">Danh Sách Nhân Viên</h2>
+                                        {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
+                                        {successMessage && <p className="text-green-400 mb-4 text-center">{successMessage}</p>}
+                                        {isInitialLoading ? (
+                                            <div className="flex justify-center items-center">
+                                                <div className="flex flex-row gap-2">
+                                                    <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce"></div>
+                                                    <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.3s]"></div>
+                                                    <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.5s]"></div>
+                                                </div>
+                                            </div>
+                                        ) : staffList.length === 0 ? (
+                                            <p className="text-white text-center">Không có nhân viên nào.</p>
+                                        ) : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full bg-white/10 rounded-lg shadow-md">
+                                                    <thead>
+                                                        <tr className="bg-yellow-950 text-white">
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Tên</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Ngày sinh</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">SĐT</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Rạp</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Tùy Chọn</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {staffList.map((staff) => (
+                                                            <tr key={staff.staffId} className="border-t border-gray-600 hover:bg-gray-700/20 transition">
+                                                                <td className="px-4 py-2 text-white">{staff.staffName}</td>
+                                                                <td className="px-4 py-2 text-white">{staff.dayOfBirth}</td>
+                                                                <td className="px-4 py-2 text-white">{staff.staffPhoneNumber}</td>
+                                                                <td className="px-4 py-2 text-white">
+                                                                    {cinemas.find((cinema) => cinema.cinemaId === staff.cinemaId)?.cinemaName || staff.cinemaId}
+                                                                </td>
+                                                                <td className="px-4 py-2">
+                                                                    <div className="flex gap-2">
+                                                                        <button
+                                                                            onClick={() => handleEdit(staff.staffId)}
+                                                                            className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition"
+                                                                        >
+                                                                            Sửa
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleDelete(staff.staffId)}
+                                                                            className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition"
+                                                                        >
+                                                                            Xóa
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {editingStaff && (
+                                        <div className="mt-6 bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-yellow-500/30">
+                                            <h3 className="text-2xl font-bold text-yellow-400 mb-4 tracking-wide">Chỉnh sửa nhân viên</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-300 mb-1">Tên nhân viên</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingStaff.staffName}
+                                                        onChange={(e) => handleEditInputChange(e, 'staffName')}
+                                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-300 mb-1">Ngày sinh</label>
+                                                    <input
+                                                        type="date"
+                                                        value={editingStaff.dateOfBirth}
+                                                        onChange={(e) => handleEditInputChange(e, 'dateOfBirth')}
+                                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-300 mb-1">SĐT</label>
+                                                    <input
+                                                        type="tel"
+                                                        value={editingStaff.phoneNumer}
+                                                        onChange={(e) => handleEditInputChange(e, 'phoneNumer')}
+                                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-300 mb-1">Rạp</label>
+                                                    <select
+                                                        value={editingStaff.cinemaId}
+                                                        onChange={(e) => handleEditInputChange(e, 'cinemaId')}
+                                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    >
+                                                        {cinemas.map((cinema) => (
+                                                            <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                                                                {cinema.cinemaName}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-300 mb-1">Vai trò</label>
+                                                    <select
+                                                        value={editingStaff.staffRole}
+                                                        onChange={(e) => handleEditInputChange(e, 'staffRole')}
+                                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                                    >
+                                                        {roles.map((role) => (
+                                                            <option key={role.roleid} value={role.roleid}>
+                                                                {role.roleName}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="mt-6 flex justify-center gap-4">
+                                                <button
+                                                    onClick={handleSaveEdit}
+                                                    className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? (
+                                                        <div className="flex flex-row gap-2">
+                                                            <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce"></div>
+                                                            <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.3s]"></div>
+                                                            <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.5s]"></div>
+                                                        </div>
+                                                    ) : (
+                                                        'Lưu'
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => setEditingStaff(null)}
+                                                    className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition"
+                                                >
+                                                    Hủy
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     )}
 
@@ -1370,62 +1393,62 @@ const Info: React.FC = () => {
                     )}
                     {activeTab === "doanhthu" && roles1.includes('Director') && (
                         <div>
-                            <RevenueList/>
+                            <RevenueList />
                         </div>
                     )}
                     {activeTab === "xacdinhdichvu" && roles1.includes('Cashier') && (
-                        <div className="p-4 max-w-4xl mx-auto">
+                        <div className="p-4 max-w-4xl rounded-xl mx-auto bg-gradient-to-b from-gray-700/70 to-gray-500/50">
                             {/* Error Message */}
                             {errorFood && (
-                                <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-md">
+                                <div className="bg-red-600/10 text-red-400 p-4 mb-4 rounded-md border border-red-500/30">
                                     {errorFood}
                                 </div>
                             )}
 
                             {/* Order Form */}
-                            <div className="bg-white p-6 rounded-md shadow-md">
-                                <h2 className="text-xl font-bold mb-4">New Order</h2>
+                            <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-yellow-500/30">
+                                <h2 className="text-2xl font-bold text-white mb-6">Đặt Hàng Mới</h2>
 
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium mb-1">Customer Email</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Email Khách Hàng</label>
                                     <input
                                         type="text"
                                         value={customerEmail}
                                         onChange={(e) => setCustomerEmail(e.target.value)}
-                                        placeholder="Enter customer email"
-                                        className="w-full p-2 border rounded-md"
+                                        placeholder="Nhập email khách hàng"
+                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                                     />
                                 </div>
 
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium mb-1">Order Date</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Ngày Đặt Hàng</label>
                                     <input
                                         type="text"
                                         value={new Date().toLocaleDateString()}
                                         disabled
-                                        className="w-full p-2 border rounded-md bg-gray-100"
+                                        className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2"
                                     />
                                 </div>
 
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium mb-1">Select Food Item</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Chọn Món</label>
                                     <div className="flex gap-2">
                                         <select
-                                            className="w-full p-2 border rounded-md"
+                                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                                             value={selectedFoodId}
                                             onChange={(e) => setSelectedFoodId(e.target.value)}
                                         >
-                                            <option value="">Select a food item</option>
+                                            <option value="">Chọn món</option>
                                             {Array.isArray(foodItems) && foodItems.length > 0 ? (
                                                 foodItems.map((item) => (
                                                     <option key={item.foodId} value={item.foodId}>{item.foodName}</option>
                                                 ))
                                             ) : (
-                                                <option disabled>No food items available</option>
+                                                <option disabled>Không có món nào</option>
                                             )}
                                         </select>
                                         <select
-                                            className="w-24 p-2 border rounded-md"
+                                            className="w-24 bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                                             value={quantity}
                                             onChange={(e) => setQuantity(Number(e.target.value))}
                                         >
@@ -1434,10 +1457,10 @@ const Info: React.FC = () => {
                                             ))}
                                         </select>
                                         <button
-                                            className="bg-green-500 text-white px-4 py-1 rounded-md hover:bg-green-600"
+                                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
                                             onClick={handleAddItem}
                                         >
-                                            Add
+                                            Thêm
                                         </button>
                                     </div>
                                 </div>
@@ -1445,18 +1468,18 @@ const Info: React.FC = () => {
                                 {/* Selected Items List */}
                                 {orderItems.length > 0 && (
                                     <div className="mb-4">
-                                        <h3 className="text-sm font-medium mb-2">Selected Items</h3>
-                                        <ul className="list-disc pl-5">
+                                        <h3 className="text-sm font-medium text-white mb-2">Danh Sách Món Đã Chọn</h3>
+                                        <ul className="list-disc pl-5 text-white bg-white/10 rounded-md p-4">
                                             {orderItems.map((item, index) => {
                                                 const food = foodItems.find(f => f.foodId === item.productId);
                                                 return (
-                                                    <li key={index} className="flex items-center gap-2">
-                                                        {food?.foodName || 'Unknown Item'} - Quantity: {item.quantity}
+                                                    <li key={index} className="flex items-center gap-2 py-1">
+                                                        {food?.foodName || 'Unknown Item'} - Số lượng: {item.quantity}
                                                         <button
-                                                            className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 ml-2"
+                                                            className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 transition"
                                                             onClick={() => handleDeleteStaffOrder(index)}
                                                         >
-                                                            Delete
+                                                            Xóa
                                                         </button>
                                                     </li>
                                                 );
@@ -1467,64 +1490,89 @@ const Info: React.FC = () => {
 
                                 <div className="flex justify-end gap-2">
                                     <button
-                                        className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400"
+                                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
                                         onClick={() => {
                                             setOrderItems([]);
                                             setCustomerEmail('');
                                         }}
                                     >
-                                        Cancel
+                                        Hủy
                                     </button>
                                     <button
-                                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                         onClick={handleSubmitOrder}
                                         disabled={orderItems.length === 0}
                                     >
-                                        Submit Order
+                                        Gửi Đơn Hàng
                                     </button>
                                 </div>
                             </div>
                         </div>
                     )}
-                    {activeTab === "csphongrap" && roles1.includes('FacilitiesManager') && (
-                        <div>
-                            <div className="flex justify-between text-white items-center mb-4">
-                                <h2 className="text-2xl font-bold">Danh sách rạp</h2>
-                                <div className="space-x-2">
-                                    <button
-                                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                        onClick={() => navigate('/QTVHThong/chinhsuaphongrap')}
-                                    >
-                                        Chỉnh sửa rạp
-                                    </button>
-                                    <button
-                                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                        onClick={() => navigate('/QTVHThong/chinhsuaphongrap')}
-                                    >
-                                        Chỉnh sửa phòng chiếu
-                                    </button>
+                    {activeTab === 'csphongrap' && roles1.includes('FacilitiesManager') && (
+                        <div className="min-h-screen bg-gradient-to-b from-gray-700/70 to-gray-500/50 font-sans py-10 px-4 rounded-2xl">
+                            <div className="max-w-6xl mx-auto">
+                                <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
+                                    <h2 className="text-3xl font-bold text-yellow-400 tracking-wide">Danh Sách Rạp</h2>
+                                    <div className="flex gap-4 mt-4 sm:mt-0">
+                                        <button
+                                            onClick={() => navigate('/QTVHThong/chinhsuaphongrap')}
+                                            className="relative bg-yellow-950 text-yellow-400 border border-yellow-400 rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-yellow-900 hover:border-yellow-500 group"
+                                        >
+                                            <span className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></span>
+                                            Chỉnh sửa rạp
+                                        </button>
+                                        <button
+                                            onClick={() => navigate('/QTVHThong/chinhsuaphongrap')}
+                                            className="relative bg-yellow-950 text-yellow-400 border border-yellow-400 rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-yellow-900 hover:border-yellow-500 group"
+                                        >
+                                            <span className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></span>
+                                            Chỉnh sửa phòng chiếu
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            {loading && <p>Đang tải...</p>}
-                            {successMessage && <p className="text-green-500">{successMessage}</p>}
-                            {!loading && !error && cinemas.length === 0 && <p>Không có rạp nào để hiển thị.</p>}
-                            {cinemas.length > 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {cinemas.map((cinema) => (
-                                        <div key={cinema.cinemaId} className="bg-white p-4 rounded shadow">
-                                            <h3 className="text-lg font-semibold">{cinema.cinemaName}</h3>
-                                            <p className="text-gray-600">{cinema.cinemaLocation}</p>
-                                            {cinema.cinemaDescription && <p className="text-gray-500">{cinema.cinemaDescription}</p>}
-                                            {cinema.cinemaContactNumber && (
-                                                <p className="text-gray-500">Số điện thoại: {cinema.cinemaContactNumber}</p>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
 
+                                {loading && (
+                                    <div className="flex justify-center items-center">
+                                        <div className="flex flex-row gap-2">
+                                            <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce"></div>
+                                            <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.3s]"></div>
+                                            <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.5s]"></div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {successMessage && <p className="text-green-400 text-center mb-4">{successMessage}</p>}
+
+                                {!loading && !error && cinemas.length === 0 && (
+                                    <p className="text-white text-center">Không có rạp nào để hiển thị.</p>
+                                )}
+
+                                {cinemas.length > 0 && (
+                                    <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl">
+                                        <h3 className="text-2xl font-bold text-white mb-6">Danh Sách Rạp</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {cinemas.map((cinema) => (
+                                                <div
+                                                    key={cinema.cinemaId}
+                                                    className="bg-white/10 backdrop-blur-md p-6 rounded-lg shadow-md border border-gray-600 hover:border-yellow-500 transition-all duration-300"
+                                                >
+                                                    <h3 className="text-xl font-semibold text-yellow-400">{cinema.cinemaName}</h3>
+                                                    <p className="text-gray-300 mt-2">{cinema.cinemaLocation}</p>
+                                                    {cinema.cinemaDescription && (
+                                                        <p className="text-gray-400 mt-1">{cinema.cinemaDescription}</p>
+                                                    )}
+                                                    {cinema.cinemaContactNumber && (
+                                                        <p className="text-gray-400 mt-1">Số điện thoại: {cinema.cinemaContactNumber}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     {/* Add Cinema Modal */}
                     {isAddModalOpen && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

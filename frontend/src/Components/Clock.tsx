@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 interface ClockProps {
     seconds: number;
-    onTimeout: () => void; // Thêm prop này
+    onTimeout: () => void;
 }
 
 function Clock({ seconds, onTimeout }: ClockProps) {
@@ -10,29 +10,35 @@ function Clock({ seconds, onTimeout }: ClockProps) {
     const timerId = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        if (seconds <= 0) return;
+        if (seconds <= 0) {
+            console.warn("Invalid seconds value:", seconds);
+            return;
+        }
 
+        // Set initial clock value
         setClock(seconds);
 
+        // Start the countdown
         timerId.current = setInterval(() => {
             setClock((prevClock) => {
                 if (prevClock <= 1) {
                     if (timerId.current !== null) {
                         clearInterval(timerId.current);
                     }
-                    onTimeout(); // Gọi callback
+                    onTimeout();
                     return 0;
                 }
                 return prevClock - 1;
             });
         }, 1000);
 
+        // Cleanup on unmount
         return () => {
             if (timerId.current !== null) {
                 clearInterval(timerId.current);
             }
         };
-    }, [seconds, onTimeout]);
+    }, []); // Empty dependency array to run only once on mount
 
     const formatTime = (totalSeconds: number): string => {
         const minutes = Math.floor(totalSeconds / 60);

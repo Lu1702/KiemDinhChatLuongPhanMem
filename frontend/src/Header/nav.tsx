@@ -214,7 +214,7 @@ function Nav() {
                     </div>
                 </div>
                 <div className="flex justify-center flex-row">
-                    <div className="relative" ref={searchRef}>
+                    <div className="relative mr-7" ref={searchRef}>
                         <form
                             onSubmit={(e) => e.preventDefault()}
                             className="flex items-center bg-gray-800 text-gray-400 border border-gray-700 rounded-full px-4 py-2 w-[300px] focus-within:border-indigo-500 transition duration-300"
@@ -284,7 +284,7 @@ function Nav() {
                                                     setSearchTerm('');
                                                     setSearchResults([]);
                                                     setFilteredCinemas([]);
-                                                    setIsDropdownOpen(false); // Đóng dropdown khi chọn
+                                                    setIsDropdownOpen(false);
                                                     navigate(`/cinezone/${cinema.cinemaId}`);
                                                 }}
                                             >
