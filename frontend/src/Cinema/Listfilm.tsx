@@ -9,6 +9,7 @@ interface Movie {
     movieName: string;
     movieImage: string;
     movieTrailerUrl: string;
+    isRelease: boolean; // Added isRelease to the interface
 }
 
 function Listfilm() {
@@ -35,7 +36,9 @@ function Listfilm() {
                     if (!Array.isArray(moviesData) || moviesData.length === 0) {
                         hasMore = false;
                     } else {
-                        allMovies = [...allMovies, ...moviesData];
+                        // Filter movies where isRelease is true
+                        const releasedMovies = moviesData.filter((item: Movie) => item.isRelease === true);
+                        allMovies = [...allMovies, ...releasedMovies];
                         page++;
                     }
                 }
@@ -49,9 +52,9 @@ function Listfilm() {
     }, []);
 
     const handleShowtimes = (id: string) => {
-        let idphim = id ;
-        localStorage.setItem('movieId',id)
-        navigate("/test");
+        let idphim = id;
+        localStorage.setItem('movieId', id)
+        navigate("/movies");
     };
 
     const handleOpenTrailer = (url: string) => {
@@ -70,7 +73,6 @@ function Listfilm() {
     return (
         <div className="App bg-fixed w-full min-h-screen bg-cover bg-center"
             style={{ backgroundImage: "url('https://images8.alphacoders.com/136/thumb-1920-1368754.jpeg')" }}>
-            {/* Header */}
             <div className="sticky top-0 z-50 bg-slate-900 shadow-md">
                 <header>
                     <div className="max-w-screen-xl mx-auto px-8">
@@ -79,7 +81,6 @@ function Listfilm() {
                 </header>
             </div>
             <div>
-                {/* Main Content */}
                 <main className="max-w-screen-xl mx-auto px-8 py-12 top-0">
                     <h2 className="text-3xl text-white font-bold mb-8 uppercase">-- Phim đang chiếu --</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -87,7 +88,7 @@ function Listfilm() {
                             movies.map((movie) => (
                                 <div
                                     key={movie.movieID}
-                                    className="bg-slate-800 rounded-xl shadow-lg p-4 flex flex-col items-center object-cover">
+                                    className="bg-transparent rounded-xl shadow-lg p-4 flex flex-col items-center object-cover">
                                     <img
                                         src={movie.movieImage}
                                         alt={movie.movieName}
@@ -113,7 +114,6 @@ function Listfilm() {
                                                 </svg>
                                             </div>
                                         </button>
-
                                         <button
                                             onClick={() => handleShowtimes(movie.movieID)}
                                             className="relative w-[160px] h-12 px-4 bg-purple-600 text-white border-none rounded-md text-base font-bold cursor-pointer z-10 group overflow-hidden flex items-center justify-center">
