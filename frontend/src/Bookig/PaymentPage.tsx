@@ -10,7 +10,7 @@ export default function PaymentPage() {
     }
     const location = useLocation();
     const ticketInfo = location.state || {};
-
+    
     console.log(ticketInfo.time);
 
     return (
@@ -53,26 +53,44 @@ export default function PaymentPage() {
                     </div>
                 </div>
                 <div className="flex-1 max-w-md w-full">
-                    <h2 className="text-3xl font-bold mb-6 text-center text-white">THÔNG TIN VÉ XEM</h2>
-                    <div className="bg-white text-black rounded-xl p-6 shadow-lg space-y-3">
-                        <h3 className="font-bold text-lg uppercase">{ticketInfo.movie || "Tên phim"}</h3>
-                        <p className="text-sm">Phim dành cho người 18+ trở lên</p>
-                        <p><span className="font-bold">{ticketInfo.cinema || "Tên rạp:"}</span></p>
-                        <p>Địa chỉ: <span className="font-bold">{ticketInfo.address || ""}</span></p>
-                        <p>Thời gian: <span className="font-bold">{ticketInfo.time || ""}</span></p>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                            <p>Số ghế<br /><span className="font-bold">{(ticketInfo.seats || []).join(", ")}</span></p>
-                            <p>Loại vé<br /><span className="font-bold">{ticketInfo.ticketType || ""}</span></p>
-                            <p>Combo<br /><span className="font-bold">{ticketInfo.combos || ""}</span></p>
-                            <p>Số nước ngọt<br /><span className="font-bold">{ticketInfo.drinkCount || ""}</span></p>
-                            <p>Số snacks<br /><span className="font-bold">{ticketInfo.snackCount || ""}</span></p>
-                        </div>
-                        <hr className="my-2 border-black" />
-                        <p className="font-bold text-lg">
-                            SỐ TIỀN CẦN THANH TOÁN: <span className="text-right block">{ticketInfo.total?.toLocaleString() || "0"} VND</span>
-                        </p>
-                    </div>
-                </div>
+    <h2 className="text-3xl font-bold mb-6 text-center text-white">THÔNG TIN VÉ XEM</h2>
+    <div className="bg-white text-black rounded-xl p-6 shadow-lg space-y-3">
+        {/* Thông tin người đặt và ngày đặt */}
+        <p>Email người đặt: <span className="font-bold">{ticketInfo.email || ""}</span></p>
+        <p>Ngày đặt: <span className="font-bold">{ticketInfo.bookingDate || ""}</span></p>
+
+        <hr className="my-2 border-black" />
+
+        {/* Thông tin vé */}
+        <h3 className="font-bold text-lg uppercase">Thông tin vé</h3>
+        <p><span className="font-bold">Tên phim:</span> {ticketInfo.movieName || "Tên phim"}</p>
+        <p>Địa điểm: <span className="font-bold">{ticketInfo.location || ""}</span></p>
+        <p>Phòng số: <span className="font-bold">{ticketInfo.roomNumber || ""}</span></p>
+        <p>Định dạng hình ảnh: <span className="font-bold">{ticketInfo.imageFormat || ""}</span></p>
+        <p>Ngày xem: <span className="font-bold">{ticketInfo.viewingDate || ""}</span></p>
+        <p>Số ghế: <span className="font-bold">{ticketInfo.seats || ""}</span></p>
+        <p>Loại vé: <span className="font-bold">{ticketInfo.ticketType || ""}</span></p>
+        <p>Giờ xem: <span className="font-bold">{ticketInfo.viewingTime || ""}</span></p>
+        <p>Giá vé: <span className="font-bold">{ticketInfo.ticketPrice || ""} VND</span></p>
+        <p className="font-bold">Tổng giá vé: <span className="text-right block">{ticketInfo.totalTicketPrice?.toLocaleString() || "0"} VND</span></p>
+
+        <hr className="my-2 border-black" />
+
+        {/* Thông tin dịch vụ đi kèm */}
+        <h3 className="font-bold text-lg uppercase">Thông tin dịch vụ</h3>
+        <p>Dịch vụ đi kèm: <span className="font-bold">{ticketInfo.serviceName || ""}</span></p>
+        <p>Số lượng: <span className="font-bold">{ticketInfo.serviceQuantity || ""}</span></p>
+        <p>Đơn giá: <span className="font-bold">{ticketInfo.servicePrice || ""} VND</span></p>
+        <p className="font-bold">Tổng giá dịch vụ: <span className="text-right block">{ticketInfo.totalServicePrice?.toLocaleString() || "0"} VND</span></p>
+
+        <hr className="my-2 border-black" />
+
+        {/* Tổng cộng */}
+        <p className="font-bold text-lg">
+            TỔNG CỘNG: <span className="text-right block">{ticketInfo.totalAmount?.toLocaleString() || "0"} VND</span>
+        </p>
+    </div>
+</div>
             </div>
             <div className="mt-52">
                 <Bottom />
