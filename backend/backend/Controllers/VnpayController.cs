@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Web;
 using backend.Interface.EmailInterface;
 using backend.Interface.PDFInterface;
+using backend.ModelDTO.Customer.OrderRespond;
 using backend.ModelDTO.PDFDTO;
 using backend.Services.PDFServices;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -190,61 +191,61 @@ namespace backend.Controllers
                                         _dataContext.movieInformation
                                             .FirstOrDefault(x => x.movieId.Equals(getMovieScheduleInfo
                                                 .movieId));
-                                    if (getMovieInfo != null  && getCustomerOrderProductInfo.Any())
+                                    var groupBySelectionTickets =
+                                        getCustomerOrderTicketInfo.GroupBy(x => x.PriceEach);
+                                    var selectedElement =
+                                        groupBySelectionTickets.Select
+                                        (x => new GenerateCustomerBookingTicketSeatsInfo
+                                        {
+                                            PriceEachSeat = x.Key,
+                                            SeatsNumber = String.Join("," , x.Select(y => y.Seats.seatsNumber))
+                                        }).ToList();
+                                    var generateCustomerBookingProductsInfos = getCustomerOrderProductInfo.Select(x =>
+                                        new GenerateCustomerBookingProductsInfo()
+                                        {
+                                            ProductName = x.foodInformation.foodInformationName,
+                                            Quality = x.quanlity,
+                                            PriceEachProduct = x.PriceEach
+                                        }).ToList();
+                                    var generateCustomerBookingTicketInfo =
+                                        new GenerateCustomerBookingTicketInfo()
+                                        {
+                                            MovieName = getMovieInfo.movieName,
+                                            CinemaLocation = getMovieScheduleInfo.cinemaRoom.Cinema.cinemaName,
+                                            RoomNumber = getMovieScheduleInfo.cinemaRoom.cinemaRoomNumber,
+                                            VisualFormat = getMovieScheduleInfo.movieVisualFormat.movieVisualFormatName,
+                                            ShowedDate = getMovieScheduleInfo.ScheduleDate,
+                                            Seats = selectedElement ,
+                                        };
+                                    decimal TotalPrice = 0;
+                                    TotalPrice += selectedElement.Sum(x => x.PriceEachSeat);
+                                    if (generateCustomerBookingProductsInfos.Any())
                                     {
-                                        var groupBySelectionTickets =
-                                            getCustomerOrderTicketInfo.GroupBy(x => x.PriceEach).FirstOrDefault();
-                                        var generateCustomerBookingTicketSeatsInfo =
-                                            new GenerateCustomerBookingTicketSeatsInfo
-                                            {
-                                                PriceEachSeat = groupBySelectionTickets!.Key,
-                                                SeatsNumber = String.Join("," ,
-                                                    groupBySelectionTickets.Select
-                                                        (x => x.Seats.seatsNumber))
-                                            };
-                                        var generateCustomerBookingProductsInfos = getCustomerOrderProductInfo.Select(x =>
-                                            new GenerateCustomerBookingProductsInfo()
-                                            {
-                                                ProductName = x.foodInformation.foodInformationName,
-                                                Quality = x.quanlity,
-                                                PriceEachProduct = x.PriceEach
-                                            }).ToList();
-                                        var generateCustomerBookingTicketInfo =
-                                            new GenerateCustomerBookingTicketInfo()
-                                            {
-                                                MovieName = getMovieInfo.movieName,
-                                                CinemaLocation = getMovieScheduleInfo.cinemaRoom.Cinema.cinemaName,
-                                                RoomNumber = getMovieScheduleInfo.cinemaRoom.cinemaRoomNumber,
-                                                VisualFormat = getMovieScheduleInfo.movieVisualFormat.movieVisualFormatName,
-                                                ShowedDate = getMovieScheduleInfo.ScheduleDate,
-                                                Seats = generateCustomerBookingTicketSeatsInfo
-                                            };
-                                        if (generateCustomerBookingProductsInfos.Any())
+                                        // Tiếp tục thêm data vào Model để gửi EMail
+                                        generateCustomerBookingTicketInfo.Products = generateCustomerBookingProductsInfos;
+                                        TotalPrice += generateCustomerBookingTicketInfo.Products.Sum(x => x.PriceEachProduct);
+                                    }
+                                    generateCustomerBookingTicketInfo.TotalPrice = TotalPrice;
+                                    var newCustomerInfo =
+                                        new GenerateCustomerBookingDTO()
                                         {
-                                            // Tiếp tục thêm data vào Model để gửi EMail
-                                            generateCustomerBookingTicketInfo.Products = generateCustomerBookingProductsInfos;
-                                        }
-
-                                        var newCustomerInfo =
-                                            new GenerateCustomerBookingDTO()
-                                            {
-                                                CustomerEmail = getUserInfo.loginUserEmail,
-                                                BookingDate = getCustomerOrderInfo.paymentRequestCreatedDate,
-                                                BookingInfo = generateCustomerBookingTicketInfo
-                                            };
-
-                                        var generatePDF =
-                                            IPDF.GeneratePdfUserOrder(newCustomerInfo);
-                                        if (generatePDF.Status.Equals(GenericStatusEnum.Success.ToString()))
-                                        {
+                                            CustomerEmail = getUserInfo.loginUserEmail,
+                                            BookingDate = getCustomerOrderInfo.paymentRequestCreatedDate,
+                                            BookingInfo = generateCustomerBookingTicketInfo,
                                             
-                                           var getStatus =  await _emailService
-                                               .SendPdf(newCustomerInfo.CustomerEmail , generatePDF.data!);
-                                           if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
-                                           {
-                                               Console.WriteLine("Looix");
-                                           }
-                                        }
+                                        };
+                                    var generatePDF =
+                                        IPDF.GeneratePdfUserOrder(newCustomerInfo);
+                                    if (generatePDF.Status.Equals(GenericStatusEnum.Success.ToString()))
+                                    {
+                                        var getStaffInfo = _dataContext.Staff
+                                            .FirstOrDefault(x => x.Id.Equals(getCustomerOrderInfo.customerID));
+                                       var getStatus =  await _emailService
+                                           .SendPdf(newCustomerInfo.CustomerEmail , generatePDF.data!);
+                                       if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+                                       {
+                                           Console.WriteLine("Looix");
+                                       }
                                     }
                                 }
                             }
@@ -252,7 +253,57 @@ namespace backend.Controllers
                             
                         }else if (getStaffOrderInfo != null)
                         {
+                            // Lays data thông tin StaffOrder
+                            var getProductInfo =
+                                _dataContext.StaffOrderDetailFoods
+                                    .Where(x => x.Equals(getOrderID.orderId));
+                            // Update trong DB
+                            if (vnpResponseCode == "00")
+                            {
+                                getStaffOrderInfo.PaymentStatus = GenericStatusEnum.Success.ToString();
+                            }
+                            else
+                            {
+                                getStaffOrderInfo.PaymentStatus = GenericStatusEnum.Failure.ToString();
+                            }
+                            _dataContext.StaffOrder.Update(getStaffOrderInfo);
+                            await _dataContext.SaveChangesAsync();
+
+                            if (getStaffOrderInfo.CustomerName != null)
+                            {
+                                if (getProductInfo.Any())
+                                {
+                                    var GetStaffInfo =
+                                        _dataContext.Staff.FirstOrDefault(x => x.Id.Equals(getStaffOrderInfo
+                                            .StaffID));
+                                    var newListOrderRespondProductsInfo =
+                                        getProductInfo.Select
+                                        (x => new OrderRespondProductsInfo()
+                                        {
+                                            ProductName = x.foodInformation.foodInformationName,
+                                            productSinglePrice = x.foodEachPrice,
+                                            Quantity = x.quanlity,
+                                            productTotalAmount = x.foodEachPrice * x.quanlity
+                                        }).ToList();
+                                    var newGenerateStaffBookingDTO = new GenerateStaffBookingDTO()
+                                    {
+                                        StaffId = GetStaffInfo.Id,
+                                        UserName = getStaffOrderInfo.CustomerName,
+                                        OrderDate = getStaffOrderInfo.paymentRequestCreatedDate,
+                                        OrderRespondProducts = newListOrderRespondProductsInfo,
+                                        TotalPriceAllProducts = newListOrderRespondProductsInfo.Sum(x => x.productTotalAmount)
+                                    };
+                                    var GeneatePDFData = IPDF.GeneratePdfStaffOrder(newGenerateStaffBookingDTO);
+
+                                    await _emailService.SendPdf(newGenerateStaffBookingDTO.UserName,
+                                        GeneatePDFData.data);
+                                }
+                            }
                             
+                            else
+                            {
+                                return NotFound("Không tìm thấy thông tin Order của Staff");
+                            }
                         }
                     }
 

@@ -7,6 +7,7 @@ using backend.Model.Cinemas;
 using backend.ModelDTO.CinemaDTOs;
 using backend.ModelDTO.GenericRespond;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace backend.Services.CinemaServices;
 
@@ -101,6 +102,13 @@ public class CinemaService : ICinemaService
                 Status = GenericStatusEnum.Failure.ToString(),
                 message = "Tên rạp đã tồn tại trong Database"
             };
+        }else if (_context.Cinema.Any(x => cinema.CinemaContactNumber.Equals(x.cinemaContactHotlineNumber)))
+        {
+            return new GenericRespondDTOs()
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Lỗi số điện thoại đã tồn tại trong Database"
+            };
         }
         
         try
@@ -139,22 +147,43 @@ public class CinemaService : ICinemaService
             // Chỉ được sửa thông tin rạp khi chưa có ai đặt vé 
             // Kiểm tra xem có lịch chua
 
-            if (_context.Cinema.Any(x => !x.cinemaId.Equals(cinemaId) &&
-                                         cinema.CinemaLocation.Equals(x.cinemaLocation)))
+            if (!cinema.CinemaLocation.IsNullOrEmpty())
             {
-                return new GenericRespondDTOs()
+                if (_context.Cinema.Any(x => !x.cinemaId.Equals(cinemaId) &&
+                                             cinema.CinemaLocation.Equals(x.cinemaLocation)))
                 {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Địa chỉ đã tồn tại trong Database"
-                };
-            }else if (_context.Cinema.Any(x => !x.cinemaId.Equals(cinemaId) &&
-                                               cinema.CinemaName.Equals(x.cinemaName)))
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Địa chỉ đã tồn tại trong Database"
+                    };
+                }
+            }
+
+            if (!cinema.CinemaName.IsNullOrEmpty())
             {
-                return new GenericRespondDTOs()
+                if (_context.Cinema.Any(x => !x.cinemaId.Equals(cinemaId) &&
+                                                  cinema.CinemaName.Equals(x.cinemaName)))
                 {
-                    Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Tên rạp đã tồn tại trong Database"
-                };
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Tên rạp đã tồn tại trong Database"
+                    };
+                }
+            }
+
+            if (!cinema.CinemaContactNumber.IsNullOrEmpty())
+            {
+                if (_context.Cinema.Any(x => !x.cinemaId.Equals(cinemaId) &&
+                                              cinema.CinemaContactNumber.Equals(x.cinemaContactHotlineNumber)))
+                {
+                    return new GenericRespondDTOs()
+                    {
+                        Status = GenericStatusEnum.Failure.ToString(),
+                        message = "Lỗi số điện thoại đã tồn tại trong Database"
+                    };
+                }
             }
             var movieSchedule =
                 _context.movieSchedule.Where(x => x.cinemaRoom.cinemaId == cinemaId && !x.IsDelete);

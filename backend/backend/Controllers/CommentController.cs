@@ -41,11 +41,11 @@ namespace backend.Controllers
             return BadRequest(getComment);
         }
 
-        [HttpPost("uploadComment/{CustomerID}/{movieID}")]
+        [HttpPost("uploadComment/{userID}/{movieID}")]
         [Authorize(Policy = "Customer")]
-        public async Task<IActionResult> postComment(string CustomerID , string movieID , CommentRequestDTO dtos)
+        public async Task<IActionResult> postComment(string userID , string movieID , string commentDetail)
         {
-            var getStatus = await _services.uploadComment(CustomerID, movieID, dtos);
+            var getStatus = await _services.uploadComment(userID, movieID, commentDetail);
             if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
                 return BadRequest(getStatus);
@@ -55,9 +55,9 @@ namespace backend.Controllers
 
         [HttpPatch("editComment/{commentID}")]
         [Authorize(Policy = "Customer")]
-        public async Task<IActionResult> editComment(string commentID, CommentRequestDTO dtos)
+        public async Task<IActionResult> editComment(string commentID, string commentDetail)
         {
-            var getStatus = await _services.editComment(commentID, dtos);
+            var getStatus = await _services.editComment(commentID, commentDetail);
             if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
                 return BadRequest(getStatus);

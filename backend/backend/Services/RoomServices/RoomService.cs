@@ -159,9 +159,30 @@
                 try
                 {
                     // Bắt tổng cộng 2 Case
+                    // Tieens hanh kiem tra xem phong co nguoi dat hay chua
                     var getCinemaInfo = _context.cinemaRoom.FirstOrDefault(x => x.cinemaRoomId == RoomId);
+                    
+                    
                     if (getCinemaInfo != null)
                     {
+                        // Timf kiem lich chieu chua duoc xoa 
+                        var getMovieScheduleInfo = _context.movieSchedule
+                            .Where(x => x.cinemaRoomId == RoomId).Select(x => x.movieScheduleId);
+                        // Tiep tuc tien hanh kiem tra xem phong co nguoi dat hay chua
+                        var getOrderTicketInfo
+                            = _context.TicketOrderDetail.Where(x => getMovieScheduleInfo.Contains
+                                (x.movieScheduleID)).Select(x => x.orderId);
+                        var getOrderInfo =
+                            _context.Order.Where(x => getOrderTicketInfo.Contains(x.orderId) &&
+                                                      x.PaymentStatus.Equals(PaymentStatus.PaymentSuccess.ToString()));
+                        if (getOrderInfo.Any())
+                        {
+                            return new GenericRespondDTOs()
+                            {
+                                Status = GenericStatusEnum.Failure.ToString(),
+                                message = "Lỗi Không xóa được phòng do phòng đã có người đặt"
+                            };
+                        }
                         var findSeats = _context.Seats.Where(x => x.cinemaRoomId == RoomId);
                         if (roomEditRequestDTO.RoomNumber.HasValue && roomEditRequestDTO.CinemaID.IsNullOrEmpty())
                         {
@@ -177,8 +198,7 @@
                                     Status = GenericStatusEnum.Failure.ToString(),
                                     message = "Phòng đã tồn tại"
                                 };
-                            }
-                            else
+                            }else
                             {
                                 if (findSeats.Any())
                                 {
@@ -396,7 +416,7 @@
 
                         // Nếu có người đã thanh toán rồi thì không cho phép xóa phòng
                         
-                        if (findOrder.Any(x => x.Order.PaymentStatus.Equals(PaymentStatus.PaymentSuccess)))
+                        if (findOrder.Any(x => x.Order.PaymentStatus.Equals(PaymentStatus.PaymentSuccess.ToString())))
                         {
                             return new GenericRespondDTOs()
                             {

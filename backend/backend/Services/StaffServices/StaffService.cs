@@ -2,12 +2,14 @@ using System.Data.Common;
 using System.Runtime.InteropServices.JavaScript;
 using backend.Data;
 using backend.Enum;
+using backend.Helper;
 using backend.Interface.StaffInterface;
 using backend.Model.Auth;
 using backend.Model.Staff_Customer;
 using backend.ModelDTO.GenericRespond;
 using backend.ModelDTO.StaffDTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace backend.Services.StaffService;
 
@@ -32,6 +34,18 @@ public class StaffService(DataContext dbContext) : IStaffService
                 {
                     message = "Tuoi Khong Hop Le Vui Long Nhap Tuoi tren 18",
                     Status = GenericStatusEnum.Failure.ToString()
+                };
+            }
+            
+            // Check điều kiện ã có Staff Toonf tại chưa
+            if (_context
+                .Staff.Any(x => x.Name.Equals(createStaffDTO.StaffName)
+                                && x.cinemaID.Equals(createStaffDTO.CinemaId)))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Nhân viên đã tồn tại"
                 };
             }
             
@@ -125,80 +139,247 @@ public class StaffService(DataContext dbContext) : IStaffService
         catch(Exception ex)
         {
             await transition.RollbackAsync();
+            if (ex.Message.ToLower().Replace
+                    (" ", "").Contains("phoneNumber"))
+            {
+                return new GenericRespondDTOs()
+                {
+                    Status = GenericStatusEnum.Failure.ToString(),
+                    message = "Số điện thoại không được trùng"
+                };
+            }
+
             return new GenericRespondDTOs()
             {
                 Status = GenericStatusEnum.Failure.ToString(),
-                message = "Staff creation failed! + Error : " + ex.Message
+                message = "Lỗi Database"
             };
         }
     }
 
     public async Task<GenericRespondDTOs> EditStaff(string id, EditStaffDTO editStaffDTO)
     {
+        
         if (!String.IsNullOrEmpty(id))
         {
             var findStaff = await _context.Staff.FindAsync(id);
             if (findStaff != null)
             {
-                string StaffName = 
-                    String.IsNullOrEmpty(editStaffDTO.StaffName) ? findStaff.Name : editStaffDTO.StaffName;
-                string PhoneNumber = 
-                    string.IsNullOrEmpty(editStaffDTO.PhoneNumer) ? findStaff.phoneNumber : editStaffDTO.PhoneNumer;
-                string CinemaId = 
-                    string.IsNullOrEmpty(editStaffDTO.CinemaId) ? findStaff.cinemaID : editStaffDTO.CinemaId;
-                DateTime staffDateOfBirth = editStaffDTO.DateOfBirth ?? findStaff.dateOfBirth;
-                
+                await using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    findStaff.Name = StaffName;
-                    findStaff.phoneNumber = PhoneNumber;
-                    findStaff.cinemaID = CinemaId;
-                    findStaff.dateOfBirth = staffDateOfBirth;
-                    
-                    if (editStaffDTO.RoleID != null && editStaffDTO.RoleID.Any())
+                    if (editStaffDTO.StaffName != null &&
+                        editStaffDTO.CinemaId.IsNullOrEmpty())
                     {
-                        _context.userRoleInformation.RemoveRange(_context.userRoleInformation.Where(x => x.userId.Equals(findStaff.userID)));
-                        List<userRoleInformation> userRoles = new List<userRoleInformation>();
-                        var getRoles = _context.roleInformation.Where(x =>
-                            x.roleName.Equals("Director") &&
-                            x.roleName.Equals("FacilitiesManager") &&
-                            x.roleName.Equals("MovieManager") &&
-                            x.roleName.Equals("TheaterManager") &&
-                            x.roleName.Equals("Customer"));
-                        foreach (var roleID in editStaffDTO.RoleID)
+                        // Kieemr tra thong tin nhan vien coi da ton tai thong tin chua
+                        if (_context.Staff
+                            .Any(x => !x.Id.Equals(findStaff.Id)
+                                      && x.Name.Equals(editStaffDTO.StaffName)
+                                      && x.cinemaID.Equals(findStaff.cinemaID)))
                         {
-                            if (getRoles.Any(x => x.roleId == roleID))
+                            return new GenericRespondDTOs()
                             {
-                                return new GenericRespondDTOs()
-                                {
-                                    Status = GenericStatusEnum.Failure.ToString(),
-                                    message = "Lỗi : Khi Thêm Role chỉ được chứa Role Nhân Viên Thôi !"
-                                };
-                            }
-                            userRoles.Add(new userRoleInformation()
-                            {
-                                userId = findStaff.userID,
-                                roleId = roleID
-                            });
+                                Status = GenericStatusEnum.Failure.ToString(),
+                                message = "Lỗi nhân viên đã tồn tại"
+                            };
                         }
-                        await _context.userRoleInformation.AddRangeAsync(userRoles);
+
+                        findStaff.Name = editStaffDTO.StaffName;
+                        findStaff.phoneNumber = String.IsNullOrEmpty(editStaffDTO.PhoneNumer)
+                            ? findStaff.phoneNumber
+                            : editStaffDTO.PhoneNumer;
+                        findStaff.dateOfBirth = editStaffDTO.DateOfBirth ?? findStaff.dateOfBirth;
+
+                        if (editStaffDTO.RoleID != null && editStaffDTO.RoleID.Any())
+                        {
+                            _context.userRoleInformation.RemoveRange(
+                                _context.userRoleInformation.Where(x => x.userId.Equals(findStaff.userID)));
+                            List<userRoleInformation> userRoles = new List<userRoleInformation>();
+                            var getRoles = _context.roleInformation.Where(x =>
+                                x.roleName.Equals("Director") &&
+                                x.roleName.Equals("FacilitiesManager") &&
+                                x.roleName.Equals("MovieManager") &&
+                                x.roleName.Equals("TheaterManager") &&
+                                x.roleName.Equals("Customer"));
+                            foreach (var roleID in editStaffDTO.RoleID)
+                            {
+                                if (getRoles.Any(x => x.roleId == roleID))
+                                {
+                                    return new GenericRespondDTOs()
+                                    {
+                                        Status = GenericStatusEnum.Failure.ToString(),
+                                        message = "Lỗi : Khi Thêm Role chỉ được chứa Role Nhân Viên Thôi !"
+                                    };
+                                }
+
+                                userRoles.Add(new userRoleInformation()
+                                {
+                                    userId = findStaff.userID,
+                                    roleId = roleID
+                                });
+                            }
+
+                            await _context.userRoleInformation.AddRangeAsync(userRoles);
+                        }
+
+                        _context.Staff.Update(findStaff);
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        return new GenericRespondDTOs()
+                        {
+                            Status = GenericStatusEnum.Success.ToString(),
+                            message = "The Staff updated successfully!"
+                        };
+
+                        // Thêm các hàm xử lý ở đây
+
                     }
-                    
-                    _context.Staff.Update(findStaff);
-                    await _context.SaveChangesAsync();
-                    
-                    return new GenericRespondDTOs()
+                    else if (editStaffDTO.CinemaId != null && editStaffDTO.StaffName.IsNullOrEmpty())
                     {
-                        Status = GenericStatusEnum.Success.ToString(),
-                        message = "The Staff updated successfully!"
-                    };
+                        if (_context.Staff
+                            .Any(x => !x.Id.Equals(findStaff.Id)
+                                      && x.Name.Equals(editStaffDTO.StaffName)
+                                      && x.cinemaID.Equals(findStaff.cinemaID)))
+                        {
+                            return new GenericRespondDTOs()
+                            {
+                                Status = GenericStatusEnum.Failure.ToString(),
+                                message = "Lỗi nhân viên đã tồn tại"
+                            };
+                        }
+
+                        // Hàm xử lý ở đây
+
+                        findStaff.cinemaID = editStaffDTO.CinemaId;
+                        findStaff.phoneNumber = String.IsNullOrEmpty(editStaffDTO.PhoneNumer)
+                            ? findStaff.phoneNumber
+                            : editStaffDTO.PhoneNumer;
+                        findStaff.dateOfBirth = editStaffDTO.DateOfBirth ?? findStaff.dateOfBirth;
+
+                        if (editStaffDTO.RoleID != null && editStaffDTO.RoleID.Any())
+                        {
+                            _context.userRoleInformation.RemoveRange(
+                                _context.userRoleInformation.Where(x => x.userId.Equals(findStaff.userID)));
+                            List<userRoleInformation> userRoles = new List<userRoleInformation>();
+                            var getRoles = _context.roleInformation.Where(x =>
+                                x.roleName.Equals("Director") &&
+                                x.roleName.Equals("FacilitiesManager") &&
+                                x.roleName.Equals("MovieManager") &&
+                                x.roleName.Equals("TheaterManager") &&
+                                x.roleName.Equals("Customer"));
+                            foreach (var roleID in editStaffDTO.RoleID)
+                            {
+                                if (getRoles.Any(x => x.roleId == roleID))
+                                {
+                                    return new GenericRespondDTOs()
+                                    {
+                                        Status = GenericStatusEnum.Failure.ToString(),
+                                        message = "Lỗi : Khi Thêm Role chỉ được chứa Role Nhân Viên Thôi !"
+                                    };
+                                }
+
+                                userRoles.Add(new userRoleInformation()
+                                {
+                                    userId = findStaff.userID,
+                                    roleId = roleID
+                                });
+                            }
+
+                            await _context.userRoleInformation.AddRangeAsync(userRoles);
+                        }
+
+                        _context.Staff.Update(findStaff);
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        return new GenericRespondDTOs()
+                        {
+                            Status = GenericStatusEnum.Success.ToString(),
+                            message = "The Staff updated successfully!"
+                        };
+                    }
+                    else if (editStaffDTO.StaffName != null && editStaffDTO.CinemaId != null)
+                    {
+                        // Kieemr tra xem da co thong tin nhan vien chua
+                        if (_context.Staff
+                            .Any(x => !x.Id.Equals(id) && editStaffDTO.StaffName.Equals(x.Name)
+                                                       && editStaffDTO.CinemaId.Equals(x.cinemaID)))
+                        {
+                            return new GenericRespondDTOs()
+                            {
+                                Status = GenericStatusEnum.Failure.ToString(),
+                                message = "Lỗi nhân viên đã tồn tại"
+                            };
+                        }
+
+                        findStaff.cinemaID = editStaffDTO.CinemaId;
+                        findStaff.Name = editStaffDTO.StaffName;
+                        findStaff.phoneNumber = String.IsNullOrEmpty(editStaffDTO.PhoneNumer)
+                            ? findStaff.phoneNumber
+                            : editStaffDTO.PhoneNumer;
+                        findStaff.dateOfBirth = editStaffDTO.DateOfBirth ?? findStaff.dateOfBirth;
+
+                        if (editStaffDTO.RoleID != null && editStaffDTO.RoleID.Any())
+                        {
+                            _context.userRoleInformation.RemoveRange(
+                                _context.userRoleInformation.Where(x => x.userId.Equals(findStaff.userID)));
+                            List<userRoleInformation> userRoles = new List<userRoleInformation>();
+                            var getRoles = _context.roleInformation.Where(x =>
+                                x.roleName.Equals("Director") &&
+                                x.roleName.Equals("FacilitiesManager") &&
+                                x.roleName.Equals("MovieManager") &&
+                                x.roleName.Equals("TheaterManager") &&
+                                x.roleName.Equals("Customer"));
+                            foreach (var roleID in editStaffDTO.RoleID)
+                            {
+                                if (getRoles.Any(x => x.roleId == roleID))
+                                {
+                                    return new GenericRespondDTOs()
+                                    {
+                                        Status = GenericStatusEnum.Failure.ToString(),
+                                        message = "Lỗi : Khi Thêm Role chỉ được chứa Role Nhân Viên Thôi !"
+                                    };
+                                }
+
+                                userRoles.Add(new userRoleInformation()
+                                {
+                                    userId = findStaff.userID,
+                                    roleId = roleID
+                                });
+                            }
+
+                            await _context.userRoleInformation.AddRangeAsync(userRoles);
+                        }
+
+                        _context.Staff.Update(findStaff);
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        return new GenericRespondDTOs()
+                        {
+                            Status = GenericStatusEnum.Success.ToString(),
+                            message = "The Staff updated successfully!"
+                        };
+                    }
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
+                    await transaction.RollbackAsync();
+                    if (e.Message.ToLower().Replace
+                            (" ", "").Contains("phoneNumber"))
+                    {
+                        return new GenericRespondDTOs()
+                        {
+                            Status = GenericStatusEnum.Failure.ToString(),
+                            message = "Số điện thoại không được trùng"
+                        };
+                    }
+
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Failure.ToString(),
-                        message = "Loi DB"
+                        message = "Lỗi Database"
                     };
                 }
                 

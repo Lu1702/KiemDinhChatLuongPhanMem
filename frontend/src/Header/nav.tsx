@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { TicketIcon, MapPinIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import user from "../image/user.png";
 import logo from '../image/logocinema1.png';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Định nghĩa interface cho rạp chiếu phim
 interface Cinema {
@@ -38,6 +38,7 @@ function Nav() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const location = useLocation(); // Hook để lấy thông tin về URL hiện tại
     const searchRef = useRef<HTMLDivElement>(null); // Ref cho vùng tìm kiếm và dropdown
 
     // Lấy danh sách rạp từ API
@@ -182,6 +183,26 @@ function Nav() {
         navigate('/booking');
     };
 
+    const handleMovieClick = (movieID: string) => {
+        // Lưu movieID vào localStorage
+        localStorage.setItem('movieId', movieID);
+
+        // Đóng dropdown và xóa kết quả tìm kiếm
+        setSearchTerm('');
+        setSearchResults([]);
+        setFilteredCinemas([]);
+        setIsDropdownOpen(false);
+
+        // Kiểm tra xem người dùng có đang ở trang /movies hay không
+        if (location.pathname === '/movies') {
+            // Nếu đang ở trang /movies, reload lại trang
+            window.location.reload();
+        } else {
+            // Nếu không, chuyển hướng đến trang /movies
+            navigate('/movies');
+        }
+    };
+
     return (
         <nav className="shadow-md text-white relative z-50">
             <div className="flex items-center justify-between px-4 py-2">
@@ -260,13 +281,7 @@ function Nav() {
                                             <div
                                                 key={movie.movieID}
                                                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                onClick={() => {
-                                                    setSearchTerm('');
-                                                    setSearchResults([]);
-                                                    setFilteredCinemas([]);
-                                                    setIsDropdownOpen(false); // Đóng dropdown khi chọn
-                                                    navigate(`/movie/${movie.movieID}`);
-                                                }}
+                                                onClick={() => handleMovieClick(movie.movieID)} // Gọi hàm handleMovieClick
                                             >
                                                 {movie.movieName}
                                             </div>

@@ -5,6 +5,7 @@ using backend.Model.Booking;
 using backend.Model.Cinemas;
 using backend.Model.Movie;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Model.Staff_Customer
 {

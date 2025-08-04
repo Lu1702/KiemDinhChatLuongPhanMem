@@ -1,4 +1,4 @@
-using backend.Data;
+﻿using backend.Data;
 using backend.Enum;
 using backend.Interface.BookingInterface;
 using backend.Interface.VnpayInterface;
@@ -51,6 +51,15 @@ public class StaffOrderService : IStaffOrderService
             {
                 Status = GenericStatusEnum.Failure.ToString(),
                 message = "Danh Sach Order Dang Bi Trong"
+            };
+        }
+
+        if (request.orderRequestItems.Any(x => x.Quanlity == 0))
+        {
+            return new GenericRespondWithObjectDTO<Dictionary<string, string>>
+            {
+                Status = GenericStatusEnum.Failure.ToString(),
+                message = "Số lượng không thể bằng 0 được"
             };
         }
         
