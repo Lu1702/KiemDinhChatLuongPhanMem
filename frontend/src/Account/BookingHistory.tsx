@@ -1,69 +1,86 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
-const BookingHistory = () => {
-    const userEmail = localStorage.getItem("userEmail")
-    const bookings = [
-        {
-            cinema: "1",
-            room: "A2",
-            movie: "Ngôi nhà ma ám",
-            date: "11/07/2025",
-            time: "20:00",
-            status: "Đang chiếu",
-        },
-        {
-            cinema: "1",
-            room: "A3",
-            movie: "Doraemon",
-            date: "14/05/2025",
-            time: "16:30",
-            status: "Đang chiếu",
-        },
-        {
-            cinema: "1",
-            room: "A3",
-            movie: "Doraemon",
-            date: "14/05/2025",
-            time: "16:30",
-            status: "Đang chiếu",
-        },
-    ];
+interface Booking {
+  Rap: string;
+  Phong: string;
+  TenPhim: string;
+  NgayChieu: string;
+  GioChieu: string;
+  TrangThai: string;
+}
 
-    return (
-        <div className=" py-16 px-4 flex flex-col items-center">
-            <h2 className="text-white uppercase text-3xl font-bold mb-8">Lịch sử đặt vé</h2>
+const BookingHistory: React.FC = () => {
+  const { userId } = useParams<{ userId?: string }>();
+  const [bookings, setBookings] = useState<Booking[]>([]);
 
-            <div className="bg-white p-8 rounded-2xl w-full shadow-lg">
-                <div className="mb-6 text-lg text-black font-medium">
-                    Tên khách hàng: {userEmail}
-                </div>
-                <table className="w-full text-sm text-center border-collapse">
-                    <thead>
-                        <tr className="border-b border-black text-black font-semibold">
-                            <th className="py-2">Rạp</th>
-                            <th>Phòng</th>
-                            <th>Tên phim</th>
-                            <th>Ngày chiếu</th>
-                            <th>Giờ chiếu</th>
-                            <th>Trạng thái</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {bookings.map((item, index) => (
-                            <tr key={index} className="border-t border-black text-black">
-                                <td className="py-2">{item.cinema}</td>
-                                <td>{item.room}</td>
-                                <td>{item.movie}</td>
-                                <td>{item.date}</td>
-                                <td>{item.time}</td>
-                                <td>{item.status}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userId) {
+        console.error("No userId provided");
+        return;
+      }
+      const url = `http://localhost:5229/api/BookingHistory/getBookingHistory/${userId}`;
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'accept': '*/*'
+          }
+        });
+        const data = await response.json();
+        setBookings(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [userId]);
+
+  const handleButtonClick = (index: number) => {
+    alert(`Button clicked for row ${index + 1}`);
+    // Add your button click logic here
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4 text-white">Lịch sử đặt vé </h1>
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="border p-2">Rạp</th>
+            <th className="border p-2">Phòng</th>
+            <th className="border p-2">Tên phim</th>
+            <th className="border p-2">Ngày chiếu</th>
+            <th className="border p-2">Giờ chiếu</th>
+            <th className="border p-2">Trạng thái</th>
+            <th className="border p-2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bookings.map((item, index) => (
+            <tr key={index} className="hover:bg-gray-100">
+              <td className="border p-2">{item.Rap}</td>
+              <td className="border p-2">{item.Phong}</td>
+              <td className="border p-2">{item.TenPhim}</td>
+              <td className="border p-2">{item.NgayChieu}</td>
+              <td className="border p-2">{item.GioChieu}</td>
+              <td className="border p-2">{item.TrangThai}</td>
+              <td className="border p-2">
+                <button
+                  className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                  onClick={() => handleButtonClick(index)}
+                >
+                  Click
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 };
 
 export default BookingHistory;

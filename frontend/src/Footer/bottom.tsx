@@ -40,7 +40,7 @@ function Bottom() {
                     </ul>
                     <ul className="space-y-4 font-cinzel text-sm tracking-wide pl-36">
                         <li>
-                            <span className="text-amber-200 font-bold text-xl">CÔNG TY TNHH CINEMA VIỆT NAM</span>
+                            <span className="text-amber-200 font-bold text-xl animate-pulse hover:scale-110 transition-transform duration-700 ease-in-out">CÔNG TY TNHH BỘ TỨ CINEMA VIỆT NAM</span>
                         </li>
                         <li>
                             <span className="text-gray-300">Giấy CNĐKDN: 9999999999, đăng ký lần đầu ngày 20/02/2002, cấp bởi Sở KHĐT Thành phố Hồ Chí Minh</span>
