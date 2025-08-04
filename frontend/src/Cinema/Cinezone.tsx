@@ -18,39 +18,30 @@ interface Cinema {
 }
 
 interface ApiResponse {
-    movieRespondDTOs: {
-        movieID: string;
+    status: string;
+    message: string;
+    data: {
+        movieId: string;
         movieName: string;
         movieImage: string;
-        movieTrailerUrl: string;
+        trailerURL: string;
     }[];
-    pageSize: number;
-    page: number;
-    totalCount: number;
 }
-
-const upcomingMovies: Movie[] = [
-    { movieID: "1", title: "NĂM MƯƠI (T18)", image: "https://th.bing.com/th/id/R.4b3f8ee56b9334f4958f75a5f45362a9?rik=JkvbTUiZTAlZYQ&pid=ImgRaw&r=0", trailer: "https://youtu.be/miUjcCPpVGo" },
-    { movieID: "2", title: "BUÔN THẦN BÁN THÁNH (T16)", image: "https://bloganchoi.com/wp-content/uploads/2019/03/tam-cam-chuyen-chua-ke.jpg", trailer: "https://www.youtube.com/watch?v=Ud-YVnRK_kY" },
-    { movieID: "3", title: "TRƯỜNG NGUYỆT TẪN MINH", image: "https://bazaarvietnam.vn/wp-content/uploads/2023/04/harper-bazaar-review-phim-truong-nguyet-tan-minh-till-the-end-of-the-moon-101-e1680702014162.jpg", trailer: "https://youtu.be/7kRzVm_umc0?si=bjoPQPcEVgsWZ2AL" },
-    { movieID: "4", title: "Tấm Cám chuyện Quỳnh Lập kể", image: "https://cdn.eva.vn/upload/2-2017/images/2017-05-10/tam-cam-chuyen-huynh-lap-ke-hay-chuyen-ai-cho-tao-luong-thien-cua-me-ghe-ac-nhat-hanh-tinh-tamcam-huynh-lap-1494403229-width500height683.jpg", trailer: "https://youtu.be/I5SL4kNC7rk?si=HSB1PYMD2C6x6N0p" },
-    { movieID: "5", title: "BÍ KÍP LUYỆN RỒNG (K)", image: "https://cinestar.com.vn/_next/image/?url=https%3A%2F%2Fapi-website.cinestar.com.vn%2Fmedia%2Fwysiwyg%2FPosters%2F06-2025%2Fbi-kip-luyen-rong_1.jpg&w=1200&q=75", trailer: "https://youtu.be/JD-idNoeiPE" },
-    { movieID: "10", title: "LÂM GIANG TIÊN (T18)", image: "https://static2.vieon.vn/vieplay-image/poster_v4/2025/06/02/djtoaqo5_660x946-lamgiangtien2.png", trailer: "https://youtu.be/-hTr-NBoDnU?si=idCRW93f3kx6j7ZV" },
-];
 
 function Cinezone() {
     const { cinemaId } = useParams<{ cinemaId: string }>();
     const navigate = useNavigate();
     const [cinemas, setCinemas] = useState<Cinema[]>([]);
     const [selectedCinemaId, setSelectedCinemaId] = useState<string | null>(null);
-    const [movies, setMovies] = useState<Movie[]>([]);
+    const [inShowMovies, setInShowMovies] = useState<Movie[]>([]);
+    const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
     const [activeTab, setActiveTab] = useState<"tab1" | "tab2">("tab1");
     const [showTrailer, setShowTrailer] = useState(false);
     const [trailerUrl, setTrailerUrl] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch cinemas
+    // Fetch cinema list
     useEffect(() => {
         setLoading(true);
         fetch("http://localhost:5229/api/Cinema/getCinemaList")
@@ -77,39 +68,62 @@ function Cinezone() {
             .finally(() => setLoading(false));
     }, [cinemaId]);
 
-    // Fetch all movies
+    // Fetch in-show movies
     useEffect(() => {
-        const fetchAllMovies = async () => {
+        const fetchInShowMovies = async () => {
             setLoading(true);
             try {
-                let allMovies: Movie[] = [];
-                let page = 1;
-                let totalPages = 1;
-                while (page <= totalPages) {
-                    const res = await fetch(`http://localhost:5229/api/movie/getAllMoviesPagniation/${page}`);
-                    if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-                    const data: ApiResponse = await res.json();
-                    allMovies = [
-                        ...allMovies,
-                        ...data.movieRespondDTOs.map((item) => ({
-                            movieID: item.movieID,
-                            title: item.movieName,
-                            image: item.movieImage,
-                            trailer: item.movieTrailerUrl,
-                        })),
-                    ];
-                    totalPages = Math.ceil(data.totalCount / data.pageSize);
-                    page++;
+                const response = await fetch("http://localhost:5229/api/movie/GetInShowedMovie");
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                const result: ApiResponse = await response.json();
+                if (result.status === "Success") {
+                    const formattedMovies = result.data.map((item) => ({
+                        movieID: item.movieId,
+                        title: item.movieName,
+                        image: item.movieImage,
+                        trailer: item.trailerURL,
+                    }));
+                    setInShowMovies(formattedMovies);
+                } else {
+                    setError("Không tìm thấy danh sách phim đang chiếu.");
                 }
-                setMovies(allMovies);
             } catch (err: any) {
-                setError(`Lỗi tải danh sách phim: ${err.message}`);
-                setMovies([]);
+                setError(`Lỗi tải danh sách phim đang chiếu: ${err.message}`);
+                setInShowMovies([]);
             } finally {
                 setLoading(false);
             }
         };
-        fetchAllMovies();
+        fetchInShowMovies();
+    }, []);
+
+    // Fetch upcoming movies
+    useEffect(() => {
+        const fetchUpcomingMovies = async () => {
+            setLoading(true);
+            try {
+                const response = await fetch("http://localhost:5229/api/movie/GetUnShowedMovie");
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                const result: ApiResponse = await response.json();
+                if (result.status === "Success") {
+                    const formattedMovies = result.data.map((item) => ({
+                        movieID: item.movieId,
+                        title: item.movieName,
+                        image: item.movieImage,
+                        trailer: item.trailerURL,
+                    }));
+                    setUpcomingMovies(formattedMovies);
+                } else {
+                    setError("Không tìm thấy danh sách phim sắp chiếu.");
+                }
+            } catch (err: any) {
+                setError(`Lỗi tải danh sách phim sắp chiếu: ${err.message}`);
+                setUpcomingMovies([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUpcomingMovies();
     }, []);
 
     const handleOpenTrailer = (url: string) => {
@@ -121,9 +135,6 @@ function Cinezone() {
         setTrailerUrl(embedUrl);
         setShowTrailer(true);
     };
-
-
-
 
     const renderMovie = (movie: Movie) => (
         <div key={movie.movieID} className="bg-transparent rounded-xl shadow-lg p-4 flex flex-col min-h-[450px] sm:min-h-[550px]">
@@ -172,14 +183,13 @@ function Cinezone() {
             </div>
             <main className="flex-grow flex flex-col items-center">
                 <div className="pt-3 w-full max-w-screen-xl mx-auto px-4 sm:px-8">
-
                     {/* Selected Cinema Info */}
                     {selectedCinemaId && (
                         <div className="h-48 w-full bg-cover bg-center rounded-xl pt-10 mb-4" style={{ backgroundImage: `url(${filmszone})` }}>
                             <div className="flex h-full text-white p-4">
                                 <div className="p-4">
-                                    <h1 className="text-3xl font-bold">{cinemas.find((c: Cinema) => c.cinemaId === selectedCinemaId)?.cinemaName}</h1>
-                                    <p>Địa điểm: {cinemas.find((c: Cinema) => c.cinemaId === selectedCinemaId)?.cinemaLocation}</p>
+                                    <h1 className="text-3xl font-bold text-white pl-28">{cinemas.find((c: Cinema) => c.cinemaId === selectedCinemaId)?.cinemaName}</h1>
+                                    <p className="text-white pl-32">Địa điểm: {cinemas.find((c: Cinema) => c.cinemaId === selectedCinemaId)?.cinemaLocation}</p>
                                 </div>
                             </div>
                         </div>
@@ -207,14 +217,26 @@ function Cinezone() {
                                     <p className="text-center text-white">Đang tải...</p>
                                 ) : error ? (
                                     <p className="text-center text-red-500">{error}</p>
-                                ) : movies.length === 0 ? (
+                                ) : inShowMovies.length === 0 ? (
                                     <p className="text-center text-white">Không có phim nào</p>
                                 ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">{movies.map(renderMovie)}</div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">{inShowMovies.map(renderMovie)}</div>
                                 )}
                             </div>
                         )}
-                        {activeTab === "tab2" && <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">{upcomingMovies.map(renderMovie)}</div>}
+                        {activeTab === "tab2" && (
+                            <div>
+                                {loading ? (
+                                    <p className="text-center text-white">Đang tải...</p>
+                                ) : error ? (
+                                    <p className="text-center text-red-500">{error}</p>
+                                ) : upcomingMovies.length === 0 ? (
+                                    <p className="text-center text-white">Không có phim nào</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">{upcomingMovies.map(renderMovie)}</div>
+                                )}
+                            </div>
+                        )}
                         {/* Trailer Popup */}
                         {showTrailer && (
                             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">

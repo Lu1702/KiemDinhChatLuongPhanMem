@@ -5,6 +5,7 @@ import Bottom from "../Footer/bottom";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import SCHEDULE from '../QL_lichchieu/schedule';
+import RevenueList from "../QL_Doanhthu_GiamDoc/Doanhthu";
 interface FoodItem {
     foodId: string;
     foodName: string;
@@ -513,7 +514,7 @@ const Info: React.FC = () => {
     };
 
     const [userRole, setUserRole] = useState<string | null>(localStorage.getItem("role") || null);
-    const [activeTab, setActiveTab] = useState<"password" | "nhanvien" | "quanlynoidung"| "schedule" | "doanhthu" | "xacdinhdichvu" | "csphongrap" | "room">("password");
+    const [activeTab, setActiveTab] = useState<"password" | "nhanvien" | "quanlynoidung" | "schedule" | "doanhthu" | "xacdinhdichvu" | "csphongrap" | "room">("password");
     const [addStaffFormData, setAddStaffFormData] = useState<AddStaffFormData>({
         staffId: "",
         cinemaId: "",
@@ -994,33 +995,33 @@ const Info: React.FC = () => {
                     <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "password" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("password")}>Đổi mật khẩu</button>
                     {roles1.includes('TheaterManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Rạp</h3>
+                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Quản Lý Rạp</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "nhanvien" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("nhanvien")}>Danh sách nhân viên</button>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "schedule" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("schedule")}>Tạo lịch chiếu</button>
                         </div>
                     )}
                     {roles1.includes('MovieManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4">Quản Lý Nội Dung</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "quanlynoidung" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => navigate('/Addmovie')}>Nội dung</button>
+                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Quản Lý Nội Dung</h3>
+                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "quanlynoidung" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => navigate('/Addmovie')}>Thêm Phim</button>
                         </div>
                     )}
                     {roles1.includes('Cashier') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4">Thu Ngân</h3>
+                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Thu Ngân</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "xacdinhdichvu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("xacdinhdichvu")}>Xác nhận dịch vụ</button>
                         </div>
                     )}
-                    {userRole === "Director" && (
+                    {userRole?.includes('Director') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
-                            <h3 className="text-lg font-bold text-DarkRed mb-4">Giám đốc</h3>
+                            <h3 className="text-lg font-bold text-DarkRed mb-4 text-yellow-400">Giám đốc</h3>
                             <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("doanhthu")}>Doanh thu</button>
                         </div>
                     )}
                     {roles1.includes('FacilitiesManager') && (
                         <div className="mt-6 pt-6 border-t border-white/30">
                             <h3 className="text-lg font-bold text-DarkRed mb-4">Quản trị viên hệ thống</h3>
-                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "doanhthu" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
+                            <button className={`w-full px-4 py-2 rounded-lg text-left font-medium ${activeTab === "csphongrap" ? "bg-yellow-300 text-black" : "hover:bg-white/30 text-white"}`} onClick={() => setActiveTab("csphongrap")}>Chỉnh sửa rạp</button>
                         </div>
                     )}
                 </div>
@@ -1028,55 +1029,77 @@ const Info: React.FC = () => {
                     <h1 className="text-white text-3xl font-bold text-center uppercase">Cinema xin chào! {userEmail}</h1>
 
                     {activeTab === "password" && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                            <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block mb-2 font-semibold">Mật khẩu cũ</label>
-                                    <input
-                                        type="password"
-                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
-                                        value={oldPassword}
-                                        onChange={(e) => setOldPassword(e.target.value)}
-                                    />
+                        <div className="max-w-4xl mx-auto bg-white/10 rounded-xl shadow-2xl overflow-hidden p-8 animate-[slideInFromLeft_1s_ease-out]">
+                            <div className="bg-white/10 p-6 rounded-2xl shadow-xl text-white">
+                                <h2 className="text-2xl font-bold mb-6">Đổi mật khẩu</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block mb-3 font-semibold">Mật khẩu cũ</label>
+                                        <input
+                                            type="password"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            value={oldPassword}
+                                            onChange={(e) => setOldPassword(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block mb-2 font-semibold">Mật khẩu mới</label>
+                                        <input
+                                            type="password"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
+                                        <input
+                                            type="password"
+                                            className="w-full border rounded-md px-4 py-2 bg-white/10"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block mb-2 font-semibold">Mật khẩu mới</label>
-                                    <input
-                                        type="password"
-                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                    />
+                                {message1 && (
+                                    <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
+                                        {message1}
+                                    </p>
+                                )}
+
+                                <div className="mt-6 text-center">
+                                    <button
+                                        onClick={handleChangePassword}
+                                        type="submit"
+                                        disabled={loading}
+                                        className="relative cursor-pointer py-4 px-8 text-center font-barlow inline-flex justify-center text-base uppercase text-white rounded-lg border-solid transition-transform duration-300 ease-in-out group outline-offset-4 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-4 overflow-hidden">
+                                        {loading ?
+                                            'Đang cập nhật mật khẩu...' : 'Cập nhật mật khẩu'}
+
+                                        <span
+                                            className="absolute left-[-75%] top-0 h-full w-[50%] bg-white/20 rotate-12 z-10 blur-lg group-hover:left-[125%] transition-all duration-1000 ease-in-out"
+                                        ></span>
+
+                                        <span
+                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[20%] rounded-tl-lg border-l-2 border-t-2 top-0 left-0"
+                                        ></span>
+                                        <span
+                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute group-hover:h-[90%] h-[60%] rounded-tr-lg border-r-2 border-t-2 top-0 right-0"
+                                        ></span>
+                                        <span
+                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[60%] group-hover:h-[90%] rounded-bl-lg border-l-2 border-b-2 left-0 bottom-0"
+                                        ></span>
+                                        <span
+                                            className="w-1/2 drop-shadow-3xl transition-all duration-300 block border-[#D4EDF9] absolute h-[20%] rounded-br-lg border-r-2 border-b-2 right-0 bottom-0"
+                                        ></span>
+                                    </button>
                                 </div>
-                                <div>
-                                    <label className="block mb-2 font-semibold">Xác nhận mật khẩu mới</label>
-                                    <input
-                                        type="password"
-                                        className="w-full border rounded-md px-4 py-2 bg-white/50"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            {/* Đã sử dụng biến mới message1 để hiển thị */}
-                            {message1 && (
-                                <p className={`mt-4 text-center font-semibold ${message1.includes('Lỗi:') ? 'text-red-500' : 'text-green-600'}`}>
-                                    {message1}
-                                </p>
-                            )}
-                            <div className="mt-6 text-center">
-                                <button
-                                    className="bg-yellow-950 text-yellow-400 border border-yellow-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"
-                                    onClick={handleChangePassword}
-                                >
-                                    <span className="bg-yellow-400 shadow-yellow-400 absolute -top-[150%] left-0 inline-flex w-80 h-[5px] rounded-md opacity-50 group-hover:top-[150%] duration-500 shadow-[0_0_10px_10px_rgba(0,0,0,0.3)]"></span>Cập nhật mật khẩu
-                                </button>
                             </div>
                         </div>
+
                     )}
                     {activeTab === "nhanvien" && roles1.includes('TheaterManager') && (
-                        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl max-w-5xl mx-auto my-8">
+                        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl">
                             <h2 className="text-2xl font-bold text-white mb-6">Thêm Nhân Viên</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Thông tin đăng nhập */}
@@ -1336,19 +1359,18 @@ const Info: React.FC = () => {
 
                     {/* Trang Add_movie */}
                     {activeTab === "quanlynoidung" && (
-                       <div>
-                        
-                       </div>
+                        <div>
+
+                        </div>
                     )}
                     {activeTab === "schedule" && (
-                       <div>
-                            <SCHEDULE/>
-                       </div>
+                        <div>
+                            <SCHEDULE />
+                        </div>
                     )}
                     {activeTab === "doanhthu" && roles1.includes('Director') && (
-                        <div className="bg-[#f7eaff]/50 p-6 rounded-2xl shadow-xl">
-                            <h2 className="text-2xl font-bold mb-6">Doanh Thu</h2>
-                            <p className="text-white">Đây là trang hiển thị thông tin doanh thu. Bạn có thể thêm biểu đồ hoặc bảng dữ liệu ở đây.</p>
+                        <div>
+                            <RevenueList/>
                         </div>
                     )}
                     {activeTab === "xacdinhdichvu" && roles1.includes('Cashier') && (

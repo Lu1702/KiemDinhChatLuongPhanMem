@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { TicketIcon, MapPinIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import user from "../image/user.png";
 import logo from '../image/logocinema1.png';
@@ -30,11 +30,15 @@ function Nav() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Thêm trạng thái để kiểm soát dropdown
     const [cinemas, setCinemas] = useState<Cinema[]>([]);
+    const [allMovies, setAllMovies] = useState<Movie[]>([]);
     const [searchResults, setSearchResults] = useState<Movie[]>([]);
+    const [filteredCinemas, setFilteredCinemas] = useState<Cinema[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const searchRef = useRef<HTMLDivElement>(null); // Ref cho vùng tìm kiếm và dropdown
 
     // Lấy danh sách rạp từ API
     useEffect(() => {
@@ -65,35 +69,36 @@ function Nav() {
             movieVisualFormat: ["2D"],
             movieGenres: ["Hành động"],
         },
-    ], []); // Thêm useMemo để ổn định tham chiếu
+    ], []);
 
-    // Tìm kiếm realtime với cache và retry
-    useEffect(() => {
-        if (!searchTerm.trim()) {
-            setSearchResults([]);
-            setError(null);
-            return;
-        }
-
+    // Hàm gọi API lấy tất cả phim khi click vào input tìm kiếm
+    const fetchAllMovies = () => {
         setIsLoading(true);
         setError(null);
 
-        const cachedResults = cache.get(searchTerm.toLowerCase());
+        const cachedResults = cache.get('allMovies');
         if (cachedResults) {
+            setAllMovies(cachedResults);
             setSearchResults(cachedResults);
+            setFilteredCinemas(cinemas);
             setIsLoading(false);
             return;
         }
 
         let retries = 0;
         const maxRetries = 3;
-        const retryDelay = 2000; // 2 giây giữa các lần thử lại
+        const retryDelay = 2000;
 
         const fetchData = () => {
-            const url = `http://localhost:5229/api/movie/SearchMovieTake5?movieName=${encodeURIComponent(searchTerm.trim())}`;
+            const url = 'http://localhost:5229/api/movie/getAllMoviesPagniation/1';
             console.log('URL yêu cầu:', url);
 
-            fetch(url)
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'accept': '*/*'
+                }
+            })
                 .then((response) => {
                     console.log('Trạng thái HTTP:', response.status);
                     if (!response.ok) {
@@ -103,13 +108,17 @@ function Nav() {
                 })
                 .then((data) => {
                     console.log('Dữ liệu API:', data);
-                    if (data.status === 'Success' && Array.isArray(data.data)) {
-                        const results = data.data;
-                        cache.set(searchTerm.toLowerCase(), results);
+                    if (data.movieRespondDTOs && Array.isArray(data.movieRespondDTOs)) {
+                        const results = data.movieRespondDTOs;
+                        cache.set('allMovies', results);
+                        setAllMovies(results);
                         setSearchResults(results);
+                        setFilteredCinemas(cinemas);
                     } else {
+                        setAllMovies([]);
                         setSearchResults([]);
-                        setError('Không tìm thấy phim.');
+                        setFilteredCinemas([]);
+                        setError('Không tìm thấy phim hoặc rạp.');
                     }
                 })
                 .catch((error) => {
@@ -120,14 +129,61 @@ function Nav() {
                         setTimeout(fetchData, retryDelay);
                     } else {
                         setError('Không thể kết nối đến server. Sử dụng dữ liệu mẫu.');
-                        setSearchResults(fallbackMovies); // Sử dụng dữ liệu mẫu
+                        setAllMovies(fallbackMovies);
+                        setSearchResults(fallbackMovies);
+                        setFilteredCinemas(cinemas);
                     }
                 })
                 .finally(() => setIsLoading(false));
         };
 
         fetchData();
-    }, [searchTerm]); // Loại bỏ cache và fallbackMovies khỏi mảng phụ thuộc
+    };
+
+    // Lọc phim và rạp khi searchTerm thay đổi
+    useEffect(() => {
+        if (!allMovies.length && !cinemas.length) {
+            setSearchResults([]);
+            setFilteredCinemas([]);
+            return;
+        }
+
+        if (!searchTerm.trim()) {
+            setSearchResults(allMovies);
+            setFilteredCinemas(cinemas);
+            return;
+        }
+
+        const filteredMovies = allMovies.filter((movie) =>
+            movie.movieName.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        const filtered = cinemas.filter(
+            (cinema) =>
+                cinema.cinemaName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                cinema.cinemaLocation.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        setSearchResults(filteredMovies);
+        setFilteredCinemas(filtered);
+    }, [searchTerm, allMovies, cinemas]);
+
+    // Đóng dropdown khi click ra ngoài
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false); // Đóng dropdown
+                setSearchResults([]);
+                setFilteredCinemas([]);
+                setSearchTerm('');
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const handleInfo = () => {
         const roleName = localStorage.getItem('role') || '';
@@ -176,7 +232,7 @@ function Nav() {
                     </div>
                 </div>
                 <div className="flex justify-center flex-row">
-                    <div className="relative">
+                    <div className="relative" ref={searchRef}>
                         <form
                             onSubmit={(e) => e.preventDefault()}
                             className="flex items-center bg-gray-800 text-gray-400 border border-gray-700 rounded-full px-4 py-2 w-[300px] focus-within:border-indigo-500 transition duration-300"
@@ -187,6 +243,10 @@ function Nav() {
                                 className="w-full bg-transparent outline-none text-sm"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                onClick={() => {
+                                    fetchAllMovies(); // Gọi API lấy tất cả phim
+                                    setIsDropdownOpen(true); // Hiển thị dropdown khi nhấp vào input
+                                }}
                             />
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -204,30 +264,56 @@ function Nav() {
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                         </form>
-                        {isLoading && (
+                        {isLoading && isDropdownOpen && (
                             <div className="absolute top-full mt-2 bg-gray-800 text-white rounded shadow-md w-[300px] z-50 p-2 text-center">
                                 Đang tải...
                             </div>
                         )}
-
-                        {searchResults.length > 0 && !isLoading && !error && (
+                        {(searchResults.length > 0 || filteredCinemas.length > 0) && !isLoading && !error && isDropdownOpen && (
                             <div className="absolute top-full mt-2 bg-white text-black rounded shadow-md w-[300px] z-50 max-h-48 overflow-y-auto">
-                                {searchResults.map((movie) => (
-                                    <div
-                                        key={movie.movieID}
-                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() => {
-                                            setSearchTerm(movie.movieName);
-                                            setSearchResults([]);
-                                            navigate(`/movie/${movie.movieID}`); // Điều hướng đến trang chi tiết phim
-                                        }}
-                                    >
-                                        {movie.movieName}
+                                {searchResults.length > 0 && (
+                                    <div>
+                                        <div className="px-4 py-2 font-bold bg-gray-100">Phim</div>
+                                        {searchResults.map((movie) => (
+                                            <div
+                                                key={movie.movieID}
+                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                onClick={() => {
+                                                    setSearchTerm('');
+                                                    setSearchResults([]);
+                                                    setFilteredCinemas([]);
+                                                    setIsDropdownOpen(false); // Đóng dropdown khi chọn
+                                                    navigate(`/movie/${movie.movieID}`);
+                                                }}
+                                            >
+                                                {movie.movieName}
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
+                                {filteredCinemas.length > 0 && (
+                                    <div>
+                                        <div className="px-4 py-2 font-bold bg-gray-100">Rạp</div>
+                                        {filteredCinemas.map((cinema) => (
+                                            <div
+                                                key={cinema.cinemaId}
+                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                onClick={() => {
+                                                    setSearchTerm('');
+                                                    setSearchResults([]);
+                                                    setFilteredCinemas([]);
+                                                    setIsDropdownOpen(false); // Đóng dropdown khi chọn
+                                                    navigate(`/cinezone/${cinema.cinemaId}`);
+                                                }}
+                                            >
+                                                {cinema.cinemaName} ({cinema.cinemaLocation})
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
-                        {error && !isLoading && (
+                        {error && !isLoading && isDropdownOpen && (
                             <div className="absolute top-full mt-2 bg-gray-800 text-white rounded shadow-md w-[300px] z-50 p-2 text-center">
                                 {error}
                             </div>
@@ -287,7 +373,7 @@ function Nav() {
                             {cinemas.map((cinema) => (
                                 <div
                                     key={cinema.cinemaId}
-                                    onClick={() => navigate(`/cinezone/${cinema.cinemaId}`)} // Điều hướng đến trang chi tiết rạp
+                                    onClick={() => navigate(`/cinezone/${cinema.cinemaId}`)}
                                     className="text-slate-200 font-bold cursor-pointer"
                                 >
                                     {cinema.cinemaName} ({cinema.cinemaLocation})
@@ -295,10 +381,6 @@ function Nav() {
                             ))}
                         </div>
                     )}
-                    <span onClick={() => navigate('/cinezone')} className="cursor-pointer flex items-center gap-1 hover:text-purple-300">
-                        <MapPinIcon className="w-5 h-5 text-purple-400" />
-                        Chọn rạp hahaha
-                    </span>
                     <span onClick={() => navigate('/listfilm')} className="cursor-pointer flex items-center gap-1 hover:text-purple-300">
                         <MapPinIcon className="w-5 h-5 text-purple-400" />
                         Chọn phim đang chiếu
