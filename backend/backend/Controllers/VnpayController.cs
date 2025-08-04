@@ -133,8 +133,20 @@ namespace backend.Controllers
                     {
                         getOrderID.PaymentStatus = PaymentStatus.PaymentFailure.ToString();
                         getOrderID.message = responseMessage;
-
+                        var getOrderSeats = _dataContext.TicketOrderDetail.Where
+                            (x => x.orderId.Equals(vnpTxnRef)).Select(x => x.seatsId);
+                        if (getOrderSeats.Any())
+                        {
+                            // Update Seats
+                            var getSeats = _dataContext.Seats.Where(x => getOrderSeats.Contains(x.seatsId));
+                            foreach (var seat in getSeats)
+                            {
+                                seat.isTaken = false;
+                            }
+                            _dataContext.Seats.UpdateRange(getSeats);
+                        }
                         _dataContext.Order.Update(getOrderID);
+                        await _dataContext.SaveChangesAsync();
                     }
                     getOrderID.PaymentStatus = PaymentStatus.PaymentSuccess.ToString();
                     getOrderID.message = responseMessage;

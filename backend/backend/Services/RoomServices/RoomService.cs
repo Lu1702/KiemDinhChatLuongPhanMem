@@ -5,6 +5,7 @@
     using backend.ModelDTO.GenericRespond;
     using backend.ModelDTO.RoomDTOS;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.IdentityModel.Tokens;
     using Seats = backend.Model.CinemaRoom.Seats;
 
     namespace backend.Services.RoomServices;
@@ -27,14 +28,16 @@
                 && x.ScheduleDate == scheduleDate
                 && x.HourScheduleID == HourId
                 && x.movieId == movieID
-                && x.ScheduleDate > DateTime.Now);
+                && x.ScheduleDate > DateTime.Now
+                && !x.IsDelete);
 
             if (getRoomID != null)
             {
                 // Tiep tuc truy van toi bang room
-                var getSeatsNumber = _context.Seats.Include
-                    (x => x.cinemaRoom)
-                    .Where(x => x.cinemaRoomId.Equals(getRoomID.cinemaRoomId) && !x.isDelete);
+                var getSeatsNumber = _context.Seats
+                    .Include(x => x.cinemaRoom)
+                    .Where(x => x.cinemaRoomId.Equals(getRoomID.cinemaRoomId) && !x.isDelete
+                    && !x.cinemaRoom.isDeleted);
                 
                 List<SeatsDTO> seatsDTO = new List<SeatsDTO>();
                 foreach (var seats in getSeatsNumber)
@@ -80,9 +83,10 @@
                 return new GenericRespondDTOs()
                 {
                     Status = GenericStatusEnum.Failure.ToString(),
-                    message = "Nhap Thieu Thong Tin"
+                    message = "Bạn Nhập Thiếu Thông Tin Rồi Kìa !"
                 };
             }
+            
             await using var transaction = await _context.Database.BeginTransactionAsync();
             {
                 try
@@ -132,7 +136,7 @@
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Failure.ToString(),
-                        message = "Phong Da Ton Tai Ko tao duoc",
+                        message = "Lỗi Phòng Đã tồn tại"
                     };
                 }
                 catch (Exception e)
@@ -154,78 +158,211 @@
             {
                 try
                 {
-                    var findRoom = _context.cinemaRoom.
-                        FirstOrDefault(x => x.cinemaRoomId == RoomId);
-                    var findSeats = _context.Seats.Where(x => x.cinemaRoomId == RoomId);
-                    if (findRoom != null && findSeats.Any())
+                    // Bắt tổng cộng 2 Case
+                    var getCinemaInfo = _context.cinemaRoom.FirstOrDefault(x => x.cinemaRoomId == RoomId);
+                    if (getCinemaInfo != null)
                     {
-                        // Kiem Tra Xem Phong Co ton tai hay chua
-                        if (!_context.cinemaRoom.Any(x => x.cinemaRoomNumber.Equals(roomEditRequestDTO.RoomNumber)
-                                                          && x.cinemaId.Equals(roomEditRequestDTO.CinemaID)))
+                        var findSeats = _context.Seats.Where(x => x.cinemaRoomId == RoomId);
+                        if (roomEditRequestDTO.RoomNumber.HasValue && roomEditRequestDTO.CinemaID.IsNullOrEmpty())
                         {
-                           // Neu Chua co ai thanh toan ghe thi duoc thay doi
-                           if (!_context.TicketOrderDetail
-                                   .Any(x => findSeats.Select(x => x.seatsId).Contains(x.seatsId)))
-                           {
-                               string CinemaId = String.IsNullOrEmpty(roomEditRequestDTO.CinemaID) ? findRoom.cinemaId : roomEditRequestDTO.CinemaID;
-                               int CinemaRoomNumber = roomEditRequestDTO.RoomNumber ?? findRoom.cinemaRoomNumber;
-                               string movieVisualID = String.IsNullOrEmpty(roomEditRequestDTO.VisualFormatID) ? findRoom.movieVisualFormatID : roomEditRequestDTO.VisualFormatID;
+                            var getCinemaId =
+                                getCinemaInfo.cinemaId;
+                            // Kiểm tra
+                            if (_context.cinemaRoom.Any(x => !x.cinemaRoomId.Equals(RoomId)
+                                                             && x.cinemaId.Equals(getCinemaId) &&
+                                                             x.cinemaRoomNumber.Equals(roomEditRequestDTO.RoomNumber)))
+                            {
+                                return new GenericRespondDTOs()
+                                {
+                                    Status = GenericStatusEnum.Failure.ToString(),
+                                    message = "Phòng đã tồn tại"
+                                };
+                            }
+                            else
+                            {
+                                if (findSeats.Any())
+                                {
+                                   int cinemaRoomNumber = roomEditRequestDTO.RoomNumber ?? getCinemaInfo.cinemaRoomNumber;
+                                   string movieVisualId = String.IsNullOrEmpty(roomEditRequestDTO.VisualFormatID) ? getCinemaInfo.movieVisualFormatID : roomEditRequestDTO.VisualFormatID;
 
-                               if (roomEditRequestDTO.SeatsNumber.Any())
-                               {
-                                   _context.Seats.RemoveRange(findSeats);
-
-                                   List<Seats> SeatsList = new List<Seats>();
-                                   foreach (var newSeat in roomEditRequestDTO.SeatsNumber)
+                                   if (roomEditRequestDTO.SeatsNumber.Any())
                                    {
-                                       var SeatId = Guid.NewGuid().ToString();
-                                       SeatsList.Add(new Seats()
+                                       _context.Seats.RemoveRange(findSeats);
+
+                                       List<Seats> seatsList = new List<Seats>();
+                                       foreach (var newSeat in roomEditRequestDTO.SeatsNumber)
                                        {
-                                           seatsId = SeatId,
-                                           isDelete = false,
-                                           isTaken = false,
-                                           seatsNumber = newSeat,
-                                           cinemaRoomId = findRoom.cinemaRoomId,
-                                       });
+                                           var SeatId = Guid.NewGuid().ToString();
+                                           seatsList.Add(new Seats()
+                                           {
+                                               seatsId = SeatId,
+                                               isDelete = false,
+                                               isTaken = false,
+                                               seatsNumber = newSeat,
+                                               cinemaRoomId = getCinemaInfo.cinemaRoomId,
+                                           });
+                                       }
+                                       
+                                       await _context.Seats.AddRangeAsync(seatsList);
                                    }
                                    
-                                   await _context.Seats.AddRangeAsync(SeatsList);
-                               }
-                               
-                               findRoom.cinemaId = CinemaId;
-                               findRoom.cinemaRoomNumber = CinemaRoomNumber;
-                               findRoom.movieVisualFormatID = movieVisualID;
-                               
-                               _context.cinemaRoom.Update(findRoom);
+                                   getCinemaInfo.cinemaRoomNumber = cinemaRoomNumber;
+                                   getCinemaInfo.movieVisualFormatID = movieVisualId;
+                                   
+                                   _context.cinemaRoom.Update(getCinemaInfo);
 
-                               await _context.SaveChangesAsync();
-                               
-                               await transaction.CommitAsync();
-                               
-                               return new GenericRespondDTOs()
-                               {
-                                   Status = GenericStatusEnum.Success.ToString(),
-                                   message = "Chinhr Sua thanh cong",
-                               };
-                           }
-                           return new GenericRespondDTOs()
-                           {
-                               Status = GenericStatusEnum.Failure.ToString(),
-                               message = "Khong Sua Thong Tin Phong Duoc Do Da Co Nguoi Dat",
-                           };
-                        }
-                        return new GenericRespondDTOs()
+                                   await _context.SaveChangesAsync();
+                                   
+                                   await transaction.CommitAsync();
+                                   
+                                   return new GenericRespondDTOs()
+                                   {
+                                       Status = GenericStatusEnum.Success.ToString(),
+                                       message = "Chỉnh sửa phòng thành công",
+                                   };
+                                }
+                            }
+                        }else if (!roomEditRequestDTO.CinemaID.IsNullOrEmpty() && !roomEditRequestDTO.RoomNumber.HasValue)
                         {
-                            Status = GenericStatusEnum.Failure.ToString(),
-                            message = "Phong Da Ton Tai Ko Edit Duoc",
-                        };
+                            var getRoomNumber =
+                                getCinemaInfo.cinemaRoomNumber;
+                            // Kiểm tra
+                            if (_context.cinemaRoom.Any(x => !x.cinemaRoomId.Equals(RoomId)
+                                                             && x.cinemaId.Equals(roomEditRequestDTO.CinemaID) &&
+                                                             x.cinemaRoomNumber.Equals(getRoomNumber)))
+                            {
+                                return new GenericRespondDTOs()
+                                {
+                                    Status = GenericStatusEnum.Failure.ToString(),
+                                    message = "Phòng đã tồn tại"
+                                };
+                            }
+                            else
+                            {
+                                if (findSeats.Any())
+                                {
+                                    int cinemaRoomNumber =
+                                        roomEditRequestDTO.RoomNumber ?? getCinemaInfo.cinemaRoomNumber;
+                                    string cinemaId = String.IsNullOrEmpty(
+                                        roomEditRequestDTO.CinemaID)
+                                        ? getCinemaInfo.cinemaId
+                                        : roomEditRequestDTO.CinemaID;
+                                    string movieVisualId = String.IsNullOrEmpty(roomEditRequestDTO.VisualFormatID)
+                                        ? getCinemaInfo.movieVisualFormatID
+                                        : roomEditRequestDTO.VisualFormatID;
+
+                                    if (roomEditRequestDTO.SeatsNumber.Any())
+                                    {
+                                        _context.Seats.RemoveRange(findSeats);
+
+                                        List<Seats> seatsList = new List<Seats>();
+                                        foreach (var newSeat in roomEditRequestDTO.SeatsNumber)
+                                        {
+                                            var SeatId = Guid.NewGuid().ToString();
+                                            seatsList.Add(new Seats()
+                                            {
+                                                seatsId = SeatId,
+                                                isDelete = false,
+                                                isTaken = false,
+                                                seatsNumber = newSeat,
+                                                cinemaRoomId = getCinemaInfo.cinemaRoomId,
+                                            });
+                                        }
+
+                                        await _context.Seats.AddRangeAsync(seatsList);
+                                    }
+
+                                    getCinemaInfo.cinemaId = cinemaId;
+                                    getCinemaInfo.cinemaRoomNumber = cinemaRoomNumber;
+                                    getCinemaInfo.movieVisualFormatID = movieVisualId;
+
+                                    _context.cinemaRoom.Update(getCinemaInfo);
+
+                                    await _context.SaveChangesAsync();
+
+                                    await transaction.CommitAsync();
+
+                                    return new GenericRespondDTOs()
+                                    {
+                                        Status = GenericStatusEnum.Success.ToString(),
+                                        message = "Chỉnh sửa phòng thành công",
+                                    };
+                                }
+                            }
+                        }else if (roomEditRequestDTO.RoomNumber.HasValue && !roomEditRequestDTO.CinemaID.IsNullOrEmpty())
+                        {
+                            if (
+                                _context.cinemaRoom.Any
+                                (x => !x.cinemaRoomId.Equals(RoomId) && x.cinemaRoomNumber.Equals
+                                    (roomEditRequestDTO.RoomNumber) && x.cinemaId.Equals(roomEditRequestDTO
+                                    .CinemaID)))
+                            {
+                                return new GenericRespondDTOs()
+                                {
+                                    Status = GenericStatusEnum.Failure.ToString(),
+                                    message = "Phòng đã tồn tại"
+                                };
+                            }
+                            else
+                            {
+                                if (findSeats.Any())
+                                {
+                                    int cinemaRoomNumber =
+                                        roomEditRequestDTO.RoomNumber ?? getCinemaInfo.cinemaRoomNumber;
+                                    string cinemaId = String.IsNullOrEmpty(
+                                        roomEditRequestDTO.CinemaID)
+                                        ? getCinemaInfo.cinemaId
+                                        : roomEditRequestDTO.CinemaID;
+                                    string movieVisualId = String.IsNullOrEmpty(roomEditRequestDTO.VisualFormatID)
+                                        ? getCinemaInfo.movieVisualFormatID
+                                        : roomEditRequestDTO.VisualFormatID;
+
+                                    if (roomEditRequestDTO.SeatsNumber.Any())
+                                    {
+                                        _context.Seats.RemoveRange(findSeats);
+
+                                        List<Seats> seatsList = new List<Seats>();
+                                        foreach (var newSeat in roomEditRequestDTO.SeatsNumber)
+                                        {
+                                            var SeatId = Guid.NewGuid().ToString();
+                                            seatsList.Add(new Seats()
+                                            {
+                                                seatsId = SeatId,
+                                                isDelete = false,
+                                                isTaken = false,
+                                                seatsNumber = newSeat,
+                                                cinemaRoomId = getCinemaInfo.cinemaRoomId,
+                                            });
+                                        }
+
+                                        await _context.Seats.AddRangeAsync(seatsList);
+                                    }
+
+                                    getCinemaInfo.cinemaId = cinemaId;
+                                    getCinemaInfo.cinemaRoomNumber = cinemaRoomNumber;
+                                    getCinemaInfo.movieVisualFormatID = movieVisualId;
+
+                                    _context.cinemaRoom.Update(getCinemaInfo);
+
+                                    await _context.SaveChangesAsync();
+
+                                    await transaction.CommitAsync();
+
+                                    return new GenericRespondDTOs()
+                                    {
+                                        Status = GenericStatusEnum.Success.ToString(),
+                                        message = "Chỉnh sửa phòng thành công",
+                                    };
+                                }
+                            }
+                        }
                     }
+
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Failure.ToString(),
-                        message = "Khong Tim Thay Phong",
+                        message = "Không tìm thấy phòng"
                     };
-                   
                 }
                 catch (Exception e)
                 {
@@ -233,7 +370,7 @@
                     return new GenericRespondDTOs()
                     {
                         Status = GenericStatusEnum.Failure.ToString(),
-                        message = "Loi Database",
+                        message = "Lỗi Database",
                     };
                 }
             }
