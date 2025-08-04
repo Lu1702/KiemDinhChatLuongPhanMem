@@ -1,0 +1,123 @@
+/* Provided CSS for button2 */
+.button2 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  color: #000;
+  padding: 0.7em 1.7em;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 500;
+  border-radius: 0.5em;
+  background: #CAFF38; /* Changed from #ddd to lightgreen */
+  border: 1px solid #CAFF38; /* Changed from #ddd to lightgreen for consistency */
+  text-align: center;
+}
+
+.button2:active {
+  color: #666;
+  box-shadow: inset 4px 4px 12px #c5c5c5, inset -4px -4px 12px #044119;
+}
+
+.button2:hover {
+  color: #ffffff;
+  background-color: #7e57c2;
+  border: 1px solid #7e57c2;
+}
+
+/* Provided CSS for uiverse-pixel-input */
+.uiverse-pixel-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  font-family: "Courier New", monospace; /* This font applies to the input wrapper, not the label directly */
+  color: #fff;
+  font-size: 1em;
+  width: 100%; /* Adjusted for responsiveness */
+  max-width: 18em; /* Original max width */
+}
+
+.uiverse-pixel-label {
+  text-shadow: 1px 1px #000;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  color: #333; /* Adjusted for better contrast on light background */
+  font-family: Arial, sans-serif; /* Changed to Arial */
+}
+
+.uiverse-pixel-input {
+  appearance: none;
+  border: none;
+  padding: 0.6em;
+  font-size: 1em;
+  font-family: "Courier New", monospace;
+  color: #fff;
+  background: #7e57c2;
+  image-rendering: pixelated;
+  box-shadow:
+    0 0 0 0.15em #000,
+    0 0 0 0.3em #fff,
+    0 0 0 0.45em #000,
+    0 0.3em 0 0 #5e35b1,
+    0 0.3em 0 0.15em #000;
+  outline: none;
+  transition: all 0.15s steps(1);
+  text-shadow: 1px 1px #000;
+  width: 100%; /* Ensure it takes full width of its wrapper */
+}
+
+.uiverse-pixel-input::placeholder {
+  color: #fff;
+  opacity: 0.6;
+}
+
+.uiverse-pixel-input:focus {
+  background: #9575cd;
+  box-shadow:
+    0 0 0 0.15em #000,
+    0 0 0 0.3em #fff,
+    0 0 0 0.45em #000,
+    0 0.2em 0 0 #7e57c2,
+    0 0.2em 0 0.15em #000;
+}
+
+.uiverse-pixel-input:hover {
+  animation: uiverse-glitch-input 0.3s steps(2) infinite;
+}
+
+@keyframes uiverse-glitch-input {
+  0% { transform: translate(0); }
+  25% { transform: translate(-1px, 1px); }
+  50% { transform: translate(1px, -1px); }
+  75% { transform: translate(-1px, -1px); }
+  100% { transform: translate(0); }
+}
+
+/* Custom styles for the remove button */
+.remove-button {
+    background-color: #ff4d4d; /* Red color for remove */
+    color: white;
+    border: 1px solid #ff4d4d;
+    padding: 0.5em 1em;
+    border-radius: 0.5em;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in;
+}
+.remove-button:hover {
+    background-color: #cc0000;
+    border: 1px solid #cc0000;
+}
+
+/* New style for body background opacity */
+body {
+  background-color: rgba(243, 244, 246, 0.3); /* Corresponds to gray-100 with 30% opacity */
+}
+
+/* New style for form background opacity */
+.form-bg-opacity-30 {
+  background-color: rgba(255, 255, 255, 0.3); /* White with 30% opacity */
+}

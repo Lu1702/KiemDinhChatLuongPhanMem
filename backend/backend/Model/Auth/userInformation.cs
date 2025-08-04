@@ -2,11 +2,14 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using backend.Model.Booking;
 using backend.Model.CinemaRoom;
+using backend.Model.Email;
 using backend.Model.Movie;
 using backend.Model.Staff_Customer;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Model.Auth
 {
+    [Index(nameof(loginUserEmail) , IsUnique = true)]
     public class userInformation
     {
         // ID của User trong DB 
@@ -32,5 +35,7 @@ namespace backend.Model.Auth
         public Customer Customer { get; set; } = null!;
 
         public Staff Staff { get; set; } = null!;
+        
+        public List<EmailList> EmailList { get; set; } = [];
     }
 }

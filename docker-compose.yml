@@ -1,7 +1,5 @@
 # Phiên bản Build Image
 
-version: "3.7"
-
 # Các loại services
 
 services:
@@ -22,7 +20,6 @@ services:
             - CHOKIDAR_USEPOLLING=true
             - WATCHPACK_POLLING=true 
             - FAST_REFRESH=true
-
     backend :
         build :
             context: ./backend/backend

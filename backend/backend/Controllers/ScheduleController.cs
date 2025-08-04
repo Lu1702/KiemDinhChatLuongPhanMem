@@ -1,5 +1,9 @@
-﻿using backend.Interface.Schedule;
+﻿using backend.Data;
+using backend.Enum;
+using backend.Interface.Schedule;
+using backend.ModelDTO.ScheduleDTO;
 using backend.ModelDTO.ScheduleDTO.Request;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,32 +14,96 @@ namespace backend.Controllers
     public class ScheduleController : ControllerBase
     {
         private readonly IScheduleServices scheduleServices;
+        
+        private readonly DataContext dataContext;
 
-        public ScheduleController(IScheduleServices scheduleServices)
+        public ScheduleController(IScheduleServices scheduleServices , DataContext dataContext)
         {
             this.scheduleServices = scheduleServices;
+            this.dataContext = dataContext;
         }
-
         [HttpPost("addSchedule")]
-        public async Task<IActionResult> addSchedule(ScheduleRequestDTO scheduleRequestDTO)
+        [Authorize(Policy = "TheaterManager")]
+        public async Task<IActionResult> addSchedule(string cinemaId ,ScheduleRequestDTO scheduleRequestDTO)
         {
-            var status = await scheduleServices.add(scheduleRequestDTO);
-            if (status)
+            var status = await scheduleServices.add(cinemaId, scheduleRequestDTO);
+            if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
-                return Ok(new {message = "Thêm thành công"});
+                return BadRequest(status);
             }
-            return BadRequest(new {message = "Thêm thất bại"});
+            return Ok(status);
         }
 
-        [HttpDelete("removeSchedule")]
-        public async Task<IActionResult> removeSchedule(string id, string options)
+        [HttpPatch("editSchedule/{id}")]
+        [Authorize(Policy = "TheaterManager")]
+        public async Task<IActionResult> editSchedule(string id, EditScheduleDTO edit)
         {
-            var status = await scheduleServices.delete(id, options);
-            if (status) 
+            var status = await scheduleServices.edit(id, edit);
+            if (status.Status.Equals(GenericStatusEnum.Failure.ToString()))
             {
-                return Ok(new { message = "Đã xóa thành công" });
+                return BadRequest(new { message = "thay đổi thất bại do có lỗi =(" });
             }
-            return BadRequest(new {message = "Xóa thất bại do có người đã đặt lịch này"});
+            return Ok(new { message = "Đã thay đổi thành công" });
+        }
+
+        [HttpDelete("removeSchedule/{id}")]
+        [Authorize(Policy = "TheaterManager")]
+        public async Task<IActionResult> removeSchedule(string id)
+        {
+            var status = await scheduleServices.delete(id);
+            if (status.Status.Equals(GenericStatusEnum.Success.ToString())) 
+            {
+                return Ok(status);
+            }
+            return BadRequest(status);
+        }
+
+        [HttpGet("getScheduleByName")]
+        public IActionResult getScheduleByName([FromQuery] string name)
+        {
+            var findStatus = scheduleServices.getAlSchedulesByMovieName(name);
+            if (findStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            {
+                return BadRequest(findStatus);
+            }
+            return Ok(findStatus);
+        }
+        
+        
+        [Authorize(Policy = "TheaterManager")]
+        [HttpGet("GetMovieVisualFormatByMovieId")]
+        public IActionResult getMovieVisualFormatById(string movieId)
+        {
+            var getStatus = scheduleServices.getVisualFormatListByMovieId(movieId);
+            if (getStatus.Status.Equals(GenericStatusEnum.Failure.ToString()))
+            {
+                return BadRequest(getStatus);
+            }
+            return Ok(getStatus);
+        }
+
+        [HttpGet("GetAllTimes")]
+        public IActionResult GetAllTimes()
+        {
+            var getAllTimes = dataContext.HourSchedule
+                .Select(x => new
+                {
+                    HourScheduleID = x.HourScheduleID,
+                    HourScheduleShowTime = x.HourScheduleShowTime
+                });
+            return Ok(getAllTimes);
+        }
+
+        [HttpGet("getMovieScheduleId")]
+        public IActionResult GetMovieScheduleId(string movieId , string HourId , string cinemaRooomId , DateTime showDate)
+        {
+            var getStatus = scheduleServices.getScheduleId
+                (cinemaRooomId, showDate, HourId, movieId);
+            if (getStatus.Status.Equals(GenericStatusEnum.Success.ToString()))
+            {
+                return Ok(getStatus);
+            }
+            return NotFound(getStatus);
         }
     }
 }
