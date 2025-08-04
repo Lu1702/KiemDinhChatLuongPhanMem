@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './ScheduleSearch.css';
 
-// --- Định nghĩa kiểu dữ liệu ---
 interface MovieDTO {
   movieID: string;
   movieName: string;
@@ -527,7 +525,7 @@ const ScheduleSearch: React.FC = () => {
   const handleCinemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCinemaId = e.target.value;
     setSelectedCinemaId(newCinemaId);
-    setModalError(null); // Clear modal error when cinema changes
+    setModalError(null);
   };
 
   const handleEditCinemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -538,7 +536,7 @@ const ScheduleSearch: React.FC = () => {
   const handleMovieChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newMovieId = e.target.value;
     setNewSchedule({ ...newSchedule, movieId: newMovieId });
-    setModalError(null); // Clear modal error when movie changes
+    setModalError(null);
     fetchMovieDetail(newMovieId);
   };
 
@@ -556,358 +554,419 @@ const ScheduleSearch: React.FC = () => {
   };
 
   return (
-    <div className="schedule-search-container">
-      <h1>Tìm kiếm & Quản lý Lịch chiếu Phim</h1>
+    <div className="min-h-screen bg-gradient-to-b from-gray-700/70 to-gray-500/50 font-sans py-10 px-4 rounded-2xl">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-yellow-400 text-center mb-8 tracking-wide">
+          Tìm kiếm & Quản lý Lịch chiếu Phim
+        </h1>
 
-      <div className="search-controls">
-        <label htmlFor="movie-select">Chọn Phim:</label>
-        <select
-          id="movie-select"
-          value={selectedMovie}
-          onChange={(e) => setSelectedMovie(e.target.value)}
-          disabled={loading}
-        >
-          {loading && <option>Đang tải phim...</option>}
-          {!loading && movies.length === 0 && <option>Không có phim nào</option>}
-          {movies.map((movie) => (
-            <option key={movie.movieID} value={movie.movieName}>
-              {movie.movieName}
-            </option>
-          ))}
-        </select>
-        <button onClick={handleSearch} disabled={loading}>
-          {loading ? 'Đang tìm...' : 'Tìm kiếm'}
-        </button>
-      </div>
-
-      <div className="action-buttons">
-        <button onClick={() => setShowAddModal(true)} className="add-button">
-          Thêm lịch chiếu
-        </button>
-      </div>
-
-      {error && <p className="error-message">Lỗi: {error}</p>}
-
-      {schedules && schedules.length > 0 && (
-        <div className="search-results">
-          <h2>Kết quả tìm kiếm</h2>
-          <button
-            onClick={handleDelete}
-            disabled={loading || !selectedScheduleId}
-            className="delete-button"
-          >
-            {loading ? 'Đang xóa...' : 'Xóa lịch chiếu đã chọn'}
-          </button>
-          <button
-            onClick={handleOpenEditModal}
-            disabled={loading || !selectedScheduleId}
-            className="edit-button"
-          >
-            {loading ? 'Đang xử lý...' : 'Sửa lịch chiếu đã chọn'}
-          </button>
-
-          {schedules.map((movieSchedule) => (
-            <div key={movieSchedule.movieName} className="movie-schedule-card">
-              <h3>{movieSchedule.movieName}</h3>
-              {movieSchedule.getListSchedule.length > 0 ? (
-                <ul>
-                  {movieSchedule.getListSchedule.map((schedule) => (
-                    <li key={schedule.scheduleId}>
-                      <input
-                        type="radio"
-                        name="schedule"
-                        value={schedule.scheduleId}
-                        checked={selectedScheduleId === schedule.scheduleId}
-                        onChange={() => setSelectedScheduleId(schedule.scheduleId)}
-                      />
-                      <p>
-                        <strong>Rạp:</strong> {schedule.cinemaName}
-                      </p>
-                      <p>
-                        <strong>Định dạng:</strong> {schedule.movieVisualFormatInfo}
-                      </p>
-                      <p>
-                        <strong>Phòng chiếu:</strong> {schedule.cinemaRoom}
-                      </p>
-                      <p>
-                        <strong>Thời gian:</strong> {schedule.showTime} - <strong>Ngày:</strong>{' '}
-                        {new Date(schedule.showDate).toLocaleDateString('vi-VN')}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>Không có lịch chiếu nào cho phim này.</p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {schedules && schedules.length === 0 && (
-        <p className="no-results">Không tìm thấy lịch chiếu nào cho phim này.</p>
-      )}
-
-      {/* Modal thêm lịch chiếu */}
-      {showAddModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Thêm Lịch Chiếu Mới</h2>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setMovieDetail(null);
-                  setModalError(null);
-                }}
-                className="close-button"
+        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl mb-8">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex-1">
+              <label className="block text-base font-medium text-gray-300 mb-1">Chọn Phim</label>
+              <select
+                id="movie-select"
+                value={selectedMovie}
+                onChange={(e) => setSelectedMovie(e.target.value)}
+                disabled={loading}
+                className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               >
-                &times;
-              </button>
+                {loading && <option>Đang tải phim...</option>}
+                {!loading && movies.length === 0 && <option>Không có phim nào</option>}
+                {movies.map((movie) => (
+                  <option key={movie.movieID} value={movie.movieName}>
+                    {movie.movieName}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className="modal-body">
-              {modalError && <p className="error-message">{modalError}</p>}
-              <div className="form-group">
-                <label>Phim:</label>
-                <select value={newSchedule.movieId} onChange={handleMovieChange}>
-                  {movies.map((movie) => (
-                    <option key={movie.movieID} value={movie.movieID}>
-                      {movie.movieName}
-                    </option>
-                  ))}
-                </select>
+            <button
+              onClick={handleSearch}
+              disabled={loading}
+              className="relative bg-yellow-950 text-yellow-400 border border-yellow-400 rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-yellow-900 hover:border-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed group mt-6 sm:mt-0"
+            >
+              <span className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></span>
+              {loading ? <div className="flex flex-row gap-2">
+                <div className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce"></div>
+                <div
+                  className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.3s]"
+                ></div>
+                <div
+                  className="w-4 h-4 rounded-full bg-yellow-300 animate-bounce [animation-delay:-.5s]"
+                ></div>
               </div>
-
-              {movieDetail ? (
-                <div className="movie-detail">
-                  <h3>Định dạng phim</h3>
-                  {movieDetail.movieVisualFormat && movieDetail.movieVisualFormat.length > 0 ? (
-                    <ul>
-                      {movieDetail.movieVisualFormat.map((format) => (
-                        <li key={format.movieVisualFormatId}>{format.movieVisualFormatName}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>Không có định dạng phim nào.</p>
-                  )}
-                </div>
-              ) : (
-                <p className="movie-detail">Đang tải chi tiết phim...</p>
-              )}
-
-              <div className="form-group">
-                <label>Rạp:</label>
-                <select value={selectedCinemaId} onChange={handleCinemaChange}>
-                  {cinemas.map((cinema) => (
-                    <option key={cinema.cinemaId} value={cinema.cinemaId}>
-                      {cinema.cinemaName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Định dạng phim:</label>
-                <select
-                  value={newSchedule.movieVisualId}
-                  onChange={(e) => setNewSchedule({ ...newSchedule, movieVisualId: e.target.value })}
-                >
-                  {movieVisualFormats.map((format) => (
-                    <option
-                      key={format.movieVisualId}
-                      value={format.movieVisualId}
-                      disabled={!isVisualFormatCompatible(format.movieVisualId)}
-                    >
-                      {format.movieVisualFormatDetail}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Phòng chiếu:</label>
-                <select
-                  value={newSchedule.cinemaRoomId}
-                  onChange={(e) => setNewSchedule({ ...newSchedule, cinemaRoomId: e.target.value })}
-                >
-                  {cinemaRooms.length === 0 ? (
-                    <option value="">Không có phòng chiếu phù hợp</option>
-                  ) : (
-                    cinemaRooms.map((room) => (
-                      <option key={room.roomId} value={room.roomId}>
-                        Phòng: {room.roomNumber}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Thời gian:</label>
-                <select
-                  value={newSchedule.showTime}
-                  onChange={(e) => setNewSchedule({ ...newSchedule, showTime: e.target.value })}
-                >
-                  <option value="">Chọn thời gian</option>
-                  {availableTimes.map((time) => (
-                    <option key={time.hourScheduleID} value={time.hourScheduleID}>
-                      {time.hourScheduleShowTime}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Ngày chiếu:</label>
-                <input
-                  type="date"
-                  value={newSchedule.showDate}
-                  onChange={(e) => setNewSchedule({ ...newSchedule, showDate: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button onClick={handleAddSchedule} disabled={loading}>
-                {loading ? 'Đang thêm...' : 'Lưu'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setMovieDetail(null);
-                  setModalError(null);
-                }}
-              >
-                Hủy
-              </button>
-            </div>
+                : 'Tìm kiếm'}
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Modal sửa lịch chiếu */}
-      {showEditModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Sửa Lịch Chiếu</h2>
+        <div className=" p-6 rounded-2xl shadow-xl mb-8 flex justify-center items-center" >
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="relative bg-yellow-950 text-yellow-400 border border-yellow-400 rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-yellow-900 hover:border-yellow-500 group">
+            <span className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></span>
+            Thêm lịch chiếu
+          </button>
+        </div>
+
+        {error && <p className="text-red-400 text-center mb-4">{error}</p>}
+
+        {schedules && schedules.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-xl">
+            <h2 className="text-2xl font-bold text-white mb-6">Kết quả tìm kiếm</h2>
+            <div className="flex gap-4 mb-4">
               <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setMovieDetail(null);
-                }}
-                className="close-button"
+                onClick={handleDelete}
+                disabled={loading || !selectedScheduleId}
+                className="relative bg-red-600 text-white rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                &times;
+                {loading ? 'Đang xóa...' : 'Xóa lịch chiếu đã chọn'}
+              </button>
+              <button
+                onClick={handleOpenEditModal}
+                disabled={loading || !selectedScheduleId}
+                className="relative bg-blue-600 text-white rounded-md px-6 py-2 font-medium overflow-hidden transition-all duration-300 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Đang xử lý...' : 'Sửa lịch chiếu đã chọn'}
               </button>
             </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Phim:</label>
-                <select value={editSchedule.movieId} onChange={handleEditMovieChange}>
-                  {movies.map((movie) => (
-                    <option key={movie.movieID} value={movie.movieID}>
-                      {movie.movieName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {movieDetail ? (
-                <div className="movie-detail">
-                  <h3>Định dạng phim</h3>
-                  {movieDetail.movieVisualFormat && movieDetail.movieVisualFormat.length > 0 ? (
-                    <ul>
-                      {movieDetail.movieVisualFormat.map((format) => (
-                        <li key={format.movieVisualFormatId}>{format.movieVisualFormatName}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>Không có định dạng phim nào.</p>
-                  )}
-                </div>
-              ) : (
-                <p className="movie-detail">Đang tải chi tiết phim...</p>
-              )}
-
-              <div className="form-group">
-                <label>Rạp:</label>
-                <select value={editCinemaId} onChange={handleEditCinemaChange}>
-                  {cinemas.map((cinema) => (
-                    <option key={cinema.cinemaId} value={cinema.cinemaId}>
-                      {cinema.cinemaName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Định dạng phim:</label>
-                <select
-                  value={editSchedule.movieVisualId}
-                  onChange={(e) => setEditSchedule({ ...editSchedule, movieVisualId: e.target.value })}
-                >
-                  {movieVisualFormats.map((format) => (
-                    <option
-                      key={format.movieVisualId}
-                      value={format.movieVisualId}
-                      disabled={!isVisualFormatCompatible(format.movieVisualId)}
-                    >
-                      {format.movieVisualFormatDetail}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Phòng chiếu:</label>
-                <select
-                  value={editSchedule.cinemaRoomId}
-                  onChange={(e) => setEditSchedule({ ...editSchedule, cinemaRoomId: e.target.value })}
-                >
-                  {cinemaRooms.length === 0 ? (
-                    <option value="">Không có phòng chiếu phù hợp</option>
-                  ) : (
-                    cinemaRooms.map((room) => (
-                      <option key={room.roomId} value={room.roomId}>
-                        Phòng: {room.roomNumber}
-                      </option>
+            <div className="overflow-x-auto">
+              <table className="w-full bg-white/10 rounded-lg shadow-md">
+                <thead>
+                  <tr className="bg-yellow-950 text-white">
+                    <th className="px-4 py-3 text-left text-sm font-semibold"></th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">Tên phim</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">Rạp</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">Định dạng</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">Phòng chiếu</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">Thời gian</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">Ngày</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schedules.map((movieSchedule) =>
+                    movieSchedule.getListSchedule.map((schedule) => (
+                      <tr key={schedule.scheduleId} className="border-t border-gray-600 hover:bg-gray-700/20 transition">
+                        <td className="px-4 py-2">
+                          <input
+                            type="radio"
+                            name="schedule"
+                            value={schedule.scheduleId}
+                            checked={selectedScheduleId === schedule.scheduleId}
+                            onChange={() => setSelectedScheduleId(schedule.scheduleId)}
+                            className="text-yellow-500 focus:ring-yellow-500"
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-white">{movieSchedule.movieName}</td>
+                        <td className="px-4 py-2 text-white">{schedule.cinemaName}</td>
+                        <td className="px-4 py-2 text-white">{schedule.movieVisualFormatInfo}</td>
+                        <td className="px-4 py-2 text-white">{schedule.cinemaRoom}</td>
+                        <td className="px-4 py-2 text-white">{schedule.showTime}</td>
+                        <td className="px-4 py-2 text-white">{new Date(schedule.showDate).toLocaleDateString('vi-VN')}</td>
+                      </tr>
                     ))
                   )}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Thời gian:</label>
-                <select
-                  value={editSchedule.showTime}
-                  onChange={(e) => setEditSchedule({ ...editSchedule, showTime: e.target.value })}
-                >
-                  <option value="">Chọn thời gian</option>
-                  {availableTimes.map((time) => (
-                    <option key={time.hourScheduleID} value={time.hourScheduleID}>
-                      {time.hourScheduleShowTime}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Ngày chiếu:</label>
-                <input
-                  type="date"
-                  value={editSchedule.showDate}
-                  onChange={(e) => setEditSchedule({ ...editSchedule, showDate: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button onClick={handleEditSchedule} disabled={loading}>
-                {loading ? 'Đang sửa...' : 'Lưu'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setMovieDetail(null);
-                }}
-              >
-                Hủy
-              </button>
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {schedules && schedules.length === 0 && (
+          <p className="text-white text-center">Không tìm thấy lịch chiếu nào cho phim này.</p>
+        )}
+
+        {/* Modal thêm lịch chiếu */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+            <div className="max-w-lg w-full bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-yellow-500/30">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-white">Thêm Lịch Chiếu Mới</h2>
+                <button
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setMovieDetail(null);
+                    setModalError(null);
+                  }}
+                  className="text-gray-300 hover:text-white text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+              {modalError && <p className="text-red-400 mb-4">{modalError}</p>}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Phim</label>
+                  <select
+                    value={newSchedule.movieId}
+                    onChange={handleMovieChange}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    {movies.map((movie) => (
+                      <option key={movie.movieID} value={movie.movieID}>
+                        {movie.movieName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {movieDetail ? (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white italic">Định dạng phim</h3>
+                    {movieDetail.movieVisualFormat && movieDetail.movieVisualFormat.length > 0 ? (
+                      <ul className="list-disc list-inside text-gray-300">
+                        {movieDetail.movieVisualFormat.map((format) => (
+                          <li key={format.movieVisualFormatId}>{format.movieVisualFormatName}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-300">Không có định dạng phim nào.</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-300">Đang tải chi tiết phim...</p>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Rạp</label>
+                  <select
+                    value={selectedCinemaId}
+                    onChange={handleCinemaChange}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    {cinemas.map((cinema) => (
+                      <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                        {cinema.cinemaName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Định dạng phim</label>
+                  <select
+                    value={newSchedule.movieVisualId}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, movieVisualId: e.target.value })}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    {movieVisualFormats.map((format) => (
+                      <option
+                        key={format.movieVisualId}
+                        value={format.movieVisualId}
+                        disabled={!isVisualFormatCompatible(format.movieVisualId)}
+                      >
+                        {format.movieVisualFormatDetail}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Phòng chiếu</label>
+                  <select
+                    value={newSchedule.cinemaRoomId}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, cinemaRoomId: e.target.value })}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    {cinemaRooms.length === 0 ? (
+                      <option value="">Không có phòng chiếu phù hợp</option>
+                    ) : (
+                      cinemaRooms.map((room) => (
+                        <option key={room.roomId} value={room.roomId}>
+                          Phòng: {room.roomNumber}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Thời gian</label>
+                  <select
+                    value={newSchedule.showTime}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, showTime: e.target.value })}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    <option value="">Chọn thời gian</option>
+                    {availableTimes.map((time) => (
+                      <option key={time.hourScheduleID} value={time.hourScheduleID}>
+                        {time.hourScheduleShowTime}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Ngày chiếu</label>
+                  <input
+                    type="date"
+                    value={newSchedule.showDate}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, showDate: e.target.value })}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-center gap-4">
+                <button
+                  onClick={handleAddSchedule}
+                  disabled={loading}
+                  className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Đang thêm...' : 'Lưu'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setMovieDetail(null);
+                    setModalError(null);
+                  }}
+                  className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal sửa lịch chiếu */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+            <div className="max-w-lg w-full bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-yellow-500/30">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-white">Sửa Lịch Chiếu</h2>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setMovieDetail(null);
+                  }}
+                  className="text-gray-300 hover:text-white text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Phim</label>
+                  <select
+                    value={editSchedule.movieId}
+                    onChange={handleEditMovieChange}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    {movies.map((movie) => (
+                      <option key={movie.movieID} value={movie.movieID}>
+                        {movie.movieName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {movieDetail ? (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white italic">Định dạng phim</h3>
+                    {movieDetail.movieVisualFormat && movieDetail.movieVisualFormat.length > 0 ? (
+                      <ul className="list-disc list-inside text-gray-300">
+                        {movieDetail.movieVisualFormat.map((format) => (
+                          <li key={format.movieVisualFormatId}>{format.movieVisualFormatName}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-300">Không có định dạng phim nào.</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-300">Đang tải chi tiết phim...</p>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Rạp</label>
+                  <select
+                    value={editCinemaId}
+                    onChange={handleEditCinemaChange}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    {cinemas.map((cinema) => (
+                      <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                        {cinema.cinemaName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Định dạng phim</label>
+                  <select
+                    value={editSchedule.movieVisualId}
+                    onChange={(e) => setEditSchedule({ ...editSchedule, movieVisualId: e.target.value })}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    {movieVisualFormats.map((format) => (
+                      <option
+                        key={format.movieVisualId}
+                        value={format.movieVisualId}
+                        disabled={!isVisualFormatCompatible(format.movieVisualId)}
+                      >
+                        {format.movieVisualFormatDetail}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Phòng chiếu</label>
+                  <select
+                    value={editSchedule.cinemaRoomId}
+                    onChange={(e) => setEditSchedule({ ...editSchedule, cinemaRoomId: e.target.value })}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    {cinemaRooms.length === 0 ? (
+                      <option value="">Không có phòng chiếu phù hợp</option>
+                    ) : (
+                      cinemaRooms.map((room) => (
+                        <option key={room.roomId} value={room.roomId}>
+                          Phòng: {room.roomNumber}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Thời gian</label>
+                  <select
+                    value={editSchedule.showTime}
+                    onChange={(e) => setEditSchedule({ ...editSchedule, showTime: e.target.value })}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    <option value="">Chọn thời gian</option>
+                    {availableTimes.map((time) => (
+                      <option key={time.hourScheduleID} value={time.hourScheduleID}>
+                        {time.hourScheduleShowTime}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Ngày chiếu</label>
+                  <input
+                    type="date"
+                    value={editSchedule.showDate}
+                    onChange={(e) => setEditSchedule({ ...editSchedule, showDate: e.target.value })}
+                    className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-center gap-4">
+                <button
+                  onClick={handleEditSchedule}
+                  disabled={loading}
+                  className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Đang sửa...' : 'Lưu'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setMovieDetail(null);
+                  }}
+                  className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

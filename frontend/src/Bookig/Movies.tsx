@@ -124,16 +124,21 @@ interface FoodApiResponse {
 interface FoodRequestDTO {
   foodID: string;
   quantity: number;
+  foodName?: string;
+  foodPrice?: number;
 }
 
 interface SeatRequestDTO {
   seatID: string;
+  seatsNumber?: string;
 }
 
 interface UserTypeRequestDTO {
   userTypeID: string;
   quantity: number;
   seatsList: SeatRequestDTO[];
+  userTypeName?: string;
+  price?: number;
 }
 
 interface BookingPayload {
@@ -141,6 +146,19 @@ interface BookingPayload {
   movieScheduleId: string;
   foodRequestDTOs: FoodRequestDTO[];
   userTypeRequestDTO: UserTypeRequestDTO[];
+}
+
+// Define BookingDetails interface
+interface BookingDetails {
+  userId: string;
+  movieScheduleId: string;
+  foodRequestDTOs: FoodRequestDTO[];
+  userTypeRequestDTO: UserTypeRequestDTO[];
+  movieName?: string;
+  cinemaName?: string;
+  showTime?: string;
+  showDate?: string;
+  roomNumber?: number;
 }
 
 const MovieDetails: React.FC = () => {
@@ -174,16 +192,17 @@ const MovieDetails: React.FC = () => {
   const [commentCount, setCommentCount] = useState<number>(0);
   const navigate = useNavigate();
 
-
   useEffect(() => {
     const storedCommentCount = localStorage.getItem('commentCount');
     if (storedCommentCount) {
       setCommentCount(parseInt(storedCommentCount, 10));
     }
   }, []);
+
   const handleComments = () => {
     navigate("/comments");
   };
+
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
@@ -332,6 +351,7 @@ const MovieDetails: React.FC = () => {
     setSelectedCinemaId(cinemaId);
     setSelectedDate(scheduleDate);
   };
+
   useEffect(() => {
     if (selectedSeats.length > 0 && !startCountdown) {
       setStartCountdown(true);
@@ -546,7 +566,7 @@ const MovieDetails: React.FC = () => {
         {
           method: 'GET',
           headers: {
-            'accept': '*/*',
+            accept: '*/*',
           },
         }
       );
@@ -570,7 +590,9 @@ const MovieDetails: React.FC = () => {
         .filter(foodId => selectedFoods[foodId] > 0)
         .map(foodId => ({
           foodID: foodId,
-          quantity: selectedFoods[foodId]
+          quantity: selectedFoods[foodId],
+          foodName: foodInfo?.find(f => f.foodId === foodId)?.foodName,
+          foodPrice: foodInfo?.find(f => f.foodId === foodId)?.foodPrice,
         }));
       const userTypeRequestDTOs: UserTypeRequestDTO[] = [];
       const sortedUserTypeIds = Object.keys(selectedTickets).sort();
@@ -578,45 +600,65 @@ const MovieDetails: React.FC = () => {
       for (const userTypeId of sortedUserTypeIds) {
         const quantity = selectedTickets[userTypeId];
         if (quantity > 0) {
-          const seatsForThisType = [];
+          const seatsForThisType: SeatRequestDTO[] = [];
           for (let i = 0; i < quantity; i++) {
             const seatId = seatsToBook.shift();
             if (seatId) {
-              seatsForThisType.push({ seatID: seatId });
+              seatsForThisType.push({
+                seatID: seatId,
+                seatsNumber: roomInfo?.seats.find(s => s.seatsId === seatId)?.seatsNumber,
+              });
             }
           }
           userTypeRequestDTOs.push({
             userTypeID: userTypeId,
-            quantity: quantity,
-            seatsList: seatsForThisType
+            quantity,
+            seatsList: seatsForThisType,
+            userTypeName: priceInfo?.find(p => p.userTypeId === userTypeId)?.userTypeWithPriceDTO.userTypeName,
+            price: priceInfo?.find(p => p.userTypeId === userTypeId)?.userTypeWithPriceDTO.price,
           });
         }
       }
 
+      const bookingDetails: BookingDetails = {
+        userId,
+        movieScheduleId,
+        foodRequestDTOs,
+        userTypeRequestDTO: userTypeRequestDTOs,
+        movieName: movie?.movieName,
+        cinemaName: bookingInfo?.data.find(d => d.scheduleDate === selectedDate)?.cinemaBookings.find(c => c.cinemaID === selectedCinemaId)?.cinemaName,
+        showTime: bookingInfo?.data.find(d => d.scheduleDate === selectedDate)?.cinemaBookings.find(c => c.cinemaID === selectedCinemaId)?.scheduleShowTimeWithCinemaDtos.find(s => s.hourScheduleID === selectedShowTime)?.hourScheduleDetail,
+        showDate: selectedDate,
+        roomNumber: roomInfo?.cinemaRoomNumber,
+      };
+
+      console.log('Saving bookingDetails:', bookingDetails); // Debug log
+      localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
+
       const payload: BookingPayload = {
-        userId: userId,
-        movieScheduleId: movieScheduleId,
-        foodRequestDTOs: foodRequestDTOs,
+        userId,
+        movieScheduleId,
+        foodRequestDTOs,
         userTypeRequestDTO: userTypeRequestDTOs,
       };
 
       const bookingResponse = await fetch('http://localhost:5229/api/Booking/Booking', {
         method: 'POST',
         headers: {
-          'accept': '*/*',
+          accept: '*/*',
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(payload),
       });
       const bookingResult = await bookingResponse.json();
+      localStorage.setItem("respondInfoBooking", JSON.stringify(bookingResult))
 
       if (bookingResponse.ok && bookingResult.status === 'Success') {
         alert('Đặt vé thành công!');
-        localStorage.removeItem('movieId');
-        localStorage.removeItem('VSID');
+        console.log('Navigating to /payment'); // Debug log
         closeBookingSection();
-        navigate('/listfilm');
+        navigate('/payment');
       } else {
         setBookingProcessingError(bookingResult.message || 'Đặt vé thất bại. Vui lòng thử lại.');
       }

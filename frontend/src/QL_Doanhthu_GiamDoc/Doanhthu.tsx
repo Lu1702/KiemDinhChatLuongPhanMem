@@ -28,18 +28,19 @@ interface DetailedRevenueData {
   }[];
   totalRevenue: number;
 }
-
 const RevenueList: React.FC = () => {
   const [revenues, setRevenues] = useState<Revenue[]>([]);
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [selectedCinemaId, setSelectedCinemaId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // State mới để quản lý modal chi tiết
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
   const [detailedRevenue, setDetailedRevenue] = useState<DetailedRevenueData | null>(null);
 
   const fetchRevenue = async () => {
+    setLoading(true);
     try {
       const response = await fetch('http://localhost:5229/api/Revenue/GetAllRevenue', {
         method: 'GET',

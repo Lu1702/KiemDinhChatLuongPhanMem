@@ -1,4 +1,5 @@
 ﻿using backend.ModelDTO.BookingHistoryDTO.OrderDetailRespond;
+using backend.ModelDTO.GenericRespond;
 
 namespace backend.Interface.GenericsInterface
 
@@ -8,7 +9,7 @@ namespace backend.Interface.GenericsInterface
     // TDetail có nghĩa là xem chi tiết
     public interface GenericInterface<TList , TDetail>
     {
-        Task<List<TList>> getAll(string userID);
+        Task<GenericRespondWithObjectDTO<List<TList>>> getAll(string userID);
 
         Task<TDetail> getByID(string id);
     }

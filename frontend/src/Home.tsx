@@ -7,7 +7,6 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
-import QuickBooking from './Bookig/QuickBooking';
 import { useNavigate } from 'react-router-dom';
 
 interface Movie {
@@ -230,7 +229,6 @@ function Home() {
         <div className="content-wrapper max-w-screen-xl text-base mx-auto px-8 min-h-screen top-0">
           <main className="flex flex-col gap-6 p-4">
             <MovieSlider />
-            <QuickBooking />
             <section>
               <h2 className="text-3xl text-white font-bold pt-10 mb-5 uppercase text-center">-- Phim đang chiếu --</h2>
               <div className="px-4 sm:px-6 lg:px-8">
