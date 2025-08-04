@@ -14,6 +14,8 @@ namespace backend.Model.Booking
         [Required]
         [ForeignKey("foodInformation")]
         public string foodInformationId { get; set; } = "";
+        
+        public decimal foodEachPrice { get; set; }
 
         public int quanlity { get; set; }
 

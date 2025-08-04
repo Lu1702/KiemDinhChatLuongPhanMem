@@ -2,6 +2,7 @@
 using backend.Model.Booking;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+// ReSharper disable All
 
 namespace backend.ModelDTO.Customer.OrderRespond
 {
@@ -29,7 +30,7 @@ namespace backend.ModelDTO.Customer.OrderRespond
 
         public OrderRespondProductsInfoWithTotalPrice OrderRespondProductsInfoWithTotalPrice { get; set; } = null!;
         
-        public double TotalPrice { get; set; }
+        public decimal TotalPrice { get; set; }
     }
 
     public class OrderRespondUserTypeInfo
@@ -38,7 +39,7 @@ namespace backend.ModelDTO.Customer.OrderRespond
 
         public string SeatsNumber { get; set; } = string.Empty;
 
-        public double PriceTicket { get; set; }
+        public decimal PriceTicket { get; set; }
     }
 
     public class OrderRespondUserTypeWithPrices
@@ -46,7 +47,7 @@ namespace backend.ModelDTO.Customer.OrderRespond
         public List<OrderRespondUserTypeInfo> OrderRespondUserTypeInfos { get; set; } =
             new List<OrderRespondUserTypeInfo>();
 
-        public double TotalPriceTicket { get; set; }
+        public decimal TotalPriceTicket { get; set; }
     }
 
 
@@ -55,9 +56,12 @@ namespace backend.ModelDTO.Customer.OrderRespond
     {
         public string ProductName { get; set; } = string.Empty;
 
-        public long Amount { get; set; } 
-
-        public Double ProductPrice { get; set; }
+        public decimal productTotalAmount { get; set; } 
+        
+        // ReSharper disable once InconsistentNaming
+        public decimal productSinglePrice { get; set; }
+        
+        public int Quantity { get; set; }
     }
 
     public class OrderRespondProductsInfoWithTotalPrice
@@ -65,6 +69,6 @@ namespace backend.ModelDTO.Customer.OrderRespond
         public List<OrderRespondProductsInfo> OrderRespondProductsInfos { get; set; } =
             new List<OrderRespondProductsInfo>();
 
-        public double TotalPrice { get; set; }
+        public decimal TotalPrice { get; set; }
     }
 }

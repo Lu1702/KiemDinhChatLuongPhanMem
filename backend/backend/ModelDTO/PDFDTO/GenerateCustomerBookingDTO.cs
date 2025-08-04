@@ -24,7 +24,7 @@ public class GenerateCustomerBookingTicketInfo
 
     public DateTime ShowedDate { get; set; }
     
-    public GenerateCustomerBookingTicketSeatsInfo Seats { get; set; } = new GenerateCustomerBookingTicketSeatsInfo();
+    public List<GenerateCustomerBookingTicketSeatsInfo> Seats { get; set; } = new List<GenerateCustomerBookingTicketSeatsInfo>();
 
     public List<GenerateCustomerBookingProductsInfo> Products { get; set; } = new
         List<GenerateCustomerBookingProductsInfo>();

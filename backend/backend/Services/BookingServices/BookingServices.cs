@@ -376,8 +376,9 @@ namespace backend.Services.BookingServices
                                     orderRespondProducts.Add(new OrderRespondProductsInfo()
                                     {
                                         ProductName = foodName,
-                                        Amount = foodPrice,
-                                        ProductPrice = foodPrice * foodRequestInfo.quantity
+                                        productSinglePrice = foodPrice,
+                                        productTotalAmount = foodPrice * foodRequestInfo.quantity,
+                                        Quantity = foodRequestInfo.quantity
                                     });
                                     // Tinh toan
                                 }
@@ -387,7 +388,7 @@ namespace backend.Services.BookingServices
                                 = new OrderRespondProductsInfoWithTotalPrice()
                                 {
                                     OrderRespondProductsInfos = orderRespondProducts,
-                                    TotalPrice = orderRespondProducts.Sum(x => x.ProductPrice)
+                                    TotalPrice = orderRespondProducts.Sum(x => x.productTotalAmount)
                                 };
                             
                             return new GenericRespondWithObjectDTO<OrderRespondDTO>()

@@ -8,7 +8,7 @@ public class GenerateStaffBookingDTO
     
     public string UserName { get; set; } = string.Empty;
     
-    public string OrderDate { get; set; } = string.Empty;
+    public DateTime OrderDate { get; set; }
     
     public List<OrderRespondProductsInfo> OrderRespondProducts { get; set; } = new List<OrderRespondProductsInfo>();
     
