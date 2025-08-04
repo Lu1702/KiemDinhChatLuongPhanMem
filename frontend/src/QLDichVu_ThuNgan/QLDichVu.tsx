@@ -78,7 +78,6 @@ const CinemaPage: React.FC = () => {
     visualFormatID: '',
     seatsNumber: [],
   });
-
   const [roomsByCinema, setRoomsByCinema] = useState<CinemaRoom[]>([]);
 
   useEffect(() => {
@@ -556,7 +555,7 @@ const CinemaPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat font-sans"
+      className="flex h-screen bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url('/images/bg.png')" }}
     >
       <style>
@@ -727,6 +726,7 @@ const CinemaPage: React.FC = () => {
             </li>
           </ul>
         </div>
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 p-6 flex space-x-6">
@@ -754,24 +754,6 @@ const CinemaPage: React.FC = () => {
                   Back
                 </button>
               </div>
-              {loading && <p className="text-white text-center">Đang tải...</p>}
-              {error && <p className="text-red-400 text-center mb-4">{error}</p>}
-              {successMessage && <p className="text-green-600 text-center mb-4">{successMessage}</p>}
-              {!loading && !error && cinemas.length === 0 && <p className="text-white text-center">Không có rạp nào để hiển thị.</p>}
-              {cinemas.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {cinemas.map((cinema) => (
-                    <div key={cinema.cinemaId} className="bg-white/10 p-4 rounded-lg shadow-md border border-yellow-500/30">
-                      <h3 className="text-lg font-semibold text-white">{cinema.cinemaName}</h3>
-                      <p className="text-gray-300">{cinema.cinemaLocation}</p>
-                      {cinema.cinemaDescription && <p className="text-gray-300">{cinema.cinemaDescription}</p>}
-                      {cinema.cinemaContactNumber && (
-                        <p className="text-gray-300">Số điện thoại: {cinema.cinemaContactNumber}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
             {loading && <p>Đang tải...</p>}
             {successMessage && (
@@ -921,8 +903,6 @@ const CinemaPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-              {error && <p className="text-red-400 mt-4 text-center">{error}</p>}
-              {successMessage && <p className="text-green-600 mt-4 text-center">{successMessage}</p>}
             </div>
             {/* Display existing rooms */}
             <div className="flex flex-col w-1/2">
@@ -1038,7 +1018,8 @@ const CinemaPage: React.FC = () => {
                 </button>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
         {/* Delete Cinema Modal */}
         {isDeleteModalOpen && (
@@ -1056,18 +1037,15 @@ const CinemaPage: React.FC = () => {
                     onChange={(e) => setSelectedCinemaId(e.target.value)}
                     className="uiverse-pixel-input"
                   >
-                    Hủy
-                  </button>
-                  <button
-                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleDeleteCinema}
-                    disabled={!selectedCinemaId}
-                  >
-                    Xóa
-                  </button>
+                    <option value="">-- Chọn rạp để xóa --</option>
+                    {cinemas.map((cinema) => (
+                      <option key={cinema.cinemaId} value={cinema.cinemaId}>
+                        {cinema.cinemaName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-
               <div className="mt-6 flex justify-end space-x-2">
                 <button
                   className="button2 gray"
@@ -1252,12 +1230,6 @@ const CinemaPage: React.FC = () => {
           </div>
         )}
       </div>
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all"
-      >
-        ↑
-      </button>
     </div>
   );
 };
