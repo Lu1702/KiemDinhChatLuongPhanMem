@@ -18,10 +18,16 @@ namespace backend.Model.Product
         [Required]
         [Column(TypeName = "nvarchar(30)")]
         public string foodInformationName { get; set; } = "";
+        
+        [Required]
+        [Column(TypeName = "nvarchar(255)")]
+        public string foodImageURL { get; set; } = "";
 
         [Required]
         public long foodPrice { get; set; }
 
         public List<orderDetailFood> orderDetailFood = [];
+
+        public List<StaffOrderDetailFood> StaffOrderDetailFood = [];
     }
 }

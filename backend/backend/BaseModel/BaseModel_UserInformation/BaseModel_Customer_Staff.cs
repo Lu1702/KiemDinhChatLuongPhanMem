@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.BaseModel.BaseModel_UserInformation
 {
+    [Index(nameof(phoneNumber) , IsUnique = true)]
     public class BaseModel_Customer_Staff
     {
         [Required]
@@ -21,8 +23,5 @@ namespace backend.BaseModel.BaseModel_UserInformation
         [Required]
         public string phoneNumber { get; set; } = "";
 
-        [Column(TypeName = "varchar(70)")]
-        [Required]
-        public string IdentityCode { get; set; } = "";
     }
 }
