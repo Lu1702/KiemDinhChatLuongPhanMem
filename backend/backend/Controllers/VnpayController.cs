@@ -364,7 +364,7 @@ namespace backend.Controllers
             {
                 Console.WriteLine("Null rồi");
                 return BadRequest("Missing one or more required VNPAY callback parameters. Please check the URL.");
-            }   
+            }
             // ---
             // Process the VNPAY response code to get a human-readable message
             // ---
@@ -423,8 +423,8 @@ namespace backend.Controllers
                 return BadRequest("Invalid amount received from VNPAY.");
             }
 
-            string url = "http://localhost:3000/VNPAY/PaymentStatus?" +
-                            $"success={(vnpResponseCode == "00" ? "true" : "false")}" +
+            string url = "http://localhost:3000/VNPAY/PaymentStatus" +
+                            $"?success={(vnpResponseCode == "00" ? "true" : "false")}" +
                             $"&code={vnpResponseCode}" +
                             $"&message={responseMessage}" +
                             $"&transactionNo={vnpTransactionNo}" +

@@ -298,7 +298,7 @@ const MovieDetails: React.FC = () => {
     );
     if (selectedFormatObj) {
       setSelectedVisualId(selectedFormatObj.movieVisualId);
-      localStorage.setItem('VSID', selectedFormatObj.movieVisualId);
+      localStorage.setItem('VSID', "2D");
     }
   };
 

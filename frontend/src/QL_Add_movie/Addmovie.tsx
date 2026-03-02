@@ -342,7 +342,7 @@ const AddMovie: React.FC = () => {
                 method,
                 url,
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
                     "Content-Type": "multipart/form-data",
                 },
                 data: formData as any,
